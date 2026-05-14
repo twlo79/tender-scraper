@@ -482,6 +482,39 @@ def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
     return new
 
 
+def _extract_months(text: str) -> list[tuple[int, int]]:
+    """從字串中擷取所有 (year, month) 組合，支援民國／西元曆。"""
+    found = []
+    # 西元：2026-05、2026/05、2026年05
+    for m in re.finditer(r"(20\d{2})[/-年](\d{1,2})[/-月日]?", text):
+        found.append((int(m.group(1)), int(m.group(2))))
+    # 民國：115-05、115/05、115年05
+    for m in re.finditer(r"\b(1\d{2})[/-年](\d{1,2})[/-月日]?", text):
+        found.append((int(m.group(1)) + 1911, int(m.group(2))))
+    return found
+
+
+def is_within_date_window(item: dict, window: int = 1) -> bool:
+    """若標案日期在當月 ±window 個月內則回傳 True；無法解析日期則放行。"""
+    today = date.today()
+    # 建立有效 (year, month) 集合
+    valid = set()
+    for delta in range(-window, window + 1):
+        m = today.month + delta
+        y = today.year
+        if m < 1:
+            m += 12; y -= 1
+        elif m > 12:
+            m -= 12; y += 1
+        valid.add((y, m))
+
+    # 從 date 欄位與 title 中找日期
+    candidates = _extract_months(item.get("date", "") + " " + item.get("title", ""))
+    if not candidates:
+        return True  # 無法解析 → 不過濾
+    return any(ym in valid for ym in candidates)
+
+
 # ── LINE 推播 ─────────────────────────────────────────────────────────────────
 
 def _push(messages: list[dict]):
@@ -506,25 +539,25 @@ def push_in_batches(messages: list[dict]):
 
 
 def build_line_messages(results: dict, run_time: str) -> list[dict]:
-    today     = date.today().strftime("%Y/%m/%d")
-    total_new = sum(len(v["new"]) for v in results.values())
-    messages  = []
+    today        = date.today().strftime("%Y/%m/%d")
+    total_notify = sum(len(v.get("notify", [])) for v in results.values())
+    messages     = []
 
-    # 摘要文字
-    lines = [f"📋 政府標案通知 {today}", f"共新增 {total_new} 筆\n"]
+    # 摘要文字（只統計推播筆數）
+    lines = [f"📋 政府標案通知 {today}", f"近期新增 {total_notify} 筆\n"]
     for src in SOURCES:
-        name = src["name"]
-        new  = len(results.get(name, {}).get("new", []))
-        err  = results.get(name, {}).get("error")
-        icon = "⚠️" if err else ("🆕" if new else "✅")
-        lines.append(f"{icon} {name}：{'抓取失敗' if err else (f'{new} 筆新增' if new else '無新增')}")
+        name   = src["name"]
+        notify = len(results.get(name, {}).get("notify", []))
+        err    = results.get(name, {}).get("error")
+        icon   = "⚠️" if err else ("🆕" if notify else "✅")
+        lines.append(f"{icon} {name}：{'抓取失敗' if err else (f'{notify} 筆' if notify else '無近期新增')}")
     lines.append("\n⚠️ 免責聲明：本通知由自動爬蟲產生，資料僅供參考，請以各機關官方公告為準。")
     messages.append({"type": "text", "text": "\n".join(lines)})
 
-    # 各機關 Flex Message
+    # 各機關 Flex Message（只顯示通過日期篩選的標案）
     for src in SOURCES:
         name      = src["name"]
-        new_items = results.get(name, {}).get("new", [])
+        new_items = results.get(name, {}).get("notify", [])
         if not new_items: continue
 
         body_contents = []
@@ -556,7 +589,7 @@ def build_line_messages(results: dict, run_time: str) -> list[dict]:
                     "type": "box", "layout": "vertical", "backgroundColor": "#1d4ed8", "paddingAll": "16px",
                     "contents": [
                         {"type": "text", "text": name, "color": "#ffffff", "weight": "bold", "size": "md"},
-                        {"type": "text", "text": f"新增 {len(new_items)} 筆", "color": "#bfdbfe", "size": "sm", "margin": "xs"},
+                        {"type": "text", "text": f"近期新增 {len(new_items)} 筆", "color": "#bfdbfe", "size": "sm", "margin": "xs"},
                     ],
                 },
                 "body": {"type": "box", "layout": "vertical", "paddingAll": "16px", "contents": body_contents},
@@ -584,35 +617,43 @@ def main():
         name = src["name"]
         log.info(f"抓取：{name}")
         try:
-            items     = src["fn"]()
-            new_items = find_new_items(name, items, state)
-            results[name] = {"all": items, "new": new_items, "error": None}
-            log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆")
+            items        = src["fn"]()
+            new_items    = find_new_items(name, items, state)
+            notify_items = [i for i in new_items if is_within_date_window(i)]
+            results[name] = {"all": items, "new": new_items, "notify": notify_items, "error": None}
+            log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆，推播 {len(notify_items)} 筆")
         except Exception as e:
             log.error(f"  → 例外：{e}")
-            results[name] = {"all": [], "new": [], "error": str(e)}
+            results[name] = {"all": [], "new": [], "notify": [], "error": str(e)}
 
     save_state(state)
 
     # 摘要
-    total_new = sum(len(v["new"]) for v in results.values())
+    total_new    = sum(len(v["new"])    for v in results.values())
+    total_notify = sum(len(v["notify"]) for v in results.values())
     print(f"\n{'='*60}")
     print(f"  每日標案摘要  {date.today()}  {run_time}")
     print(f"{'='*60}")
     for src in SOURCES:
-        name = src["name"]
-        d    = results[name]
-        new  = len(d["new"])
-        err  = d["error"]
-        status = f"⚠️ {err}" if err else (f"🆕 新增 {new} 筆" if new else "✅ 無新增")
+        name   = src["name"]
+        d      = results[name]
+        new    = len(d["new"])
+        notify = len(d["notify"])
+        err    = d["error"]
+        if err:
+            status = f"⚠️ {err}"
+        elif new:
+            status = f"🆕 新增 {new} 筆（推播 {notify} 筆）"
+        else:
+            status = "✅ 無新增"
         print(f"  {name:22s}  共{len(d['all']):3d}筆  {status}")
-        for item in d["new"][:3]:
+        for item in d["notify"][:3]:
             print(f"       ▸ {item.get('title','')[:55]}")
     print(f"{'='*60}")
-    print(f"  合計新增：{total_new} 筆")
+    print(f"  合計新增：{total_new} 筆  推播：{total_notify} 筆")
     print(f"{'='*60}\n")
 
-    # LINE 推播
+    # LINE 推播（只發近期標案）
     messages = build_line_messages(results, run_time)
     if messages:
         push_in_batches(messages)
