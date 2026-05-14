@@ -136,7 +136,9 @@ def parse_tra() -> list[dict]:
                 "date":  m.group(2).strip(),
                 "url":   "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
             })
-    log.info(f"  [國營台鐵] {len(items)} 筆")
+    # 只保留臺北營業分處的標案
+    items = [i for i in items if "臺北營業分處" in i.get("title", "")]
+    log.info(f"  [國營台鐵] {len(items)} 筆（僅臺北營業分處）")
     return items
 
 
@@ -439,6 +441,7 @@ def build_line_messages(results: dict, run_time: str) -> list[dict]:
         err  = results.get(name, {}).get("error")
         icon = "⚠️" if err else ("🆕" if new else "✅")
         lines.append(f"{icon} {name}：{'抓取失敗' if err else (f'{new} 筆新增' if new else '無新增')}")
+    lines.append("\n⚠️ 免責聲明：本通知由自動爬蟲產生，資料僅供參考，請以各機關官方公告為準。")
     messages.append({"type": "text", "text": "\n".join(lines)})
 
     # 各機關 Flex Message
@@ -453,9 +456,12 @@ def build_line_messages(results: dict, run_time: str) -> list[dict]:
             dt    = item.get("date", "")
             url   = item.get("url", src["url"])
 
-            title_obj = {"type": "text", "text": title, "size": "sm", "color": "#1d4ed8", "wrap": True,
-                         "action": {"type": "uri", "uri": url}}
-            row = {"type": "box", "layout": "vertical", "margin": "md", "contents": [title_obj]}
+            title_obj = {"type": "text", "text": f"🔗 {title}", "size": "sm", "color": "#1d4ed8", "wrap": True}
+            row = {
+                "type": "box", "layout": "vertical", "margin": "md",
+                "action": {"type": "uri", "uri": url},
+                "contents": [title_obj],
+            }
             if dt:
                 row["contents"].append({"type": "text", "text": f"📅 {dt}", "size": "xs", "color": "#9ca3af", "margin": "xs"})
             body_contents.append(row)
