@@ -293,108 +293,74 @@ def parse_hurc() -> list[dict]:
 
 
 def parse_fnp() -> list[dict]:
-    """國有財產署：支援靜態 table 與動態 JSON API 兩種模式。
-
-    esvc.fnp.gov.tw/rtMsg 是台灣政府 e-service 宣告平台，通常是 SPA 架構：
-    瀏覽器載入空 HTML 殼後由 JavaScript 呼叫後端 JSON API 渲染 table。
-    → requests.get() 只拿到空殼，soup.select("table tr") 因此得 0 筆。
-
-    修正策略：
-      1. 先嘗試 JSON API endpoint（從 Chrome DevTools Network 找到後填入 FNP_API_URL）
-      2. 若 API 不通，再嘗試靜態 table（相容舊頁面或未來改版）
-      3. 若頁面 < 2000 字元，記錄警告提示需改用 Playwright
-
-    如何找 JSON API endpoint：
-      → 瀏覽器開啟 https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c
-      → F12 → Network → 篩選 XHR 或 Fetch
-      → 觀察頁面載入時出現哪個 API 請求回傳標案 JSON
-      → 將該 URL 填入下方 FNP_API_URL
+    """國有財產署：SSR 頁面，ul > li > span.title-message + p.form-height 結構。
+    詳情 URL：https://esvc.fnp.gov.tw/rtMsg/showInfomation?msgId={msgId}
+    fallback：table tr（相容未來改版）
     """
     BASE_URL   = "https://esvc.fnp.gov.tw"
     SVC_ID     = "5eafac8df8c649ba9cf62a591e44223c"
     SOURCE_URL = f"{BASE_URL}/rtMsg?svcId={SVC_ID}"
+    DETAIL_URL = f"{BASE_URL}/rtMsg/showInfomation"
 
-    # ── 填入從 Chrome DevTools 找到的實際 JSON API endpoint ────────────
-    # 常見格式範例（請依實際情況修改）：
-    #   FNP_API_URL = f"{BASE_URL}/api/rtMsg/getMsgList?svcId={SVC_ID}"
-    #   FNP_API_URL = f"{BASE_URL}/rtMsg/api/list?svcId={SVC_ID}"
-    FNP_API_URL = None   # ← 找到後取代 None
-
-    items = []
-
-    # ── 策略 1：JSON API（若已知 endpoint）──────────────────────────────
-    if FNP_API_URL:
-        r = get(FNP_API_URL)
-        if r and "json" in r.headers.get("Content-Type", ""):
-            try:
-                data = r.json()
-                rows = data if isinstance(data, list) else data.get("data", data.get("list", []))
-                for row in rows:
-                    unit    = row.get("unit", row.get("unitName", row.get("單位", "")))
-                    year    = str(row.get("year", row.get("年度", "")))
-                    batch   = str(row.get("batch", row.get("batchNo", row.get("批號", ""))))
-                    pub_dt  = row.get("pubDate", row.get("announceDate", row.get("公告日期", "")))
-                    open_dt = row.get("openDate", row.get("bidOpenDate", row.get("開標日期", "")))
-                    if not unit:
-                        continue
-                    title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
-                    href  = row.get("url", row.get("link", SOURCE_URL))
-                    if href and not href.startswith("http"):
-                        href = urljoin(BASE_URL, href)
-                    items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL})
-                log.info(f"  [國有財產署] JSON API 取得 {len(items)} 筆")
-                return items
-            except Exception as e:
-                log.warning(f"  [國有財產署] JSON API 解析失敗：{e}")
-
-    # ── 策略 2：靜態 HTML table（相容純 HTML 頁面）──────────────────────
     r = get(SOURCE_URL)
     if not r:
         return []
 
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
+    items = []
 
-    # 診斷：若頁面極小，幾乎可確定是 JS SPA
-    page_len = len(r.text)
-    tables   = soup.find_all("table")
-    scripts  = [s.get("src", "") for s in soup.find_all("script", src=True)]
-    log.debug(f"  [國有財產署] 頁面大小={page_len}字元 tables={len(tables)} 外部scripts={len(scripts)}")
-
-    if page_len < 2000 or (not tables and any(
-            kw in s for s in scripts for kw in ("angular", "vue", "react"))):
-        log.warning(
-            f"  [國有財產署] 頁面僅 {page_len} 字元，疑似 SPA（JS 動態渲染）。"
-            " 需用 Playwright 或找出 JSON API endpoint（見 FNP_API_URL 注解）。"
-        )
-        return []
-
-    # 嘗試多個 selector，從精確到寬鬆
-    rows = []
-    for sel in ("tbody tr", "table tr", "#tenderTable tr", "#msgTable tr",
-                ".announce-table tr", ".data-table tr"):
-        rows = soup.select(sel)
-        if rows:
-            log.debug(f"  [國有財產署] 使用 selector='{sel}', 行數={len(rows)}")
-            break
-
-    for row in rows:
-        tds = row.find_all("td")
-        if len(tds) < 4:
+    # ── 主要策略：ul > li，每個 li 為一筆標案 ──────────────────────────
+    for li in soup.select("ul li"):
+        labels = [s.get_text(strip=True) for s in li.select("span.title-message")]
+        values = [p.get_text(strip=True) for p in li.select("p.form-height")]
+        if not labels or not values:
             continue
-        unit    = tds[0].get_text(strip=True)
-        year    = tds[1].get_text(strip=True)
-        batch   = tds[2].get_text(strip=True)
-        pub_dt  = tds[3].get_text(strip=True)
-        open_dt = tds[4].get_text(strip=True) if len(tds) > 4 else ""
+        fields = dict(zip(labels, values))
+
+        unit    = fields.get("單位", "")
+        year    = fields.get("年度", "")
+        batch   = fields.get("批號", "")
+        pub_dt  = fields.get("公告日期", "")
+        open_dt = fields.get("開標日期", "")
         if not unit or unit in ("單位", "機關單位"):
             continue
+
+        # msgId：從 li 屬性或內部連結取得
+        msg_id = (li.get("data-msgid") or li.get("data-msg-id")
+                  or li.get("data-id") or "")
+        a = li.find("a", href=True)
+        if a:
+            href = a["href"]
+            if not href.startswith("http"):
+                href = urljoin(BASE_URL, href)
+            m = re.search(r"msgId=([a-f0-9A-F]+)", href)
+            if m:
+                msg_id = m.group(1)
+        href = f"{DETAIL_URL}?msgId={msg_id}" if msg_id else SOURCE_URL
+
         title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
-        a    = row.find("a", href=True)
-        href = a["href"] if a else SOURCE_URL
-        if href and not href.startswith("http"):
-            href = urljoin(BASE_URL, href)
-        items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL})
+        items.append({"title": title, "date": pub_dt, "url": href})
+
+    # ── fallback：table tr ───────────────────────────────────────────────
+    if not items:
+        for row in soup.select("table tbody tr, table tr"):
+            tds = row.find_all("td")
+            if len(tds) < 4:
+                continue
+            unit    = tds[0].get_text(strip=True)
+            year    = tds[1].get_text(strip=True)
+            batch   = tds[2].get_text(strip=True)
+            pub_dt  = tds[3].get_text(strip=True)
+            open_dt = tds[4].get_text(strip=True) if len(tds) > 4 else ""
+            if not unit or unit in ("單位", "機關單位"):
+                continue
+            title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
+            a = row.find("a", href=True)
+            href = a["href"] if a else SOURCE_URL
+            if href and not href.startswith("http"):
+                href = urljoin(BASE_URL, href)
+            items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL})
 
     log.info(f"  [國有財產署] {len(items)} 筆")
     return items
