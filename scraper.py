@@ -90,19 +90,44 @@ def post_json(url, payload, extra_headers=None) -> dict | None:
 # ── 各網站精準 Parser ─────────────────────────────────────────────────────────
 
 def parse_taipei_water() -> list[dict]:
-    """台北自來水處：table tr，連結指向政府採購網"""
-    r = get("https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5")
+    """台北自來水處：CCMS 系統 table tbody tr。
+    欄位結構（每 td 含 data-title 屬性）：
+      編號 | 標案名稱（含 <a> 連結） | 公告日期 | 開標日期 | 標案進度 | 開標結果
+    修正說明：
+      1. 選 tbody tr 避免 thead（th 無 td，舊版 select("table tr") 仍能跳過，
+         但 water.gov.taipei 目前 HTTP 403 host_not_allowed，需等 IP 解封）
+      2. 用 td[data-title="標案名稱"] 精準取標案連結，避免誤抓「開標結果」欄的 PDF 連結
+      3. 日期取 td[data-title="公告日期"]，而非 tds[-1]（最後欄是「開標結果」非日期）
+    """
+    BASE = "https://www.water.gov.taipei"
+    r = get(f"{BASE}/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5")
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tr"):
-        a = row.find("a", href=True)
+    for row in soup.select("table tbody tr"):
         tds = row.find_all("td")
-        if not a or len(tds) < 2: continue
+        if not tds:
+            continue
+        # 用 data-title 屬性建立欄位字典（CCMS 台北市 CMS 固定格式）
+        td_map = {td.get("data-title", ""): td for td in tds}
+        # 標案名稱欄（含連結）
+        title_td = td_map.get("標案名稱") or td_map.get("標題") or td_map.get("主旨")
+        if not title_td:
+            # fallback：找第一個含 <a href> 的 td
+            title_td = next((td for td in tds if td.find("a", href=True)), None)
+        if not title_td:
+            continue
+        a = title_td.find("a", href=True)
+        if not a:
+            continue
         title = a.get_text(strip=True)
-        href  = a["href"] if a["href"].startswith("http") else urljoin("https://www.water.gov.taipei", a["href"])
-        dt    = tds[-1].get_text(strip=True) if tds else ""
+        href  = a["href"]
+        if not href.startswith("http"):
+            href = urljoin(BASE, href)
+        # 公告日期（第 3 欄，data-title="公告日期"）
+        date_td = td_map.get("公告日期") or td_map.get("發布日期") or td_map.get("日期")
+        dt = date_td.get_text(strip=True) if date_td else ""
         if title and len(title) > 3:
             items.append({"title": title, "date": dt, "url": href})
     log.info(f"  [台北自來水處] {len(items)} 筆")
@@ -176,19 +201,24 @@ def parse_ntpc_finance() -> list[dict]:
 
 
 def parse_ialgo() -> list[dict]:
-    """農業部 瑠公管理處：table tr"""
-    r = get("https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010")
+    """農業部 瑠公管理處：ul.commonList li.commonList-item > a.newsItem"""
+    BASE = "https://www.ialgo.nat.gov.tw"
+    r = get(f"{BASE}/news/NewsPage3?a=10010")
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tr, .list tr, ul.news li"):
-        a = row.find("a", href=True)
-        tds = row.find_all("td")
-        if not a: continue
-        title = a.get_text(strip=True)
-        href  = a["href"] if a["href"].startswith("http") else urljoin("https://www.ialgo.nat.gov.tw", a["href"])
-        dt    = tds[-1].get_text(strip=True) if tds else ""
+    for li in soup.select("ul.commonList li.commonList-item"):
+        a = li.find("a", class_="newsItem")
+        if not a:
+            continue
+        href = a.get("href", "")
+        if href and not href.startswith("http"):
+            href = urljoin(BASE, href)
+        title_div = a.find("div", class_="newsItem__content-title")
+        title = title_div.get_text(strip=True) if title_div else a.get("title", "")
+        date_span = a.find("span", class_="newsItem__meta-item")
+        dt = date_span.get_text(strip=True) if date_span else ""
         if title and len(title) > 3:
             items.append({"title": title, "date": dt, "url": href})
     log.info(f"  [農業部 瑠公管理處] {len(items)} 筆")
