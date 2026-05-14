@@ -495,9 +495,10 @@ def _extract_months(text: str) -> list[tuple[int, int]]:
 
 
 def is_within_date_window(item: dict, window: int = 1) -> bool:
-    """若標案日期在當月 ±window 個月內則回傳 True；無法解析日期則放行。"""
+    """若標案公告日期在當月 ±window 個月內則回傳 True；無法解析日期則放行。
+    只看 date 欄位（公告日期），date 為空時才掃 title 作為備援。
+    """
     today = date.today()
-    # 建立有效 (year, month) 集合
     valid = set()
     for delta in range(-window, window + 1):
         m = today.month + delta
@@ -508,10 +509,11 @@ def is_within_date_window(item: dict, window: int = 1) -> bool:
             m -= 12; y += 1
         valid.add((y, m))
 
-    # 從 date 欄位與 title 中找日期
-    candidates = _extract_months(item.get("date", "") + " " + item.get("title", ""))
+    # 優先用 date 欄位（公告日期），有值就只用它
+    date_str = item.get("date", "").strip()
+    candidates = _extract_months(date_str) if date_str else _extract_months(item.get("title", ""))
     if not candidates:
-        return True  # 無法解析 → 不過濾
+        return True  # 無法解析 → 放行
     return any(ym in valid for ym in candidates)
 
 
