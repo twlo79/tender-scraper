@@ -1,128 +1,190 @@
-# 每日政府標案爬蟲
+# 政府標案每日爬蟲
 
-自動抓取 8 個政府網站的最新標案，每日整理成 Email 通知。
-
-## 涵蓋網站
-
-| 機關 | 網址 |
-|------|------|
-| 台北自來水處 | https://www.water.gov.taipei |
-| 國營台鐵 | https://www.railway.gov.tw |
-| 新北市政府財政局 | https://www.finance.ntpc.gov.tw |
-| 農業部 瑠公管理處 | https://www.ialgo.nat.gov.tw |
-| 郵局房地產出租 | https://www.post.gov.tw |
-| 台北市財政局 | https://dof.gov.taipei |
-| 國家住宅及都市更新中心 | https://www.hurc.org.tw |
-| 國有財產署 | https://esvc.fnp.gov.tw |
+自動抓取 8 個政府機關網站的最新標案，每日透過 **LINE** 推播近期新增公告。
 
 ---
 
-## 快速開始
+## 收錄網站
 
-### 1. 安裝相依套件
+| 機關 | 公告頁面 | 抓取方式 | 備註 |
+|------|----------|----------|------|
+| 台北自來水處 | [連結](https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5) | `table tbody tr`（CCMS 格式） | 目前此環境 IP 被 WAF 封鎖，本機執行正常 |
+| 國營台鐵 | [連結](https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1) | CSS class + regex fallback | **只抓臺北營業分處**，其餘分處略過 |
+| 新北市政府財政局 | [連結](https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316) | 靜態連結 + Claude fallback | AJAX 動態頁面，靜態無法取得時用 Claude API 解析 |
+| 農業部 瑠公管理處 | [連結](https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010) | `ul.commonList li.commonList-item` | 無 table，為 ul/li 結構 |
+| 郵局房地產出租 | [連結](https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904) | `table tr` / `ul li` | 無各別標案頁，連結統一指向來源頁 |
+| 台北市財政局 | [連結](https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00) | `table tbody tr`（CCMS 格式） | 以 `data-title` 屬性精準取欄位 |
+| 國家住宅及都市更新中心 | [連結](https://www.hurc.org.tw/hurc/procurement) | `table tr` + Claude fallback | |
+| 國有財產署 | [連結](https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c) | `ul li > span.title-message + p.form-height` | SSR 頁面，詳情 URL 含 msgId |
+
+---
+
+## 完整流程
+
+### 一、爬取流程
+
+```
+執行 scraper.py
+       │
+       ├─ 對每個來源網站發出 HTTP GET
+       │   ├─ 帶有 Windows Chrome User-Agent（模擬瀏覽器）
+       │   └─ timeout = 20 秒
+       │
+       ├─ 依各網站結構以 BeautifulSoup 解析 HTML
+       │   └─ 若精準 parser 抓到 0 筆，部分網站會 fallback 呼叫 Claude API 解析純文字
+       │
+       └─ 每筆標案輸出格式：{ title, date（公告日期）, url（詳情連結）}
+```
+
+### 二、紀錄流程（state.json）
+
+```
+每次執行
+       │
+       ├─ 啟動時：從 GitHub repo 載入 state.json
+       │           └─ 失敗時改讀本地 state.json
+       │
+       ├─ 比對：用標題（去除空白後）作為唯一 key
+       │   ├─ 已在 state 中 → 舊標案，略過
+       │   └─ 不在 state 中 → 新標案，進入篩選
+       │
+       ├─ 無論是否推播，所有新標案都存入 state
+       │   └─ 每個來源最多保留 300 筆 key（自動輪替）
+       │
+       └─ 結束時：state.json 同時寫入本地 + commit 到 GitHub
+                  （解決 VM 每次重置後資料遺失的問題）
+```
+
+### 三、篩選流程
+
+```
+新標案（不在 state 中）
+       │
+       ▼
+【地區篩選】（僅台鐵）
+  標題包含「臺北營業分處」→ ✅ 保留
+  其他分處（花蓮、高雄…） → ❌ 直接丟棄（爬取時就過濾）
+       │
+       ▼
+【日期篩選】（所有來源）
+  讀取 date 欄位（公告日期 / 釋出日）
+  解析民國曆（115年05月）或西元曆（2026-05）
+  在當月 ±1 個月內 → ✅ 加入推播清單（notify）
+  超出範圍         → ❌ 不推播（但仍存入 state 避免重複）
+  date 欄位為空    → 用 title 文字備援解析；仍無法解析 → 放行
+       │
+       ▼
+【推播】LINE Flex Message（每筆可點擊直達公告頁）
+```
+
+**日期篩選設計原因：**
+正常每日執行時，爬到的新標案公告日期就是近期的，兩層篩選都會通過。
+萬一 state.json 重置，舊標案會突然被視為「新」，但因公告日期是數月前的，日期篩選會自動擋掉，不會推播無商業價值的舊公告。
+
+---
+
+## 如何確認每天的更新與比對
+
+### 1. 執行後的終端機摘要
+
+每次執行結束後會印出：
+
+```
+============================================================
+  每日標案摘要  2026-05-14  08:00
+============================================================
+  台北自來水處          共  0筆  ✅ 無新增
+  國營台鐵              共  2筆  ✅ 無新增
+  農業部 瑠公管理處     共 14筆  🆕 新增 3 筆（推播 3 筆）
+       ▸ 瑠公管理處 115 年度第 5 批...
+  郵局房地產出租        共 83筆  ✅ 無新增
+  ...
+============================================================
+  合計新增：3 筆  推播：3 筆
+============================================================
+```
+
+- **新增 N 筆**：本次爬到且不在 state 中的標案數
+- **推播 N 筆**：通過日期篩選、實際送出 LINE 通知的標案數
+- 兩者相等表示所有新標案都是近期公告
+
+### 2. state.json 歷史記錄
+
+`state.json` 記錄每個來源已通知過的標案 key（標題），可直接查看：
+
+```bash
+cat state.json | python -m json.tool
+```
+
+或查看 GitHub repo 的 commit 歷史，每次執行後都會有一筆 `chore: update state.json YYYY-MM-DD` 的 commit，可追溯每天新增了哪些標案。
+
+### 3. LINE 推播內容
+
+收到的 LINE 訊息包含：
+- 摘要文字：各來源的近期新增筆數
+- 各機關的 Flex Message 卡片：列出每筆標案標題與公告日期，**點擊可直達原始公告頁**
+
+---
+
+## 安裝與執行
+
+### 相依套件
 
 ```bash
 pip install requests beautifulsoup4 lxml
 ```
 
-### 2. 設定 Email（Gmail）
+### 環境變數
 
-需要開啟 Gmail **兩步驟驗證** 並產生 **應用程式密碼**：
-1. Google 帳戶 → 安全性 → 兩步驟驗證（開啟）
-2. Google 帳戶 → 安全性 → 應用程式密碼 → 產生（選「郵件」）
-3. 複製產生的 16 碼密碼
+| 變數名稱 | 必填 | 說明 |
+|----------|------|------|
+| `LINE_CHANNEL_TOKEN` | ✅ | LINE Channel Access Token |
+| `LINE_USER_ID` | ✅ | 推播目標 User ID（U 開頭） |
+| `GITHUB_TOKEN` | 建議 | Personal Access Token，用於持久化 state.json |
+| `GITHUB_REPO` | 建議 | 格式 `owner/repo`，例如 `yourname/tender-scraper` |
+| `ANTHROPIC_API_KEY` | 選填 | Claude API 金鑰，供新北財政局 / 住都中心備援解析 |
+| `STATE_FILE` | 選填 | 本地 state.json 路徑（預設 `state.json`） |
 
-```bash
-export EMAIL_FROM="你的Gmail@gmail.com"
-export EMAIL_TO="收件者@gmail.com"
-export EMAIL_PASSWORD="xxxx xxxx xxxx xxxx"   # 16 碼應用程式密碼
-```
-
-### 3. 執行一次測試
+### 執行
 
 ```bash
 python scraper.py
 ```
 
-首次執行若未設定 Email，會將結果存成 `tender_preview.html` 供預覽。
+---
+
+## 自動化排程（GitHub Actions）
+
+在 `.github/workflows/daily.yml` 設定每日定時執行：
+
+```yaml
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 每天 UTC 00:00（台灣時間 08:00）
+  workflow_dispatch:        # 支援手動觸發
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests beautifulsoup4 lxml
+      - run: python scraper.py
+        env:
+          LINE_CHANNEL_TOKEN: ${{ secrets.LINE_CHANNEL_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+> Secrets 在 GitHub repo → Settings → Secrets and variables → Actions 中設定。
 
 ---
 
-## 自動化方式（三種選擇）
+## 免責聲明
 
-### 方式 A：Claude Code Routine（推薦，不需電腦開著）
-
-1. 前往 https://claude.ai/code/routines → **New routine**
-2. **Instructions（Prompt）** 填入：
-
-```
-請執行以下步驟：
-1. 執行 scraper.py：python scraper.py
-2. 確認執行成功並顯示各網站抓取結果
-```
-
-3. **Environment** → Network Access 改為 **Custom**，加入以下網域：
-```
-water.gov.taipei
-www.railway.gov.tw
-www.finance.ntpc.gov.tw
-www.ialgo.nat.gov.tw
-www.post.gov.tw
-dof.gov.taipei
-www.hurc.org.tw
-esvc.fnp.gov.tw
-smtp.gmail.com
-```
-
-4. **Environment Variables** 新增：
-   - `EMAIL_FROM` = 你的Gmail
-   - `EMAIL_TO` = 收件者Email
-   - `EMAIL_PASSWORD` = 應用程式密碼
-
-5. **Trigger** → Schedule → 每天（例如早上 8 點）
-
-6. 點 **Create** 完成！
-
----
-
-### 方式 B：Claude Cowork Desktop（需電腦開著）
-
-1. 開啟 Claude Desktop → 切換到 **Cowork**
-2. 新增任務，描述：
-   > 「每天早上 8 點，請執行 scraper.py 並確認 Email 寄出成功」
-3. 在任務中輸入 `/schedule` 設定排程
-
----
-
-### 方式 C：本機 cron（最輕量）
-
-```bash
-# 編輯 crontab
-crontab -e
-
-# 加入這行（每天早上 8:00 執行）
-0 8 * * * EMAIL_FROM="你的gmail" EMAIL_TO="收件者" EMAIL_PASSWORD="密碼" /usr/bin/python3 /path/to/scraper.py >> /tmp/tender.log 2>&1
-```
-
----
-
-## Email 預覽樣式
-
-寄出的 Email 包含：
-- 每個機關的最新標案清單（最多 10 筆）
-- 標案標題（可點擊連結）
-- 日期資訊
-- 整齊的 HTML 排版
-
----
-
-## 常見問題
-
-**Q：某個網站抓不到資料？**
-A：政府網站結構常更新，可能需要調整對應的 `scrape_*` 函式中的 CSS selector。
-
-**Q：Gmail 登入失敗？**
-A：確認使用的是「應用程式密碼」（16 碼），不是 Gmail 登入密碼。
-
-**Q：想加入其他網站？**
-A：複製任一 `scrape_*` 函式，修改 URL 和 CSS selector，再加入 `SOURCES` 清單即可。
+本工具由自動爬蟲產生，資料僅供參考，請以各機關官方公告為準。
