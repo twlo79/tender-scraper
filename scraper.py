@@ -90,19 +90,44 @@ def post_json(url, payload, extra_headers=None) -> dict | None:
 # ── 各網站精準 Parser ─────────────────────────────────────────────────────────
 
 def parse_taipei_water() -> list[dict]:
-    """台北自來水處：table tr，連結指向政府採購網"""
-    r = get("https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5")
+    """台北自來水處：CCMS 系統 table tbody tr。
+    欄位結構（每 td 含 data-title 屬性）：
+      編號 | 標案名稱（含 <a> 連結） | 公告日期 | 開標日期 | 標案進度 | 開標結果
+    修正說明：
+      1. 選 tbody tr 避免 thead（th 無 td，舊版 select("table tr") 仍能跳過，
+         但 water.gov.taipei 目前 HTTP 403 host_not_allowed，需等 IP 解封）
+      2. 用 td[data-title="標案名稱"] 精準取標案連結，避免誤抓「開標結果」欄的 PDF 連結
+      3. 日期取 td[data-title="公告日期"]，而非 tds[-1]（最後欄是「開標結果」非日期）
+    """
+    BASE = "https://www.water.gov.taipei"
+    r = get(f"{BASE}/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5")
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tr"):
-        a = row.find("a", href=True)
+    for row in soup.select("table tbody tr"):
         tds = row.find_all("td")
-        if not a or len(tds) < 2: continue
+        if not tds:
+            continue
+        # 用 data-title 屬性建立欄位字典（CCMS 台北市 CMS 固定格式）
+        td_map = {td.get("data-title", ""): td for td in tds}
+        # 標案名稱欄（含連結）
+        title_td = td_map.get("標案名稱") or td_map.get("標題") or td_map.get("主旨")
+        if not title_td:
+            # fallback：找第一個含 <a href> 的 td
+            title_td = next((td for td in tds if td.find("a", href=True)), None)
+        if not title_td:
+            continue
+        a = title_td.find("a", href=True)
+        if not a:
+            continue
         title = a.get_text(strip=True)
-        href  = a["href"] if a["href"].startswith("http") else urljoin("https://www.water.gov.taipei", a["href"])
-        dt    = tds[-1].get_text(strip=True) if tds else ""
+        href  = a["href"]
+        if not href.startswith("http"):
+            href = urljoin(BASE, href)
+        # 公告日期（第 3 欄，data-title="公告日期"）
+        date_td = td_map.get("公告日期") or td_map.get("發布日期") or td_map.get("日期")
+        dt = date_td.get_text(strip=True) if date_td else ""
         if title and len(title) > 3:
             items.append({"title": title, "date": dt, "url": href})
     log.info(f"  [台北自來水處] {len(items)} 筆")
@@ -136,7 +161,9 @@ def parse_tra() -> list[dict]:
                 "date":  m.group(2).strip(),
                 "url":   "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
             })
-    log.info(f"  [國營台鐵] {len(items)} 筆")
+    # 只保留臺北營業分處的標案
+    items = [i for i in items if "臺北營業分處" in i.get("title", "")]
+    log.info(f"  [國營台鐵] {len(items)} 筆（僅臺北營業分處）")
     return items
 
 
@@ -174,19 +201,24 @@ def parse_ntpc_finance() -> list[dict]:
 
 
 def parse_ialgo() -> list[dict]:
-    """農業部 瑠公管理處：table tr"""
-    r = get("https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010")
+    """農業部 瑠公管理處：ul.commonList li.commonList-item > a.newsItem"""
+    BASE = "https://www.ialgo.nat.gov.tw"
+    r = get(f"{BASE}/news/NewsPage3?a=10010")
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tr, .list tr, ul.news li"):
-        a = row.find("a", href=True)
-        tds = row.find_all("td")
-        if not a: continue
-        title = a.get_text(strip=True)
-        href  = a["href"] if a["href"].startswith("http") else urljoin("https://www.ialgo.nat.gov.tw", a["href"])
-        dt    = tds[-1].get_text(strip=True) if tds else ""
+    for li in soup.select("ul.commonList li.commonList-item"):
+        a = li.find("a", class_="newsItem")
+        if not a:
+            continue
+        href = a.get("href", "")
+        if href and not href.startswith("http"):
+            href = urljoin(BASE, href)
+        title_div = a.find("div", class_="newsItem__content-title")
+        title = title_div.get_text(strip=True) if title_div else a.get("title", "")
+        date_span = a.find("span", class_="newsItem__meta-item")
+        dt = date_span.get_text(strip=True) if date_span else ""
         if title and len(title) > 3:
             items.append({"title": title, "date": dt, "url": href})
     log.info(f"  [農業部 瑠公管理處] {len(items)} 筆")
@@ -261,28 +293,75 @@ def parse_hurc() -> list[dict]:
 
 
 def parse_fnp() -> list[dict]:
-    """國有財產署：table tr，key = 單位+年度+批號"""
-    r = get("https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c")
-    if not r: return []
+    """國有財產署：SSR 頁面，ul > li > span.title-message + p.form-height 結構。
+    詳情 URL：https://esvc.fnp.gov.tw/rtMsg/showInfomation?msgId={msgId}
+    fallback：table tr（相容未來改版）
+    """
+    BASE_URL   = "https://esvc.fnp.gov.tw"
+    SVC_ID     = "5eafac8df8c649ba9cf62a591e44223c"
+    SOURCE_URL = f"{BASE_URL}/rtMsg?svcId={SVC_ID}"
+    DETAIL_URL = f"{BASE_URL}/rtMsg/showInfomation"
+
+    r = get(SOURCE_URL)
+    if not r:
+        return []
+
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    SOURCE_URL = "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c"
-    for row in soup.select("table tr"):
-        tds = row.find_all("td")
-        if len(tds) < 4: continue
-        unit    = tds[0].get_text(strip=True)
-        year    = tds[1].get_text(strip=True)
-        batch   = tds[2].get_text(strip=True)
-        pub_dt  = tds[3].get_text(strip=True)
-        open_dt = tds[4].get_text(strip=True) if len(tds) > 4 else ""
-        if not unit or unit == "單位": continue
+
+    # ── 主要策略：ul > li，每個 li 為一筆標案 ──────────────────────────
+    for li in soup.select("ul li"):
+        labels = [s.get_text(strip=True) for s in li.select("span.title-message")]
+        values = [p.get_text(strip=True) for p in li.select("p.form-height")]
+        if not labels or not values:
+            continue
+        fields = dict(zip(labels, values))
+
+        unit    = fields.get("單位", "")
+        year    = fields.get("年度", "")
+        batch   = fields.get("批號", "")
+        pub_dt  = fields.get("公告日期", "")
+        open_dt = fields.get("開標日期", "")
+        if not unit or unit in ("單位", "機關單位"):
+            continue
+
+        # msgId：從 li 屬性或內部連結取得
+        msg_id = (li.get("data-msgid") or li.get("data-msg-id")
+                  or li.get("data-id") or "")
+        a = li.find("a", href=True)
+        if a:
+            href = a["href"]
+            if not href.startswith("http"):
+                href = urljoin(BASE_URL, href)
+            m = re.search(r"msgId=([a-f0-9A-F]+)", href)
+            if m:
+                msg_id = m.group(1)
+        href = f"{DETAIL_URL}?msgId={msg_id}" if msg_id else SOURCE_URL
+
         title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
-        a = row.find("a", href=True)
-        href = a["href"] if a else SOURCE_URL
-        if href and not href.startswith("http"):
-            href = urljoin("https://esvc.fnp.gov.tw", href)
-        items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL})
+        items.append({"title": title, "date": pub_dt, "url": href})
+
+    # ── fallback：table tr ───────────────────────────────────────────────
+    if not items:
+        for row in soup.select("table tbody tr, table tr"):
+            tds = row.find_all("td")
+            if len(tds) < 4:
+                continue
+            unit    = tds[0].get_text(strip=True)
+            year    = tds[1].get_text(strip=True)
+            batch   = tds[2].get_text(strip=True)
+            pub_dt  = tds[3].get_text(strip=True)
+            open_dt = tds[4].get_text(strip=True) if len(tds) > 4 else ""
+            if not unit or unit in ("單位", "機關單位"):
+                continue
+            title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
+            a = row.find("a", href=True)
+            href = a["href"] if a else SOURCE_URL
+            if href and not href.startswith("http"):
+                href = urljoin(BASE_URL, href)
+            items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL})
+
     log.info(f"  [國有財產署] {len(items)} 筆")
     return items
 
@@ -403,6 +482,41 @@ def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
     return new
 
 
+def _extract_months(text: str) -> list[tuple[int, int]]:
+    """從字串中擷取所有 (year, month) 組合，支援民國／西元曆。"""
+    found = []
+    # 西元：2026-05、2026/05、2026年05
+    for m in re.finditer(r"(20\d{2})[/-年](\d{1,2})[/-月日]?", text):
+        found.append((int(m.group(1)), int(m.group(2))))
+    # 民國：115-05、115/05、115年05
+    for m in re.finditer(r"\b(1\d{2})[/-年](\d{1,2})[/-月日]?", text):
+        found.append((int(m.group(1)) + 1911, int(m.group(2))))
+    return found
+
+
+def is_within_date_window(item: dict, window: int = 1) -> bool:
+    """若標案公告日期在當月 ±window 個月內則回傳 True；無法解析日期則放行。
+    只看 date 欄位（公告日期），date 為空時才掃 title 作為備援。
+    """
+    today = date.today()
+    valid = set()
+    for delta in range(-window, window + 1):
+        m = today.month + delta
+        y = today.year
+        if m < 1:
+            m += 12; y -= 1
+        elif m > 12:
+            m -= 12; y += 1
+        valid.add((y, m))
+
+    # 優先用 date 欄位（公告日期），有值就只用它
+    date_str = item.get("date", "").strip()
+    candidates = _extract_months(date_str) if date_str else _extract_months(item.get("title", ""))
+    if not candidates:
+        return True  # 無法解析 → 放行
+    return any(ym in valid for ym in candidates)
+
+
 # ── LINE 推播 ─────────────────────────────────────────────────────────────────
 
 def _push(messages: list[dict]):
@@ -427,24 +541,25 @@ def push_in_batches(messages: list[dict]):
 
 
 def build_line_messages(results: dict, run_time: str) -> list[dict]:
-    today     = date.today().strftime("%Y/%m/%d")
-    total_new = sum(len(v["new"]) for v in results.values())
-    messages  = []
+    today        = date.today().strftime("%Y/%m/%d")
+    total_notify = sum(len(v.get("notify", [])) for v in results.values())
+    messages     = []
 
-    # 摘要文字
-    lines = [f"📋 政府標案通知 {today}", f"共新增 {total_new} 筆\n"]
+    # 摘要文字（只統計推播筆數）
+    lines = [f"📋 政府標案通知 {today}", f"近期新增 {total_notify} 筆\n"]
     for src in SOURCES:
-        name = src["name"]
-        new  = len(results.get(name, {}).get("new", []))
-        err  = results.get(name, {}).get("error")
-        icon = "⚠️" if err else ("🆕" if new else "✅")
-        lines.append(f"{icon} {name}：{'抓取失敗' if err else (f'{new} 筆新增' if new else '無新增')}")
+        name   = src["name"]
+        notify = len(results.get(name, {}).get("notify", []))
+        err    = results.get(name, {}).get("error")
+        icon   = "⚠️" if err else ("🆕" if notify else "✅")
+        lines.append(f"{icon} {name}：{'抓取失敗' if err else (f'{notify} 筆' if notify else '無近期新增')}")
+    lines.append("\n⚠️ 免責聲明：本通知由自動爬蟲產生，資料僅供參考，請以各機關官方公告為準。")
     messages.append({"type": "text", "text": "\n".join(lines)})
 
-    # 各機關 Flex Message
+    # 各機關 Flex Message（只顯示通過日期篩選的標案）
     for src in SOURCES:
         name      = src["name"]
-        new_items = results.get(name, {}).get("new", [])
+        new_items = results.get(name, {}).get("notify", [])
         if not new_items: continue
 
         body_contents = []
@@ -453,9 +568,12 @@ def build_line_messages(results: dict, run_time: str) -> list[dict]:
             dt    = item.get("date", "")
             url   = item.get("url", src["url"])
 
-            title_obj = {"type": "text", "text": title, "size": "sm", "color": "#1d4ed8", "wrap": True,
-                         "action": {"type": "uri", "uri": url}}
-            row = {"type": "box", "layout": "vertical", "margin": "md", "contents": [title_obj]}
+            title_obj = {"type": "text", "text": f"🔗 {title}", "size": "sm", "color": "#1d4ed8", "wrap": True}
+            row = {
+                "type": "box", "layout": "vertical", "margin": "md",
+                "action": {"type": "uri", "uri": url},
+                "contents": [title_obj],
+            }
             if dt:
                 row["contents"].append({"type": "text", "text": f"📅 {dt}", "size": "xs", "color": "#9ca3af", "margin": "xs"})
             body_contents.append(row)
@@ -473,7 +591,7 @@ def build_line_messages(results: dict, run_time: str) -> list[dict]:
                     "type": "box", "layout": "vertical", "backgroundColor": "#1d4ed8", "paddingAll": "16px",
                     "contents": [
                         {"type": "text", "text": name, "color": "#ffffff", "weight": "bold", "size": "md"},
-                        {"type": "text", "text": f"新增 {len(new_items)} 筆", "color": "#bfdbfe", "size": "sm", "margin": "xs"},
+                        {"type": "text", "text": f"近期新增 {len(new_items)} 筆", "color": "#bfdbfe", "size": "sm", "margin": "xs"},
                     ],
                 },
                 "body": {"type": "box", "layout": "vertical", "paddingAll": "16px", "contents": body_contents},
@@ -501,35 +619,43 @@ def main():
         name = src["name"]
         log.info(f"抓取：{name}")
         try:
-            items     = src["fn"]()
-            new_items = find_new_items(name, items, state)
-            results[name] = {"all": items, "new": new_items, "error": None}
-            log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆")
+            items        = src["fn"]()
+            new_items    = find_new_items(name, items, state)
+            notify_items = [i for i in new_items if is_within_date_window(i)]
+            results[name] = {"all": items, "new": new_items, "notify": notify_items, "error": None}
+            log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆，推播 {len(notify_items)} 筆")
         except Exception as e:
             log.error(f"  → 例外：{e}")
-            results[name] = {"all": [], "new": [], "error": str(e)}
+            results[name] = {"all": [], "new": [], "notify": [], "error": str(e)}
 
     save_state(state)
 
     # 摘要
-    total_new = sum(len(v["new"]) for v in results.values())
+    total_new    = sum(len(v["new"])    for v in results.values())
+    total_notify = sum(len(v["notify"]) for v in results.values())
     print(f"\n{'='*60}")
     print(f"  每日標案摘要  {date.today()}  {run_time}")
     print(f"{'='*60}")
     for src in SOURCES:
-        name = src["name"]
-        d    = results[name]
-        new  = len(d["new"])
-        err  = d["error"]
-        status = f"⚠️ {err}" if err else (f"🆕 新增 {new} 筆" if new else "✅ 無新增")
+        name   = src["name"]
+        d      = results[name]
+        new    = len(d["new"])
+        notify = len(d["notify"])
+        err    = d["error"]
+        if err:
+            status = f"⚠️ {err}"
+        elif new:
+            status = f"🆕 新增 {new} 筆（推播 {notify} 筆）"
+        else:
+            status = "✅ 無新增"
         print(f"  {name:22s}  共{len(d['all']):3d}筆  {status}")
-        for item in d["new"][:3]:
+        for item in d["notify"][:3]:
             print(f"       ▸ {item.get('title','')[:55]}")
     print(f"{'='*60}")
-    print(f"  合計新增：{total_new} 筆")
+    print(f"  合計新增：{total_new} 筆  推播：{total_notify} 筆")
     print(f"{'='*60}\n")
 
-    # LINE 推播
+    # LINE 推播（只發近期標案）
     messages = build_line_messages(results, run_time)
     if messages:
         push_in_batches(messages)
