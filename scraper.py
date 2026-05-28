@@ -37,7 +37,7 @@ import re
 import subprocess
 import sys
 from base64 import b64decode, b64encode
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urljoin, urlencode
 
@@ -366,6 +366,123 @@ def parse_fnp() -> list[dict]:
     return items
 
 
+def parse_pcc() -> list[dict]:
+    """政府採購網：readTenderBasic 搜尋頁，滾動 7 天視窗，只保留採購性質=勞務類。
+    欄位順序（依截圖）：
+      項次 | 機關名稱 | 標案案號↩標案名稱 | 傳輸次數 | 招標方式 |
+      採購性質 | 公告日期 | 截止投標 | 預算金額 | 功能選項(檢視)
+    """
+    from bs4 import BeautifulSoup
+
+    today    = date.today()
+    start_dt = (today - timedelta(days=7)).strftime("%Y/%m/%d")
+    end_dt   = today.strftime("%Y/%m/%d")
+
+    BASE = "https://web.pcc.gov.tw"
+    url = (
+        f"{BASE}/prkms/tender/common/basic/readTenderBasic"
+        f"?firstSearch=true&searchType=basic&isBinding=N&isLogIn=N"
+        f"&orgName=&orgId=&tenderName=&tenderId="
+        f"&tenderType=TENDER_DECLARATION"
+        f"&tenderWay=TENDER_WAY_ALL_DECLARATION"
+        f"&dateType=isNow"
+        f"&tenderStartDate={start_dt.replace('/', '%2F')}"
+        f"&tenderEndDate={end_dt.replace('/', '%2F')}"
+        f"&radProctrgCate=&policyAdvocacy="
+    )
+
+    r = get(url)
+    if r is None:
+        return []
+    if r.status_code == 403:
+        log.warning("  [政府採購網] HTTP 403 — IP 被封鎖（Host not in allowlist），"
+                    "請改在台灣 IP 環境執行（本機或台灣 VPS）")
+        return []
+
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+
+    # 找含有「採購性質」或「標案名稱」的 table
+    target_table = None
+    for tbl in soup.find_all("table"):
+        txt = tbl.get_text()
+        if "採購性質" in txt or "標案名稱" in txt:
+            target_table = tbl
+            break
+
+    if target_table:
+        # 從表頭自動偵測欄位位置
+        hrow = target_table.find("tr")
+        ths  = hrow.find_all(["th", "td"]) if hrow else []
+        hdrs = [c.get_text(strip=True) for c in ths]
+
+        def find_col(keywords: list[str], default: int) -> int:
+            for kw in keywords:
+                for i, h in enumerate(hdrs):
+                    if kw in h:
+                        return i
+            return default
+
+        name_col = find_col(["標案名稱", "案名"], 2)
+        type_col = find_col(["採購性質", "性質"], 5)
+        date_col = find_col(["公告日期", "公告日"], 6)
+        opt_col  = find_col(["功能選項", "功能"], len(hdrs) - 1 if hdrs else -1)
+
+        for row in target_table.select("tbody tr"):
+            tds = row.find_all("td")
+            if len(tds) < 4:
+                continue
+
+            # ── 篩選：採購性質必須含「勞務」 ──────────────────────────
+            if type_col < len(tds) and "勞務" not in tds[type_col].get_text(strip=True):
+                continue
+
+            # ── 標案名稱 + 檢視 URL ────────────────────────────────────
+            title    = ""
+            view_url = url
+            if name_col < len(tds):
+                name_td = tds[name_col]
+                a = name_td.find("a", href=True)
+                if a:
+                    title = a.get_text(strip=True)
+                    href  = a["href"]
+                    view_url = href if href.startswith("http") else urljoin(BASE, href)
+                else:
+                    lines = list(name_td.stripped_strings)
+                    # 第一行通常是案號（短），第二行是案名（長）
+                    title = max(lines, key=len) if lines else ""
+
+            # ── 公告日期 ────────────────────────────────────────────────
+            date_str = tds[date_col].get_text(strip=True) if date_col < len(tds) else ""
+
+            # ── 功能選項：取「檢視」連結 ────────────────────────────────
+            if 0 <= opt_col < len(tds):
+                opt_td = tds[opt_col]
+                # href 形式
+                opt_a = opt_td.find("a", href=True)
+                if opt_a:
+                    href = opt_a["href"]
+                    view_url = href if href.startswith("http") else urljoin(BASE, href)
+                else:
+                    # onclick="readTender('pkPmsMain')" 形式
+                    btn = opt_td.find(onclick=True)
+                    if btn:
+                        m = re.search(r"['\"]([a-fA-F0-9]{16,})['\"]", btn["onclick"])
+                        if m:
+                            view_url = f"{BASE}/prkms/tender/common/basic/readTenderBasic?pkPmsMain={m.group(1)}"
+
+            if title and len(title) > 3:
+                items.append({"title": title, "date": date_str, "url": view_url})
+
+    # Claude fallback（HTML 無法解析時）
+    if not items and CONFIG["api_key"]:
+        raw   = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
+        items = [i for i in raw if "勞務" in i.get("title", "")]
+
+    log.info(f"  [政府採購網] {len(items)} 筆（勞務類）")
+    return items
+
+
 # ── Claude 備用解析（當精準 parser 失敗時）──────────────────────────────────
 
 PARSE_PROMPT = """你是政府標案資料擷取助手。
@@ -409,6 +526,7 @@ SOURCES = [
     {"name": "台北市財政局",          "url": "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",      "fn": parse_taipei_dof},
     {"name": "國家住宅及都市更新中心","url": "https://www.hurc.org.tw/hurc/procurement",                                      "fn": parse_hurc},
     {"name": "國有財產署",            "url": "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",         "fn": parse_fnp},
+    {"name": "政府採購網",            "url": "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",               "fn": parse_pcc},
 ]
 
 
