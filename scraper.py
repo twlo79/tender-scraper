@@ -402,6 +402,13 @@ def parse_pcc() -> list[dict]:
         log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行，跳過")
         return []
 
+    # Make 用 base64() 編碼後存入 Gist，先嘗試 decode
+    try:
+        import base64 as _b64
+        html = _b64.b64decode(html).decode("utf-8")
+    except Exception:
+        pass  # 非 base64（舊格式或直接 HTML），直接使用
+
     soup  = BeautifulSoup(html, "lxml")
     items = []
 
