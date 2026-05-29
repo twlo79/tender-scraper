@@ -367,39 +367,42 @@ def parse_fnp() -> list[dict]:
 
 
 def parse_pcc() -> list[dict]:
-    """政府採購網：readTenderBasic 搜尋頁，滾動 7 天視窗，只保留採購性質=勞務類。
+    """政府採購網：從 Make 每日更新的 GitHub Gist 讀取 HTML，只保留採購性質=勞務類。
+    Gist 由 Make 定期 PATCH 更新，無 IP 封鎖問題。
     欄位順序（依截圖）：
       項次 | 機關名稱 | 標案案號↩標案名稱 | 傳輸次數 | 招標方式 |
       採購性質 | 公告日期 | 截止投標 | 預算金額 | 功能選項(檢視)
     """
     from bs4 import BeautifulSoup
 
-    today    = date.today()
-    start_dt = (today - timedelta(days=7)).strftime("%Y/%m/%d")
-    end_dt   = today.strftime("%Y/%m/%d")
-
-    BASE = "https://web.pcc.gov.tw"
-    url = (
+    BASE     = "https://web.pcc.gov.tw"
+    GIST_ID    = "816c04d08f02cd2e6e7623f5f5450f8a"
+    GIST_FILE  = "pcc.html"
+    GIST_API   = f"https://api.github.com/gists/{GIST_ID}"
+    SOURCE_URL = (
         f"{BASE}/prkms/tender/common/basic/readTenderBasic"
         f"?firstSearch=true&searchType=basic&isBinding=N&isLogIn=N"
-        f"&orgName=&orgId=&tenderName=&tenderId="
-        f"&tenderType=TENDER_DECLARATION"
-        f"&tenderWay=TENDER_WAY_ALL_DECLARATION"
-        f"&dateType=isNow"
-        f"&tenderStartDate={start_dt.replace('/', '%2F')}"
-        f"&tenderEndDate={end_dt.replace('/', '%2F')}"
-        f"&radProctrgCate=&policyAdvocacy="
+        f"&tenderType=TENDER_DECLARATION&tenderWay=TENDER_WAY_ALL_DECLARATION&dateType=isNow"
     )
 
-    r = get(url)
-    if r is None:
-        return []
-    if r.status_code == 403:
-        log.warning("  [政府採購網] HTTP 403 — IP 被封鎖（Host not in allowlist），"
-                    "請改在台灣 IP 環境執行（本機或台灣 VPS）")
+    gh_headers = {"Accept": "application/vnd.github+json"}
+    if CONFIG["gh_token"]:
+        gh_headers["Authorization"] = f"Bearer {CONFIG['gh_token']}"
+
+    try:
+        resp = requests.get(GIST_API, headers=gh_headers, timeout=15)
+        gist_json = resp.json()
+        html = gist_json.get("files", {}).get(GIST_FILE, {}).get("content", "")
+    except Exception as e:
+        log.warning(f"  [政府採購網] Gist API 讀取失敗：{e}")
         return []
 
-    soup  = BeautifulSoup(r.text, "lxml")
+    html = html.strip()
+    if not html or html == "<!-- placeholder -->":
+        log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行，跳過")
+        return []
+
+    soup  = BeautifulSoup(html, "lxml")
     items = []
 
     # 找含有「採購性質」或「標案名稱」的 table
@@ -439,7 +442,7 @@ def parse_pcc() -> list[dict]:
 
             # ── 標案名稱 + 檢視 URL ────────────────────────────────────
             title    = ""
-            view_url = url
+            view_url = SOURCE_URL
             if name_col < len(tds):
                 name_td = tds[name_col]
                 a = name_td.find("a", href=True)
