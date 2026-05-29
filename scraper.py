@@ -412,74 +412,45 @@ def parse_pcc() -> list[dict]:
     soup  = BeautifulSoup(html, "lxml")
     items = []
 
-    # 找含有「採購性質」或「標案名稱」的 table
+    # 結果 table：header 含「項次」且「功能選項」（與表單 table 區分）
     target_table = None
     for tbl in soup.find_all("table"):
-        txt = tbl.get_text()
-        if "採購性質" in txt or "標案名稱" in txt:
+        hdr = tbl.find("tr")
+        if hdr and "項次" in hdr.get_text() and "功能選項" in hdr.get_text():
             target_table = tbl
             break
 
     if target_table:
-        # 從表頭自動偵測欄位位置
-        hrow = target_table.find("tr")
-        ths  = hrow.find_all(["th", "td"]) if hrow else []
-        hdrs = [c.get_text(strip=True) for c in ths]
-
-        def find_col(keywords: list[str], default: int) -> int:
-            for kw in keywords:
-                for i, h in enumerate(hdrs):
-                    if kw in h:
-                        return i
-            return default
-
-        name_col = find_col(["標案名稱", "案名"], 2)
-        type_col = find_col(["採購性質", "性質"], 5)
-        date_col = find_col(["公告日期", "公告日"], 6)
-        opt_col  = find_col(["功能選項", "功能"], len(hdrs) - 1 if hdrs else -1)
-
-        for row in target_table.select("tbody tr"):
+        # 欄位固定：[0]項次 [1]機關 [2]案號+案名 [3]傳輸次數
+        # [4]招標方式 [5]採購性質 [6]公告日期 [7]截止投標 [8]預算 [9]功能選項
+        for row in target_table.find_all("tr")[1:]:
             tds = row.find_all("td")
-            if len(tds) < 4:
+            if len(tds) < 9:
                 continue
 
-            # ── 篩選：採購性質必須含「勞務」 ──────────────────────────
-            if type_col < len(tds) and "勞務" not in tds[type_col].get_text(strip=True):
+            # ── 採購性質篩選（POST 已篩過，保險再確認）─────────────────
+            if "勞務" not in tds[5].get_text(strip=True):
                 continue
 
-            # ── 標案名稱 + 檢視 URL ────────────────────────────────────
-            title    = ""
+            # ── 標案名稱：從 JS pageCode2Img("案名") 取出 ─────────────
+            name_td  = tds[2]
+            td_html  = str(name_td)
+            m_title  = re.search(r'pageCode2Img\("([^"]+)"\)', td_html)
+            title    = m_title.group(1) if m_title else ""
+            # fallback：stripped_strings 最長一行
+            if not title:
+                lines = list(name_td.stripped_strings)
+                title = max(lines, key=len) if lines else ""
+
+            # ── 檢視連結（td[9] 或 td[2] 的 <a>）──────────────────────
             view_url = SOURCE_URL
-            if name_col < len(tds):
-                name_td = tds[name_col]
-                a = name_td.find("a", href=True)
-                if a:
-                    title = a.get_text(strip=True)
-                    href  = a["href"]
-                    view_url = href if href.startswith("http") else urljoin(BASE, href)
-                else:
-                    lines = list(name_td.stripped_strings)
-                    # 第一行通常是案號（短），第二行是案名（長）
-                    title = max(lines, key=len) if lines else ""
+            view_a   = tds[9].find("a", href=True) or tds[2].find("a", href=True)
+            if view_a:
+                href = view_a["href"]
+                view_url = href if href.startswith("http") else urljoin(BASE, href)
 
             # ── 公告日期 ────────────────────────────────────────────────
-            date_str = tds[date_col].get_text(strip=True) if date_col < len(tds) else ""
-
-            # ── 功能選項：取「檢視」連結 ────────────────────────────────
-            if 0 <= opt_col < len(tds):
-                opt_td = tds[opt_col]
-                # href 形式
-                opt_a = opt_td.find("a", href=True)
-                if opt_a:
-                    href = opt_a["href"]
-                    view_url = href if href.startswith("http") else urljoin(BASE, href)
-                else:
-                    # onclick="readTender('pkPmsMain')" 形式
-                    btn = opt_td.find(onclick=True)
-                    if btn:
-                        m = re.search(r"['\"]([a-fA-F0-9]{16,})['\"]", btn["onclick"])
-                        if m:
-                            view_url = f"{BASE}/prkms/tender/common/basic/readTenderBasic?pkPmsMain={m.group(1)}"
+            date_str = tds[6].get_text(strip=True)
 
             if title and len(title) > 3:
                 items.append({"title": title, "date": date_str, "url": view_url})
