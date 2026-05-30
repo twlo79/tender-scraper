@@ -37,7 +37,7 @@ import re
 import subprocess
 import sys
 from base64 import b64decode, b64encode
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urljoin, urlencode
 
@@ -366,6 +366,104 @@ def parse_fnp() -> list[dict]:
     return items
 
 
+def parse_pcc() -> list[dict]:
+    """政府採購網：從 Make 每日更新的 GitHub Gist 讀取 HTML，只保留採購性質=勞務類。
+    Gist 由 Make 定期 PATCH 更新，無 IP 封鎖問題。
+    欄位順序（依截圖）：
+      項次 | 機關名稱 | 標案案號↩標案名稱 | 傳輸次數 | 招標方式 |
+      採購性質 | 公告日期 | 截止投標 | 預算金額 | 功能選項(檢視)
+    """
+    from bs4 import BeautifulSoup
+
+    BASE     = "https://web.pcc.gov.tw"
+    GIST_ID    = "816c04d08f02cd2e6e7623f5f5450f8a"
+    GIST_FILE  = "pcc.html"
+    GIST_API   = f"https://api.github.com/gists/{GIST_ID}"
+    SOURCE_URL = (
+        f"{BASE}/prkms/tender/common/basic/readTenderBasic"
+        f"?firstSearch=true&searchType=basic&isBinding=N&isLogIn=N"
+        f"&tenderType=TENDER_DECLARATION&tenderWay=TENDER_WAY_ALL_DECLARATION&dateType=isNow"
+    )
+
+    gh_headers = {"Accept": "application/vnd.github+json"}
+    if CONFIG["gh_token"]:
+        gh_headers["Authorization"] = f"Bearer {CONFIG['gh_token']}"
+
+    try:
+        resp = requests.get(GIST_API, headers=gh_headers, timeout=15)
+        gist_json = resp.json()
+        html = gist_json.get("files", {}).get(GIST_FILE, {}).get("content", "")
+    except Exception as e:
+        log.warning(f"  [政府採購網] Gist API 讀取失敗：{e}")
+        return []
+
+    html = html.strip()
+    if not html or html == "<!-- placeholder -->":
+        log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行，跳過")
+        return []
+
+    # Make 用 base64() 編碼後存入 Gist，先嘗試 decode
+    try:
+        import base64 as _b64
+        html = _b64.b64decode(html).decode("utf-8")
+    except Exception:
+        pass  # 非 base64（舊格式或直接 HTML），直接使用
+
+    soup  = BeautifulSoup(html, "lxml")
+    items = []
+
+    # 結果 table：header 含「項次」且「功能選項」（與表單 table 區分）
+    target_table = None
+    for tbl in soup.find_all("table"):
+        hdr = tbl.find("tr")
+        if hdr and "項次" in hdr.get_text() and "功能選項" in hdr.get_text():
+            target_table = tbl
+            break
+
+    if target_table:
+        # 欄位固定：[0]項次 [1]機關 [2]案號+案名 [3]傳輸次數
+        # [4]招標方式 [5]採購性質 [6]公告日期 [7]截止投標 [8]預算 [9]功能選項
+        for row in target_table.find_all("tr")[1:]:
+            tds = row.find_all("td")
+            if len(tds) < 9:
+                continue
+
+            # ── 採購性質篩選（POST 已篩過，保險再確認）─────────────────
+            if "勞務" not in tds[5].get_text(strip=True):
+                continue
+
+            # ── 標案名稱：從 JS pageCode2Img("案名") 取出 ─────────────
+            name_td  = tds[2]
+            td_html  = str(name_td)
+            m_title  = re.search(r'pageCode2Img\("([^"]+)"\)', td_html)
+            title    = m_title.group(1) if m_title else ""
+            # fallback：stripped_strings 最長一行
+            if not title:
+                lines = list(name_td.stripped_strings)
+                title = max(lines, key=len) if lines else ""
+
+            # ── 檢視連結（td[9] 或 td[2] 的 <a>）──────────────────────
+            view_url = SOURCE_URL
+            view_a   = tds[9].find("a", href=True) or tds[2].find("a", href=True)
+            if view_a:
+                href = view_a["href"]
+                view_url = href if href.startswith("http") else urljoin(BASE, href)
+
+            # ── 公告日期 ────────────────────────────────────────────────
+            date_str = tds[6].get_text(strip=True)
+
+            if title and len(title) > 3:
+                items.append({"title": title, "date": date_str, "url": view_url})
+
+    # Claude fallback（HTML 無法解析時）
+    if not items and CONFIG["api_key"]:
+        raw   = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
+        items = [i for i in raw if "勞務" in i.get("title", "")]
+
+    log.info(f"  [政府採購網] {len(items)} 筆（勞務類）")
+    return items
+
+
 # ── Claude 備用解析（當精準 parser 失敗時）──────────────────────────────────
 
 PARSE_PROMPT = """你是政府標案資料擷取助手。
@@ -409,6 +507,7 @@ SOURCES = [
     {"name": "台北市財政局",          "url": "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",      "fn": parse_taipei_dof},
     {"name": "國家住宅及都市更新中心","url": "https://www.hurc.org.tw/hurc/procurement",                                      "fn": parse_hurc},
     {"name": "國有財產署",            "url": "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",         "fn": parse_fnp},
+    {"name": "政府採購網",            "url": "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",               "fn": parse_pcc},
 ]
 
 
