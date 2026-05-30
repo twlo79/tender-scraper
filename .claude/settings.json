@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/user/tender-scraper/.claude/merge-to-main.sh 2>&1 || true",
+            "timeout": 60,
+            "statusMessage": "Merging session branch to main..."
+          }
+        ]
+      }
+    ]
+  }
+}
