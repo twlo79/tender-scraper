@@ -64,6 +64,18 @@ HTTP_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
+# ── 政府採購網篩選設定 ────────────────────────────────────────────────────────
+# 白名單：標題需含其中至少一個詞（空串列 = 不限制）
+PCC_WHITELIST: list[str] = [
+    "出租", "標租", "租賃", "招租",
+    "房地", "不動產", "標售", "廳舍",
+    "地上物", "閒置空間", "公有土地",
+]
+# 黑名單：標題含任一詞則排除（空串列 = 不排除）
+PCC_BLACKLIST: list[str] = []
+# 地區：標題或機關名稱需含其中至少一個詞（空串列 = 不限地區）
+PCC_REGIONS: list[str] = ["台北", "臺北", "新北"]
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
 log = logging.getLogger(__name__)
 
@@ -428,9 +440,7 @@ def parse_pcc() -> list[dict]:
             if len(tds) < 9:
                 continue
 
-            # ── 採購性質篩選（POST 已篩過，保險再確認）─────────────────
-            if "勞務" not in tds[5].get_text(strip=True):
-                continue
+            agency = tds[1].get_text(strip=True)
 
             # ── 標案名稱：從 JS pageCode2Img("案名") 取出 ─────────────
             name_td  = tds[2]
@@ -442,6 +452,22 @@ def parse_pcc() -> list[dict]:
                 lines = list(name_td.stripped_strings)
                 title = max(lines, key=len) if lines else ""
 
+            if not title or len(title) <= 3:
+                continue
+
+            # ── 地區篩選（雙北：台北市 / 新北市）─────────────────────
+            region_text = title + agency
+            if PCC_REGIONS and not any(k in region_text for k in PCC_REGIONS):
+                continue
+
+            # ── 關鍵字白名單 ────────────────────────────────────────────
+            if PCC_WHITELIST and not any(k in title for k in PCC_WHITELIST):
+                continue
+
+            # ── 關鍵字黑名單 ────────────────────────────────────────────
+            if PCC_BLACKLIST and any(k in title for k in PCC_BLACKLIST):
+                continue
+
             # ── 檢視連結（td[9] 或 td[2] 的 <a>）──────────────────────
             view_url = SOURCE_URL
             view_a   = tds[9].find("a", href=True) or tds[2].find("a", href=True)
@@ -452,15 +478,24 @@ def parse_pcc() -> list[dict]:
             # ── 公告日期 ────────────────────────────────────────────────
             date_str = tds[6].get_text(strip=True)
 
-            if title and len(title) > 3:
-                items.append({"title": title, "date": date_str, "url": view_url})
+            items.append({"title": title, "date": date_str, "url": view_url, "agency": agency})
 
     # Claude fallback（HTML 無法解析時）
     if not items and CONFIG["api_key"]:
-        raw   = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
-        items = [i for i in raw if "勞務" in i.get("title", "")]
+        raw = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
+        for item in raw:
+            t = item.get("title", "")
+            a = item.get("agency", "")
+            region_text = t + a
+            if PCC_REGIONS and not any(k in region_text for k in PCC_REGIONS):
+                continue
+            if PCC_WHITELIST and not any(k in t for k in PCC_WHITELIST):
+                continue
+            if PCC_BLACKLIST and any(k in t for k in PCC_BLACKLIST):
+                continue
+            items.append(item)
 
-    log.info(f"  [政府採購網] {len(items)} 筆（勞務類）")
+    log.info(f"  [政府採購網] {len(items)} 筆（雙北房地產相關）")
     return items
 
 
