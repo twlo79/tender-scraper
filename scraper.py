@@ -64,18 +64,6 @@ HTTP_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
-# ── 政府採購網篩選設定 ────────────────────────────────────────────────────────
-# 白名單：標題需含其中至少一個詞（空串列 = 不限制）
-PCC_WHITELIST: list[str] = [
-    "出租", "標租", "租賃", "招租",
-    "房地", "不動產", "標售", "廳舍",
-    "地上物", "閒置空間", "公有土地",
-]
-# 黑名單：標題含任一詞則排除（空串列 = 不排除）
-PCC_BLACKLIST: list[str] = []
-# 地區：標題或機關名稱需含其中至少一個詞（空串列 = 不限地區）
-PCC_REGIONS: list[str] = ["台北", "臺北", "新北"]
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
 log = logging.getLogger(__name__)
 
@@ -455,19 +443,6 @@ def parse_pcc() -> list[dict]:
             if not title or len(title) <= 3:
                 continue
 
-            # ── 地區篩選（雙北：台北市 / 新北市）─────────────────────
-            region_text = title + agency
-            if PCC_REGIONS and not any(k in region_text for k in PCC_REGIONS):
-                continue
-
-            # ── 關鍵字白名單 ────────────────────────────────────────────
-            if PCC_WHITELIST and not any(k in title for k in PCC_WHITELIST):
-                continue
-
-            # ── 關鍵字黑名單 ────────────────────────────────────────────
-            if PCC_BLACKLIST and any(k in title for k in PCC_BLACKLIST):
-                continue
-
             # ── 檢視連結（td[9] 或 td[2] 的 <a>）──────────────────────
             view_url = SOURCE_URL
             view_a   = tds[9].find("a", href=True) or tds[2].find("a", href=True)
@@ -482,20 +457,9 @@ def parse_pcc() -> list[dict]:
 
     # Claude fallback（HTML 無法解析時）
     if not items and CONFIG["api_key"]:
-        raw = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
-        for item in raw:
-            t = item.get("title", "")
-            a = item.get("agency", "")
-            region_text = t + a
-            if PCC_REGIONS and not any(k in region_text for k in PCC_REGIONS):
-                continue
-            if PCC_WHITELIST and not any(k in t for k in PCC_WHITELIST):
-                continue
-            if PCC_BLACKLIST and any(k in t for k in PCC_BLACKLIST):
-                continue
-            items.append(item)
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
 
-    log.info(f"  [政府採購網] {len(items)} 筆（雙北房地產相關）")
+    log.info(f"  [政府採購網] {len(items)} 筆")
     return items
 
 
@@ -531,19 +495,90 @@ def parse_with_claude_fallback(text: str, name: str, base: str) -> list[dict]:
         return []
 
 
-# ── 各網站設定（名稱、URL、parser 函式）─────────────────────────────────────
+# ── 各網站設定 ────────────────────────────────────────────────────────────────
+# whitelist：標題含任一詞才保留（空串列 = 不限）
+# blacklist：標題含任一詞則丟棄（空串列 = 不排除）
+# regions  ：標題或機關名稱含任一詞才保留（空串列 = 不限地區）
 
 SOURCES = [
-    {"name": "台北自來水處",          "url": "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5", "fn": parse_taipei_water},
-    {"name": "國營台鐵",              "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",        "fn": parse_tra},
-    {"name": "新北市政府財政局",      "url": "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316",                   "fn": parse_ntpc_finance},
-    {"name": "農業部 瑠公管理處",     "url": "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",                           "fn": parse_ialgo},
-    {"name": "郵局房地產出租",        "url": "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904",            "fn": parse_post},
-    {"name": "台北市財政局",          "url": "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",      "fn": parse_taipei_dof},
-    {"name": "國家住宅及都市更新中心","url": "https://www.hurc.org.tw/hurc/procurement",                                      "fn": parse_hurc},
-    {"name": "國有財產署",            "url": "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",         "fn": parse_fnp},
-    {"name": "政府採購網",            "url": "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",               "fn": parse_pcc},
+    {
+        "name": "台北自來水處",
+        "url":  "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",
+        "fn":   parse_taipei_water,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "國營台鐵",
+        "url":  "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
+        "fn":   parse_tra,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "新北市政府財政局",
+        "url":  "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316",
+        "fn":   parse_ntpc_finance,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "農業部 瑠公管理處",
+        "url":  "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",
+        "fn":   parse_ialgo,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "郵局房地產出租",
+        "url":  "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904",
+        "fn":   parse_post,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "台北市財政局",
+        "url":  "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",
+        "fn":   parse_taipei_dof,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "國家住宅及都市更新中心",
+        "url":  "https://www.hurc.org.tw/hurc/procurement",
+        "fn":   parse_hurc,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "國有財產署",
+        "url":  "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",
+        "fn":   parse_fnp,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "政府採購網",
+        "url":  "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",
+        "fn":   parse_pcc,
+        "whitelist": ["出租", "標租", "租賃", "招租", "房地", "不動產", "標售", "廳舍", "地上物", "閒置空間", "公有土地"],
+        "blacklist": [],
+        "regions":   ["台北", "臺北", "新北"],
+    },
 ]
+
+
+def passes_filters(item: dict, src: dict) -> bool:
+    """套用 SOURCES 設定的白名單、黑名單、地區篩選。"""
+    title  = item.get("title", "")
+    agency = item.get("agency", "")
+    text   = title + agency  # 地區可能出現在機關名稱
+
+    regions = src.get("regions", [])
+    if regions and not any(k in text for k in regions):
+        return False
+
+    whitelist = src.get("whitelist", [])
+    if whitelist and not any(k in title for k in whitelist):
+        return False
+
+    blacklist = src.get("blacklist", [])
+    if blacklist and any(k in title for k in blacklist):
+        return False
+
+    return True
 
 
 # ── state.json：本地 + GitHub 雙重儲存 ───────────────────────────────────────
@@ -755,7 +790,7 @@ def main():
         try:
             items        = src["fn"]()
             new_items    = find_new_items(name, items, state)
-            notify_items = [i for i in new_items if is_within_date_window(i)]
+            notify_items = [i for i in new_items if passes_filters(i, src) and is_within_date_window(i)]
             results[name] = {"all": items, "new": new_items, "notify": notify_items, "error": None}
             log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆，推播 {len(notify_items)} 筆")
         except Exception as e:
