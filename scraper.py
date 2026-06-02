@@ -505,7 +505,10 @@ SOURCES = [
         "name": "台北自來水處",
         "url":  "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",
         "fn":   parse_taipei_water,
-        "whitelist": [], "blacklist": [], "regions": [],
+        # 只保留房地產/標租類；工程材料/勞務採購列入黑名單
+        "whitelist": ["出租", "標租", "租賃", "招租", "房地", "不動產", "標售", "廳舍", "地上物", "閒置空間", "公有土地"],
+        "blacklist": ["清洗作業", "鑄鐵直管", "延性鑄鐵", "塗裝", "管線", "財物採購", "勞務採購", "工程"],
+        "regions": [],
     },
     {
         "name": "國營台鐵",
