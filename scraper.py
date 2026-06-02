@@ -49,6 +49,28 @@ SCRIPT_DIR = Path(__file__).parent
 STATE_FILE  = Path(os.getenv("STATE_FILE", SCRIPT_DIR / "state.json"))
 ONLY_NEW    = os.getenv("ONLY_NEW", "true").lower() != "false"
 
+# ── 全域篩選器（所有來源共用）────────────────────────────────────────────────
+# whitelist：標題含任一詞才推播（空串列 = 不限）
+# blacklist：標題含任一詞則丟棄（空串列 = 不排除）
+# regions  ：標題或機關名稱含任一詞才推播（空串列 = 全台）
+# date_window_days：公告日期距今 ±N 天內才推播（無法解析日期時放行）
+GLOBAL_FILTER = {
+    "whitelist": [
+        "出租", "標租", "租賃", "招租", "徵租",
+        "房地", "不動產", "標售", "廳舍", "地上物",
+        "閒置空間", "公有土地", "招商", "承租",
+    ],
+    "blacklist": [
+        "開標結果",
+        "自動販賣機", "場地短期出租",
+        "新建工程", "統包工程", "物業管理", "專案管理", "保險",
+        "清洗作業", "鑄鐵直管", "延性鑄鐵", "塗裝", "管線",
+        "財物採購", "勞務採購",
+    ],
+    "regions": ["台北", "臺北", "新北"],  # 留空串列 = 全台
+}
+DATE_WINDOW_DAYS = 10  # 公告日期距今 ±10 天
+
 CONFIG = {
     "api_key":      os.getenv("ANTHROPIC_API_KEY", ""),
     "line_token":   os.getenv("LINE_CHANNEL_TOKEN", ""),
@@ -496,88 +518,34 @@ def parse_with_claude_fallback(text: str, name: str, base: str) -> list[dict]:
 
 
 # ── 各網站設定 ────────────────────────────────────────────────────────────────
-# whitelist：標題含任一詞才保留（空串列 = 不限）
-# blacklist：標題含任一詞則丟棄（空串列 = 不排除）
-# regions  ：標題或機關名稱含任一詞才保留（空串列 = 不限地區）
-
 SOURCES = [
-    {
-        "name": "台北自來水處",
-        "url":  "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",
-        "fn":   parse_taipei_water,
-        # 只保留房地產/標租類；工程材料/勞務採購列入黑名單
-        "whitelist": ["出租", "標租", "租賃", "招租", "房地", "不動產", "標售", "廳舍", "地上物", "閒置空間", "公有土地"],
-        "blacklist": ["清洗作業", "鑄鐵直管", "延性鑄鐵", "塗裝", "管線", "財物採購", "勞務採購", "工程"],
-        "regions": [],
-    },
-    {
-        "name": "國營台鐵",
-        "url":  "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
-        "fn":   parse_tra,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
-    {
-        "name": "新北市政府財政局",
-        "url":  "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316",
-        "fn":   parse_ntpc_finance,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
-    {
-        "name": "農業部 瑠公管理處",
-        "url":  "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",
-        "fn":   parse_ialgo,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
-    {
-        "name": "郵局房地產出租",
-        "url":  "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904",
-        "fn":   parse_post,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
-    {
-        "name": "台北市財政局",
-        "url":  "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",
-        "fn":   parse_taipei_dof,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
-    {
-        "name": "國家住宅及都市更新中心",
-        "url":  "https://www.hurc.org.tw/hurc/procurement",
-        "fn":   parse_hurc,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
-    {
-        "name": "國有財產署",
-        "url":  "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",
-        "fn":   parse_fnp,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
-    {
-        "name": "政府採購網",
-        "url":  "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",
-        "fn":   parse_pcc,
-        "whitelist": ["出租", "標租", "租賃", "招租", "房地", "不動產", "標售", "廳舍", "地上物", "閒置空間", "公有土地"],
-        "blacklist": [],
-        "regions":   ["台北", "臺北", "新北"],
-    },
+    {"name": "台北自來水處",       "url": "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",           "fn": parse_taipei_water},
+    {"name": "國營台鐵",           "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",                   "fn": parse_tra},
+    {"name": "新北市政府財政局",   "url": "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316",                              "fn": parse_ntpc_finance},
+    {"name": "農業部 瑠公管理處",  "url": "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",                                       "fn": parse_ialgo},
+    {"name": "郵局房地產出租",     "url": "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904",                        "fn": parse_post},
+    {"name": "台北市財政局",       "url": "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",                 "fn": parse_taipei_dof},
+    {"name": "國家住宅及都市更新中心", "url": "https://www.hurc.org.tw/hurc/procurement",                                             "fn": parse_hurc},
+    {"name": "國有財產署",         "url": "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",                    "fn": parse_fnp},
+    {"name": "政府採購網",         "url": "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",                         "fn": parse_pcc},
 ]
 
 
-def passes_filters(item: dict, src: dict) -> bool:
-    """套用 SOURCES 設定的白名單、黑名單、地區篩選。"""
+def passes_filters(item: dict) -> bool:
+    """套用 GLOBAL_FILTER 的白名單、黑名單、地區篩選（所有來源共用）。"""
     title  = item.get("title", "")
     agency = item.get("agency", "")
-    text   = title + agency  # 地區可能出現在機關名稱
+    text   = title + agency
 
-    regions = src.get("regions", [])
+    regions = GLOBAL_FILTER.get("regions", [])
     if regions and not any(k in text for k in regions):
         return False
 
-    whitelist = src.get("whitelist", [])
+    whitelist = GLOBAL_FILTER.get("whitelist", [])
     if whitelist and not any(k in title for k in whitelist):
         return False
 
-    blacklist = src.get("blacklist", [])
+    blacklist = GLOBAL_FILTER.get("blacklist", [])
     if blacklist and any(k in title for k in blacklist):
         return False
 
@@ -654,39 +622,37 @@ def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
     return new
 
 
-def _extract_months(text: str) -> list[tuple[int, int]]:
-    """從字串中擷取所有 (year, month) 組合，支援民國／西元曆。"""
+def _extract_dates(text: str) -> list[date]:
+    """從字串擷取完整日期（年月日），支援民國／西元、多種分隔符。"""
     found = []
-    # 西元：2026-05、2026/05、2026年05
-    for m in re.finditer(r"(20\d{2})[/-年](\d{1,2})[/-月日]?", text):
-        found.append((int(m.group(1)), int(m.group(2))))
-    # 民國：115-05、115/05、115年05
-    for m in re.finditer(r"\b(1\d{2})[/-年](\d{1,2})[/-月日]?", text):
-        found.append((int(m.group(1)) + 1911, int(m.group(2))))
+    # 西元：2026-05-12、2026/05/12、2026年05月12日
+    for m in re.finditer(r"(20\d{2})[/-年](\d{1,2})[/-月](\d{1,2})", text):
+        try:
+            found.append(date(int(m.group(1)), int(m.group(2)), int(m.group(3))))
+        except ValueError:
+            pass
+    # 民國：115-05-12、115/05/12、115.05.12、115年05月12日
+    for m in re.finditer(r"\b(1\d{2})[/\-.年](\d{1,2})[/\-.月](\d{1,2})", text):
+        try:
+            found.append(date(int(m.group(1)) + 1911, int(m.group(2)), int(m.group(3))))
+        except ValueError:
+            pass
     return found
 
 
-def is_within_date_window(item: dict, window: int = 1) -> bool:
-    """若標案公告日期在當月 ±window 個月內則回傳 True；無法解析日期則放行。
-    只看 date 欄位（公告日期），date 為空時才掃 title 作為備援。
+def is_within_date_window(item: dict, window_days: int = DATE_WINDOW_DAYS) -> bool:
+    """若標案公告日期在今日 ±window_days 天內則回傳 True；無法解析日期則放行。
+    優先用 date 欄位，為空時才掃 title 作為備援。
     """
     today = date.today()
-    valid = set()
-    for delta in range(-window, window + 1):
-        m = today.month + delta
-        y = today.year
-        if m < 1:
-            m += 12; y -= 1
-        elif m > 12:
-            m -= 12; y += 1
-        valid.add((y, m))
+    lo = today - timedelta(days=window_days)
+    hi = today + timedelta(days=window_days)
 
-    # 優先用 date 欄位（公告日期），有值就只用它
     date_str = item.get("date", "").strip()
-    candidates = _extract_months(date_str) if date_str else _extract_months(item.get("title", ""))
+    candidates = _extract_dates(date_str) if date_str else _extract_dates(item.get("title", ""))
     if not candidates:
         return True  # 無法解析 → 放行
-    return any(ym in valid for ym in candidates)
+    return any(lo <= d <= hi for d in candidates)
 
 
 # ── LINE 推播 ─────────────────────────────────────────────────────────────────
@@ -793,7 +759,7 @@ def main():
         try:
             items        = src["fn"]()
             new_items    = find_new_items(name, items, state)
-            notify_items = [i for i in new_items if passes_filters(i, src) and is_within_date_window(i)]
+            notify_items = [i for i in new_items if passes_filters(i) and is_within_date_window(i)]
             results[name] = {"all": items, "new": new_items, "notify": notify_items, "error": None}
             log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆，推播 {len(notify_items)} 筆")
         except Exception as e:
