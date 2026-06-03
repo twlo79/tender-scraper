@@ -658,19 +658,19 @@ def is_within_date_window(item: dict, window_days: int = DATE_WINDOW_DAYS) -> bo
 # ── LINE 推播 ─────────────────────────────────────────────────────────────────
 
 def _push(messages: list[dict]):
-    if not CONFIG["line_token"] or not CONFIG["line_user_id"]:
-        log.warning("未設定 LINE_CHANNEL_TOKEN 或 LINE_USER_ID")
+    if not CONFIG["line_token"]:
+        log.warning("未設定 LINE_CHANNEL_TOKEN")
         return
     r = requests.post(
-        "https://api.line.me/v2/bot/message/push",
+        "https://api.line.me/v2/bot/message/broadcast",
         headers={"Authorization": f"Bearer {CONFIG['line_token']}", "Content-Type": "application/json"},
-        json={"to": CONFIG["line_user_id"], "messages": messages},
+        json={"messages": messages},
         timeout=30,
     )
     if r.status_code == 200:
-        log.info(f"✅ LINE 推播成功（{len(messages)} 則）")
+        log.info(f"✅ LINE broadcast 成功（{len(messages)} 則）")
     else:
-        log.warning(f"LINE 推播失敗：{r.status_code} {r.text[:300]}")
+        log.warning(f"LINE broadcast 失敗：{r.status_code} {r.text[:300]}")
 
 
 def push_in_batches(messages: list[dict]):
