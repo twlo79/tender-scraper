@@ -612,6 +612,33 @@ def save_state(state: dict):
             log.warning(f"GitHub commit 異常：{e}")
 
 
+SENT_LOG_FILE = SCRIPT_DIR / "sent_log.json"
+SENT_LOG_KEEP_DAYS = 30
+
+
+def save_sent_log(results: dict, run_time: str):
+    """將本次推播的 notify 項目存入 sent_log.json，保留最近 N 天。"""
+    key = f"{date.today()} {run_time}"
+    entry = {
+        name: d["notify"]
+        for name, d in results.items()
+        if d.get("notify")
+    }
+    try:
+        log_data = json.loads(SENT_LOG_FILE.read_text(encoding="utf-8")) if SENT_LOG_FILE.exists() else {}
+    except Exception:
+        log_data = {}
+
+    log_data[key] = entry
+
+    # 只保留最近 SENT_LOG_KEEP_DAYS 天
+    cutoff = (date.today() - timedelta(days=SENT_LOG_KEEP_DAYS)).strftime("%Y-%m-%d")
+    log_data = {k: v for k, v in log_data.items() if k[:10] >= cutoff}
+
+    SENT_LOG_FILE.write_text(json.dumps(log_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    log.info(f"✅ sent_log.json 已更新（key: {key}）")
+
+
 def item_key(item: dict) -> str:
     return re.sub(r"\s+", "", item.get("title", ""))
 
@@ -792,6 +819,9 @@ def main():
     print(f"{'='*60}")
     print(f"  合計新增：{total_new} 筆  推播：{total_notify} 筆")
     print(f"{'='*60}\n")
+
+    # 儲存本次推播內容到 sent_log.json（供日後重播）
+    save_sent_log(results, run_time)
 
     # LINE 推播（只發近期標案）
     messages = build_line_messages(results, run_time)
