@@ -705,8 +705,8 @@ def push_in_batches(messages: list[dict]):
         _push(messages[i:i+5])
 
 
-def build_line_messages(results: dict, run_time: str) -> list[dict]:
-    today        = date.today().strftime("%Y/%m/%d")
+def build_line_messages(results: dict, run_time: str, original_date: str = "") -> list[dict]:
+    today        = original_date or date.today().strftime("%Y/%m/%d")
     total_notify = sum(len(v.get("notify", [])) for v in results.values())
     messages     = []
 
