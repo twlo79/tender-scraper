@@ -67,7 +67,7 @@ def main():
         for name, items in entry.items()
     }
 
-    messages = build_line_messages(results, f"{run_time}（補發）", original_date=original_date)
+    messages = build_line_messages(results, run_time, original_date=f"{original_date}（重新推播）")
     if messages:
         push_in_batches(messages)
         log.info("完成")
