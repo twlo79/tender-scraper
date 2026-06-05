@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-政府標案每日爬蟲 v7
+政府標案每日爬蟲 v8
 ================================================================
-收錄來源（13 個）：
+收錄來源（15 個）：
   台北自來水處、國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
   國有財產署、政府採購網、教育部學產基金、台北市都發局
-  台北捷運局
+  台北捷運局、國防部政治作戰局、土地銀行出租不動產
 
 抓取策略：
   台北自來水處            requests + table tbody tr（CCMS 格式）
@@ -21,6 +21,8 @@
   教育部學產基金           requests + table tbody tr + Claude fallback
   台北市都發局            requests + table tr + Claude fallback
   台北捷運局              requests + table tbody tr（CCMS 格式）+ Claude fallback
+  國防部政治作戰局         requests + table tr + Claude fallback（眷村土地標租）
+  土地銀行出租不動產       requests + table/ul parser + Claude fallback
 
 篩選架構（統一三層，設定於 SOURCES 每個來源）：
   regions   地區白名單 — 標題或機關名稱須含其中一詞
@@ -626,6 +628,67 @@ def parse_ntpc_property() -> list[dict]:
     return items
 
 
+def parse_gpwd() -> list[dict]:
+    """國防部政治作戰局：國軍老舊眷村土地標租公告。
+    URL: Publish.aspx?cnid=609（眷村土地標租）
+    採 CCMS table tr 通用模式，失敗時 Claude fallback。
+    """
+    BASE = "https://gpwd.mnd.gov.tw"
+    URL  = f"{BASE}/Publish.aspx?cnid=609"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr, .listContent tr"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a or len(tds) < 2:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt_td = ({td.get("data-title", ""): td for td in tds}.get("公告日期")
+                 or {td.get("data-title", ""): td for td in tds}.get("日期"))
+        dt = dt_td.get_text(strip=True) if dt_td else tds[-1].get_text(strip=True)
+        items.append({"title": title, "date": dt, "url": href, "agency": "國防部政治作戰局"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國防部政治作戰局", BASE)
+    log.info(f"  [國防部政治作戰局] {len(items)} 筆")
+    return items
+
+
+def parse_landbank() -> list[dict]:
+    """土地銀行：出租不動產公告。
+    採 table tr / ul li / article 多模式，失敗時 Claude fallback。
+    """
+    BASE = "https://www.landbank.com.tw"
+    URL  = f"{BASE}/Bulletin/RentRealty"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr, .bulletin-item, .list-item, article, ul li"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True) if tds else ""
+        items.append({"title": title, "date": dt, "url": href, "agency": "土地銀行"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "土地銀行出租不動產", BASE)
+    log.info(f"  [土地銀行出租不動產] {len(items)} 筆")
+    return items
+
+
 GOOGLE_ALERT_FEEDS = [
     "https://www.google.com/alerts/feeds/00230163369583510097/4665050306916176700",   # 公開標租 台北 OR 新北
     "https://www.google.com/alerts/feeds/00230163369583510097/12652254315385751271",  # 標租公告 site:gov.tw
@@ -785,6 +848,22 @@ SOURCES = [
         "url":  "https://www.dorts.gov.taipei/Content_List.aspx?n=72DD6F09410C38F5",
         "fn":   parse_taipei_dorts,
         "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
+    },
+    {
+        "name": "國防部政治作戰局",
+        "url":  "https://gpwd.mnd.gov.tw/Publish.aspx?cnid=609",
+        "fn":   parse_gpwd,
+        "whitelist": ["標租", "出租", "租賃", "招租", "土地", "眷村", "不動產", "房地"],
+        "blacklist": [],
+        "regions":   ["台北", "臺北", "新北"],  # 眷村遍布全台，只留雙北
+    },
+    {
+        "name": "土地銀行出租不動產",
+        "url":  "https://www.landbank.com.tw/Bulletin/RentRealty",
+        "fn":   parse_landbank,
+        "whitelist": ["出租", "標租", "租賃", "招租", "不動產", "房地"],
+        "blacklist": [],
+        "regions":   ["台北", "臺北", "新北"],  # 公股銀行房產遍布全台，篩雙北
     },
     {
         "name": "Google Alerts",
