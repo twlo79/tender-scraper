@@ -662,7 +662,8 @@ SOURCES = [
         "name": "新北市政府不動產標租",
         "url":  "https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd",
         "fn":   parse_ntpc_property,
-        "whitelist": [], "blacklist": [], "regions": [],
+        "whitelist": ["標租", "出租", "租賃", "招租", "招商", "標售", "不動產", "房地"],
+        "blacklist": [], "regions": [],
     },
     {
         "name": "農業部 瑠公管理處",
@@ -882,8 +883,8 @@ def _push(messages: list[dict]):
     if DRY_RUN:
         log.info(f"[DRY RUN] 略過 LINE 推播（{len(messages)} 則）")
         return
-    if not CONFIG["line_token"] or not CONFIG["line_user_id"]:
-        log.warning("未設定 LINE_CHANNEL_TOKEN 或 LINE_USER_ID")
+    if not CONFIG["line_token"]:
+        log.warning("未設定 LINE_CHANNEL_TOKEN")
         return
     r = requests.post(
         "https://api.line.me/v2/bot/message/broadcast",
