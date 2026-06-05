@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 """
-政府標案每日爬蟲 v6
+政府標案每日爬蟲 v7
 ================================================================
-收錄來源（9 個）：
-  台北自來水處、國營台鐵、新北市政府財政局、農業部 瑠公管理處
+收錄來源（13 個）：
+  台北自來水處、國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
-  國有財產署、政府採購網
+  國有財產署、政府採購網、教育部學產基金、台北市都發局
+  台北捷運局
 
 抓取策略：
-  台北自來水處          requests + table tbody tr（CCMS 格式）
-  國營台鐵             requests + CSS class / regex fallback
-  新北市政府財政局      靜態連結 + Claude fallback
-  農業部 瑠公管理處     requests + ul.commonList li parser
-  郵局房地產出租        requests + table/list parser
-  台北市財政局          requests + table tr（CCMS 格式）
-  國家住宅及都市更新中心 requests + table/article + Claude fallback
-  國有財產署            requests + ul li span/p parser（批號為 key）
-  政府採購網            GitHub Gist HTML（由 Make 每日更新）
+  台北自來水處            requests + table tbody tr（CCMS 格式）
+  國營台鐵               requests + CSS class / regex fallback
+  新北市政府不動產標租     requests + table/li parser + Claude fallback
+  農業部 瑠公管理處       requests + ul.commonList li parser
+  郵局房地產出租           requests + table/list parser
+  台北市財政局            requests + table tr（CCMS 格式）
+  國家住宅及都市更新中心   requests + table/article + Claude fallback
+  國有財產署              requests + ul li span/p parser（批號為 key）
+  政府採購網              GitHub Gist HTML（由 Make 每日更新）
+  教育部學產基金           requests + table tbody tr + Claude fallback
+  台北市都發局            requests + table tr + Claude fallback
+  台北捷運局              requests + table tbody tr（CCMS 格式）+ Claude fallback
 
 篩選架構（統一三層，設定於 SOURCES 每個來源）：
   regions   地區白名單 — 標題或機關名稱須含其中一詞
@@ -29,7 +33,7 @@
   LINE_USER_ID        推播目標 LINE User ID（U 開頭）
 
 選填：
-  ANTHROPIC_API_KEY   Claude API 金鑰（新北財政局 / 住都中心備援解析）
+  ANTHROPIC_API_KEY   Claude API 金鑰（備援解析用）
   GITHUB_TOKEN        GitHub Personal Access Token（用於儲存 state）
   GITHUB_REPO         格式 owner/repo（例如 yourname/tender-scraper）
   STATE_FILE          本地備援路徑（預設 state.json）
@@ -160,31 +164,6 @@ def parse_tra() -> list[dict]:
     log.info(f"  [國營台鐵] {len(items)} 筆（僅臺北營業分處）")
     return items
 
-
-def parse_ntpc_finance() -> list[dict]:
-    """新北市政府財政局：呼叫後端 API（AJAX）"""
-    api_url = "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316"
-    r = get(api_url)
-    if not r: return []
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(r.text, "lxml")
-    items = []
-    for a in soup.select("a[href]"):
-        title = a.get_text(strip=True)
-        href  = a["href"]
-        if len(title) < 5: continue
-        if any(k in title for k in ["標租", "出租", "招標", "採購", "公告", "標售"]):
-            full_url = href if href.startswith("http") else urljoin("https://www.finance.ntpc.gov.tw", href)
-            items.append({"title": title, "date": "", "url": full_url})
-    # 若沒有，直接回傳頁面連結讓 Claude 備用解析
-    if not items:
-        log.warning("  [新北財政局] 靜態內容無法取得，嘗試 Claude 解析")
-        items = parse_with_claude_fallback(
-            soup.get_text("\n")[:8000], "新北市政府財政局",
-            "https://www.finance.ntpc.gov.tw"
-        )
-    log.info(f"  [新北市政府財政局] {len(items)} 筆")
-    return items
 
 
 def parse_ialgo() -> list[dict]:
@@ -550,6 +529,67 @@ def parse_taipei_udd() -> list[dict]:
     return items
 
 
+def parse_taipei_dorts() -> list[dict]:
+    """台北捷運局：開發及租售公告（站體、橋下空間標租）。
+    CCMS 格式，同 parse_taipei_dof()。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://www.dorts.gov.taipei"
+    URL  = f"{BASE}/Content_List.aspx?n=72DD6F09410C38F5"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a or len(tds) < 2:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True)
+        items.append({"title": title, "date": dt, "url": href, "agency": "台北捷運局"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北捷運局", BASE)
+    log.info(f"  [台北捷運局] {len(items)} 筆")
+    return items
+
+
+def parse_ntpc_property() -> list[dict]:
+    """新北市政府公有不動產標租資訊。
+    換源：finance.ntpc.gov.tw 的公告頁為 AJAX 搜尋表單，無法靜態抓取。
+    改用 ntpc.gov.tw 的公有不動產標租資訊頁（CCMS 列表格式）。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://www.ntpc.gov.tw"
+    URL  = f"{BASE}/ch/home.jsp?id=b7c44e481de3b2bd"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr, .list-item, li"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True) if tds else ""
+        items.append({"title": title, "date": dt, "url": href, "agency": "新北市政府"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
+    log.info(f"  [新北市政府不動產標租] {len(items)} 筆")
+    return items
+
+
 # ── Claude 備用解析（當精準 parser 失敗時）──────────────────────────────────
 
 PARSE_PROMPT = """你是政府標案資料擷取助手。
@@ -601,9 +641,9 @@ SOURCES = [
         "whitelist": [], "blacklist": [], "regions": [],
     },
     {
-        "name": "新北市政府財政局",
-        "url":  "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316",
-        "fn":   parse_ntpc_finance,
+        "name": "新北市政府不動產標租",
+        "url":  "https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd",
+        "fn":   parse_ntpc_property,
         "whitelist": [], "blacklist": [], "regions": [],
     },
     {
@@ -656,6 +696,12 @@ SOURCES = [
         "name": "台北市都發局",
         "url":  "https://www.udd.gov.taipei/events/psxwq1j",
         "fn":   parse_taipei_udd,
+        "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
+    },
+    {
+        "name": "台北捷運局",
+        "url":  "https://www.dorts.gov.taipei/Content_List.aspx?n=72DD6F09410C38F5",
+        "fn":   parse_taipei_dorts,
         "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
     },
 ]
