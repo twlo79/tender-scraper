@@ -2,11 +2,11 @@
 """
 政府標案每日爬蟲 v8
 ================================================================
-收錄來源（15 個）：
+收錄來源（14 個）：
   台北自來水處、國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
   國有財產署、政府採購網、教育部學產基金、台北市都發局
-  台北捷運局、國防部政治作戰局、土地銀行出租不動產
+  國防部政治作戰局、土地銀行出租不動產、Google Alerts
 
 抓取策略：
   台北自來水處            requests + table tbody tr（CCMS 格式）
@@ -20,7 +20,6 @@
   政府採購網              GitHub Gist HTML（由 Make 每日更新）
   教育部學產基金           requests + table tbody tr + Claude fallback
   台北市都發局            requests + table tr + Claude fallback
-  台北捷運局              requests + table tbody tr（CCMS 格式）+ Claude fallback
   國防部政治作戰局         requests + table tr + Claude fallback（眷村土地標租）
   土地銀行出租不動產       requests + table/ul parser + Claude fallback
 
@@ -559,44 +558,6 @@ def parse_taipei_udd() -> list[dict]:
     return items
 
 
-def parse_taipei_dorts() -> list[dict]:
-    """台北捷運局：開發及租售公告（站體、橋下空間標租）。
-    CCMS 格式，同 parse_taipei_dof()。試兩個 URL，第一個失敗才試第二個。
-    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
-    """
-    BASE = "https://www.dorts.gov.taipei"
-    URLS = [
-        f"{BASE}/Content_List.aspx?n=72DD6F09410C38F5",   # 開發及租售公告
-        f"{BASE}/News.aspx?n=AECB7BB1496C0843&sms=6209B1B238610820",  # 租售資料查詢
-    ]
-    from bs4 import BeautifulSoup
-    for url in URLS:
-        r = get(url)
-        if not r:
-            continue
-        soup  = BeautifulSoup(r.text, "lxml")
-        items = []
-        for row in soup.select("table tbody tr, table tr"):
-            a   = row.find("a", href=True)
-            tds = row.find_all("td")
-            if not a or len(tds) < 2:
-                continue
-            title = a.get_text(strip=True)
-            if len(title) < 5:
-                continue
-            href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
-            dt   = tds[-1].get_text(strip=True)
-            items.append({"title": title, "date": dt, "url": href, "agency": "台北捷運局"})
-        if items:
-            log.info(f"  [台北捷運局] {len(items)} 筆（from {url}）")
-            return items
-        # 兩個 URL 都抓不到才用 Claude fallback
-        if url == URLS[-1] and not items:
-            items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北捷運局", BASE)
-    log.info(f"  [台北捷運局] {len(items) if items else 0} 筆")
-    return items if items else []
-
-
 def parse_ntpc_property() -> list[dict]:
     """新北市政府公有不動產標租資訊。
     換源：finance.ntpc.gov.tw 的公告頁為 AJAX 搜尋表單，無法靜態抓取。
@@ -841,12 +802,6 @@ SOURCES = [
         "name": "台北市都發局",
         "url":  "https://www.udd.gov.taipei/events/psxwq1j",
         "fn":   parse_taipei_udd,
-        "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
-    },
-    {
-        "name": "台北捷運局",
-        "url":  "https://www.dorts.gov.taipei/Content_List.aspx?n=72DD6F09410C38F5",
-        "fn":   parse_taipei_dorts,
         "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
     },
     {
