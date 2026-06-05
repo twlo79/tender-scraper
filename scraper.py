@@ -967,21 +967,18 @@ def build_line_messages(results: dict, run_time: str, original_date: str = "") -
     total_notify = sum(len(v.get("notify", [])) for v in results.values())
     messages     = []
 
-    # 摘要文字
-    errors = [src["name"] for src in SOURCES if results.get(src["name"], {}).get("error")]
-    if total_notify == 0 and not errors:
-        # 無新增時只發一行簡潔訊息
-        lines = [f"📋 政府標案通知 {today}", "今日無新增標案"]
-    else:
-        lines = [f"📋 政府標案通知 {today}", f"近期新增 {total_notify} 筆\n"]
-        for src in SOURCES:
-            name   = src["name"]
-            notify = len(results.get(name, {}).get("notify", []))
-            err    = results.get(name, {}).get("error")
-            if err:
-                lines.append(f"⚠️ {name}：抓取失敗")
-            elif notify:
-                lines.append(f"🆕 {name}：{notify} 筆")
+    # 摘要文字（全部來源列出）
+    lines = [f"📋 政府標案通知 {today}", f"近期新增 {total_notify} 筆\n"]
+    for src in SOURCES:
+        name   = src["name"]
+        notify = len(results.get(name, {}).get("notify", []))
+        err    = results.get(name, {}).get("error")
+        if err:
+            lines.append(f"⚠️ {name}：抓取失敗")
+        elif notify:
+            lines.append(f"🆕 {name}：新增 {notify} 筆")
+        else:
+            lines.append(f"✅ {name}：無")
     lines.append("\n⚠️ 免責聲明：本通知由自動爬蟲產生，資料僅供參考，請以各機關官方公告為準。")
     messages.append({"type": "text", "text": "\n".join(lines)})
 
