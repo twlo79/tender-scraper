@@ -625,33 +625,35 @@ GOOGLE_ALERT_FEEDS = [
 
 
 def parse_google_alerts() -> list[dict]:
-    """Google Alerts RSS：合併兩個 Alert 的 Atom feed。"""
-    try:
-        import feedparser
-    except ImportError:
-        log.warning("  [Google Alerts] feedparser 未安裝")
-        return []
-
+    """Google Alerts RSS：合併兩個 Alert 的 Atom feed。
+    使用內建 xml.etree.ElementTree，不需要外部套件。
+    """
+    import xml.etree.ElementTree as ET
     from urllib.parse import unquote
+
+    NS = "http://www.w3.org/2005/Atom"
     items = []
     for feed_url in GOOGLE_ALERT_FEEDS:
-        try:
-            feed = feedparser.parse(feed_url)
-        except Exception as e:
-            log.warning(f"  [Google Alerts] feed 解析失敗：{e}")
+        r = get(feed_url)
+        if not r:
             continue
-        for entry in feed.entries:
-            # Google redirect URL → 取出實際來源連結
-            link = entry.get("link", "")
+        try:
+            root = ET.fromstring(r.content)
+        except Exception as e:
+            log.warning(f"  [Google Alerts] XML 解析失敗：{e}")
+            continue
+        for entry in root.findall(f"{{{NS}}}entry"):
+            link_el = entry.find(f"{{{NS}}}link")
+            link = link_el.get("href", "") if link_el is not None else ""
             m = re.search(r"[?&]url=([^&]+)", link)
             actual_url = unquote(m.group(1)) if m else link
-            # 清除 title 內的 HTML tag
-            title = re.sub(r"<[^>]+>", "", entry.get("title", "")).strip()
-            dt = entry.get("published", "")[:10] if entry.get("published") else ""
+            title_el = entry.find(f"{{{NS}}}title")
+            title = re.sub(r"<[^>]+>", "", title_el.text or "").strip() if title_el is not None else ""
+            pub_el = entry.find(f"{{{NS}}}published")
+            dt = (pub_el.text or "")[:10] if pub_el is not None else ""
             if title and len(title) > 5:
                 items.append({"title": title, "date": dt, "url": actual_url, "agency": "Google Alerts"})
 
-    # 同 URL 去重
     seen, unique = set(), []
     for i in items:
         if i["url"] not in seen:
