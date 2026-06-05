@@ -56,6 +56,28 @@ SCRIPT_DIR = Path(__file__).parent
 STATE_FILE = Path(os.getenv("STATE_FILE", SCRIPT_DIR / "state.json"))
 DRY_RUN    = os.getenv("DRY_RUN", "false").lower() == "true"
 
+# ── 全域篩選器（所有來源共用）────────────────────────────────────────────────
+# whitelist：標題含任一詞才推播（空串列 = 不限）
+# blacklist：標題含任一詞則丟棄（空串列 = 不排除）
+# regions  ：標題或機關名稱含任一詞才推播（空串列 = 全台）
+# date_window_days：公告日期距今 ±N 天內才推播（無法解析日期時放行）
+GLOBAL_FILTER = {
+    "whitelist": [
+        "出租", "標租", "租賃", "招租", "徵租",
+        "房地", "不動產", "標售", "廳舍", "地上物",
+        "閒置空間", "公有土地", "招商", "承租",
+    ],
+    "blacklist": [
+        "開標結果",
+        "自動販賣機", "場地短期出租",
+        "新建工程", "統包工程", "物業管理", "專案管理", "保險",
+        "清洗作業", "鑄鐵直管", "延性鑄鐵", "塗裝", "管線",
+        "財物採購", "勞務採購",
+    ],
+    "regions": ["台北", "臺北", "新北", "瑠公管理處"],  # 瑠公管理處轄區皆在台北/新北
+}
+DATE_WINDOW_DAYS = 10  # 公告日期距今 ±10 天
+
 CONFIG = {
     "api_key":      os.getenv("ANTHROPIC_API_KEY", ""),
     "line_token":   os.getenv("LINE_CHANNEL_TOKEN", ""),
@@ -623,10 +645,6 @@ def parse_with_claude_fallback(text: str, name: str, base: str) -> list[dict]:
 
 
 # ── 各網站設定 ────────────────────────────────────────────────────────────────
-# whitelist：標題含任一詞才保留（空串列 = 不限）
-# blacklist：標題含任一詞則丟棄（空串列 = 不排除）
-# regions  ：標題或機關名稱含任一詞才保留（空串列 = 不限地區）
-
 SOURCES = [
     {
         "name": "台北自來水處",
@@ -707,21 +725,21 @@ SOURCES = [
 ]
 
 
-def passes_filters(item: dict, src: dict) -> bool:
-    """套用 SOURCES 設定的白名單、黑名單、地區篩選。"""
+def passes_filters(item: dict) -> bool:
+    """套用 GLOBAL_FILTER 的白名單、黑名單、地區篩選（所有來源共用）。"""
     title  = item.get("title", "")
     agency = item.get("agency", "")
-    text   = title + agency  # 地區可能出現在機關名稱
+    text   = title + agency
 
-    regions = src.get("regions", [])
+    regions = GLOBAL_FILTER.get("regions", [])
     if regions and not any(k in text for k in regions):
         return False
 
-    whitelist = src.get("whitelist", [])
+    whitelist = GLOBAL_FILTER.get("whitelist", [])
     if whitelist and not any(k in title for k in whitelist):
         return False
 
-    blacklist = src.get("blacklist", [])
+    blacklist = GLOBAL_FILTER.get("blacklist", [])
     if blacklist and any(k in title for k in blacklist):
         return False
 
@@ -788,6 +806,33 @@ def save_state(state: dict):
             log.warning(f"GitHub commit 異常：{e}")
 
 
+SENT_LOG_FILE = SCRIPT_DIR / "sent_log.json"
+SENT_LOG_KEEP_DAYS = 30
+
+
+def save_sent_log(results: dict, run_time: str):
+    """將本次推播的 notify 項目存入 sent_log.json，保留最近 N 天。"""
+    key = f"{date.today()} {run_time}"
+    entry = {
+        name: d["notify"]
+        for name, d in results.items()
+        if d.get("notify")
+    }
+    try:
+        log_data = json.loads(SENT_LOG_FILE.read_text(encoding="utf-8")) if SENT_LOG_FILE.exists() else {}
+    except Exception:
+        log_data = {}
+
+    log_data[key] = entry
+
+    # 只保留最近 SENT_LOG_KEEP_DAYS 天
+    cutoff = (date.today() - timedelta(days=SENT_LOG_KEEP_DAYS)).strftime("%Y-%m-%d")
+    log_data = {k: v for k, v in log_data.items() if k[:10] >= cutoff}
+
+    SENT_LOG_FILE.write_text(json.dumps(log_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    log.info(f"✅ sent_log.json 已更新（key: {key}）")
+
+
 def item_key(item: dict) -> str:
     return re.sub(r"\s+", "", item.get("title", ""))
 
@@ -798,39 +843,37 @@ def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
     return new
 
 
-def _extract_months(text: str) -> list[tuple[int, int]]:
-    """從字串中擷取所有 (year, month) 組合，支援民國／西元曆。"""
+def _extract_dates(text: str) -> list[date]:
+    """從字串擷取完整日期（年月日），支援民國／西元、多種分隔符。"""
     found = []
-    # 西元：2026-05、2026/05、2026年05
-    for m in re.finditer(r"(20\d{2})[/-年](\d{1,2})[/-月日]?", text):
-        found.append((int(m.group(1)), int(m.group(2))))
-    # 民國：115-05、115/05、115年05
-    for m in re.finditer(r"\b(1\d{2})[/-年](\d{1,2})[/-月日]?", text):
-        found.append((int(m.group(1)) + 1911, int(m.group(2))))
+    # 西元：2026-05-12、2026/05/12、2026年05月12日
+    for m in re.finditer(r"(20\d{2})[/-年](\d{1,2})[/-月](\d{1,2})", text):
+        try:
+            found.append(date(int(m.group(1)), int(m.group(2)), int(m.group(3))))
+        except ValueError:
+            pass
+    # 民國：115-05-12、115/05/12、115.05.12、115年05月12日
+    for m in re.finditer(r"\b(1\d{2})[/\-.年](\d{1,2})[/\-.月](\d{1,2})", text):
+        try:
+            found.append(date(int(m.group(1)) + 1911, int(m.group(2)), int(m.group(3))))
+        except ValueError:
+            pass
     return found
 
 
-def is_within_date_window(item: dict, window: int = 1) -> bool:
-    """若標案公告日期在當月 ±window 個月內則回傳 True；無法解析日期則放行。
-    只看 date 欄位（公告日期），date 為空時才掃 title 作為備援。
+def is_within_date_window(item: dict, window_days: int = DATE_WINDOW_DAYS) -> bool:
+    """若標案公告日期在今日 ±window_days 天內則回傳 True；無法解析日期則放行。
+    優先用 date 欄位，為空時才掃 title 作為備援。
     """
     today = date.today()
-    valid = set()
-    for delta in range(-window, window + 1):
-        m = today.month + delta
-        y = today.year
-        if m < 1:
-            m += 12; y -= 1
-        elif m > 12:
-            m -= 12; y += 1
-        valid.add((y, m))
+    lo = today - timedelta(days=window_days)
+    hi = today + timedelta(days=window_days)
 
-    # 優先用 date 欄位（公告日期），有值就只用它
     date_str = item.get("date", "").strip()
-    candidates = _extract_months(date_str) if date_str else _extract_months(item.get("title", ""))
+    candidates = _extract_dates(date_str) if date_str else _extract_dates(item.get("title", ""))
     if not candidates:
         return True  # 無法解析 → 放行
-    return any(ym in valid for ym in candidates)
+    return any(lo <= d <= hi for d in candidates)
 
 
 # ── LINE 推播 ─────────────────────────────────────────────────────────────────
@@ -843,15 +886,15 @@ def _push(messages: list[dict]):
         log.warning("未設定 LINE_CHANNEL_TOKEN 或 LINE_USER_ID")
         return
     r = requests.post(
-        "https://api.line.me/v2/bot/message/push",
+        "https://api.line.me/v2/bot/message/broadcast",
         headers={"Authorization": f"Bearer {CONFIG['line_token']}", "Content-Type": "application/json"},
-        json={"to": CONFIG["line_user_id"], "messages": messages},
+        json={"messages": messages},
         timeout=30,
     )
     if r.status_code == 200:
-        log.info(f"✅ LINE 推播成功（{len(messages)} 則）")
+        log.info(f"✅ LINE broadcast 成功（{len(messages)} 則）")
     else:
-        log.warning(f"LINE 推播失敗：{r.status_code} {r.text[:300]}")
+        log.warning(f"LINE broadcast 失敗：{r.status_code} {r.text[:300]}")
 
 
 def push_in_batches(messages: list[dict]):
@@ -859,8 +902,8 @@ def push_in_batches(messages: list[dict]):
         _push(messages[i:i+5])
 
 
-def build_line_messages(results: dict, run_time: str) -> list[dict]:
-    today        = date.today().strftime("%Y/%m/%d")
+def build_line_messages(results: dict, run_time: str, original_date: str = "") -> list[dict]:
+    today        = original_date or date.today().strftime("%Y/%m/%d")
     total_notify = sum(len(v.get("notify", [])) for v in results.values())
     messages     = []
 
@@ -940,7 +983,7 @@ def main():
         try:
             items        = src["fn"]()
             new_items    = find_new_items(name, items, state)
-            notify_items = [i for i in new_items if passes_filters(i, src) and is_within_date_window(i)]
+            notify_items = [i for i in new_items if passes_filters(i) and is_within_date_window(i)]
             results[name] = {"all": items, "new": new_items, "notify": notify_items, "error": None}
             log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆，推播 {len(notify_items)} 筆")
         except Exception as e:
@@ -973,6 +1016,9 @@ def main():
     print(f"{'='*60}")
     print(f"  合計新增：{total_new} 筆  推播：{total_notify} 筆")
     print(f"{'='*60}\n")
+
+    # 儲存本次推播內容到 sent_log.json（供日後重播）
+    save_sent_log(results, run_time)
 
     # LINE 推播（只發近期標案）
     messages = build_line_messages(results, run_time)
