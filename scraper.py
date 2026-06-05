@@ -618,6 +618,49 @@ def parse_ntpc_property() -> list[dict]:
     return items
 
 
+GOOGLE_ALERT_FEEDS = [
+    "https://www.google.com/alerts/feeds/00230163369583510097/4665050306916176700",   # 公開標租 台北 OR 新北
+    "https://www.google.com/alerts/feeds/00230163369583510097/12652254315385751271",  # 標租公告 site:gov.tw
+]
+
+
+def parse_google_alerts() -> list[dict]:
+    """Google Alerts RSS：合併兩個 Alert 的 Atom feed。"""
+    try:
+        import feedparser
+    except ImportError:
+        log.warning("  [Google Alerts] feedparser 未安裝")
+        return []
+
+    from urllib.parse import unquote
+    items = []
+    for feed_url in GOOGLE_ALERT_FEEDS:
+        try:
+            feed = feedparser.parse(feed_url)
+        except Exception as e:
+            log.warning(f"  [Google Alerts] feed 解析失敗：{e}")
+            continue
+        for entry in feed.entries:
+            # Google redirect URL → 取出實際來源連結
+            link = entry.get("link", "")
+            m = re.search(r"[?&]url=([^&]+)", link)
+            actual_url = unquote(m.group(1)) if m else link
+            # 清除 title 內的 HTML tag
+            title = re.sub(r"<[^>]+>", "", entry.get("title", "")).strip()
+            dt = entry.get("published", "")[:10] if entry.get("published") else ""
+            if title and len(title) > 5:
+                items.append({"title": title, "date": dt, "url": actual_url, "agency": "Google Alerts"})
+
+    # 同 URL 去重
+    seen, unique = set(), []
+    for i in items:
+        if i["url"] not in seen:
+            seen.add(i["url"])
+            unique.append(i)
+    log.info(f"  [Google Alerts] {len(unique)} 筆")
+    return unique
+
+
 # ── Claude 備用解析（當精準 parser 失敗時）──────────────────────────────────
 
 PARSE_PROMPT = """你是政府標案資料擷取助手。
@@ -728,6 +771,14 @@ SOURCES = [
         "url":  "https://www.dorts.gov.taipei/Content_List.aspx?n=72DD6F09410C38F5",
         "fn":   parse_taipei_dorts,
         "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
+    },
+    {
+        "name": "Google Alerts",
+        "url":  "https://www.google.com/alerts",
+        "fn":   parse_google_alerts,
+        "whitelist": ["標租", "出租", "租賃", "招租", "標售", "不動產", "房地", "招商"],
+        "blacklist": [],
+        "regions":   ["台北", "臺北", "新北", "gov.tw"],  # gov.tw 讓全台政府公告通過
     },
 ]
 
