@@ -559,32 +559,40 @@ def parse_taipei_udd() -> list[dict]:
 
 def parse_taipei_dorts() -> list[dict]:
     """台北捷運局：開發及租售公告（站體、橋下空間標租）。
-    CCMS 格式，同 parse_taipei_dof()。
+    CCMS 格式，同 parse_taipei_dof()。試兩個 URL，第一個失敗才試第二個。
     注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
     """
     BASE = "https://www.dorts.gov.taipei"
-    URL  = f"{BASE}/Content_List.aspx?n=72DD6F09410C38F5"
-    r = get(URL)
-    if not r:
-        return []
+    URLS = [
+        f"{BASE}/Content_List.aspx?n=72DD6F09410C38F5",   # 開發及租售公告
+        f"{BASE}/News.aspx?n=AECB7BB1496C0843&sms=6209B1B238610820",  # 租售資料查詢
+    ]
     from bs4 import BeautifulSoup
-    soup  = BeautifulSoup(r.text, "lxml")
-    items = []
-    for row in soup.select("table tbody tr, table tr"):
-        a   = row.find("a", href=True)
-        tds = row.find_all("td")
-        if not a or len(tds) < 2:
+    for url in URLS:
+        r = get(url)
+        if not r:
             continue
-        title = a.get_text(strip=True)
-        if len(title) < 5:
-            continue
-        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
-        dt   = tds[-1].get_text(strip=True)
-        items.append({"title": title, "date": dt, "url": href, "agency": "台北捷運局"})
-    if not items:
-        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北捷運局", BASE)
-    log.info(f"  [台北捷運局] {len(items)} 筆")
-    return items
+        soup  = BeautifulSoup(r.text, "lxml")
+        items = []
+        for row in soup.select("table tbody tr, table tr"):
+            a   = row.find("a", href=True)
+            tds = row.find_all("td")
+            if not a or len(tds) < 2:
+                continue
+            title = a.get_text(strip=True)
+            if len(title) < 5:
+                continue
+            href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+            dt   = tds[-1].get_text(strip=True)
+            items.append({"title": title, "date": dt, "url": href, "agency": "台北捷運局"})
+        if items:
+            log.info(f"  [台北捷運局] {len(items)} 筆（from {url}）")
+            return items
+        # 兩個 URL 都抓不到才用 Claude fallback
+        if url == URLS[-1] and not items:
+            items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北捷運局", BASE)
+    log.info(f"  [台北捷運局] {len(items) if items else 0} 筆")
+    return items if items else []
 
 
 def parse_ntpc_property() -> list[dict]:
@@ -682,7 +690,11 @@ def parse_with_claude_fallback(text: str, name: str, base: str) -> list[dict]:
                   "messages": [{"role": "user", "content": PARSE_PROMPT.format(text=text)}]},
             timeout=60,
         )
-        raw = r.json()["content"][0]["text"].strip()
+        resp = r.json()
+        if "error" in resp:
+            log.warning(f"  [{name}] Claude API 錯誤：{resp['error'].get('type')} — {resp['error'].get('message','')[:100]}")
+            return []
+        raw = resp["content"][0]["text"].strip()
         raw = re.sub(r"^```(?:json)?|```$", "", raw, flags=re.MULTILINE).strip()
         items = json.loads(raw)
         for item in items:
