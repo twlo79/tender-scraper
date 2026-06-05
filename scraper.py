@@ -365,17 +365,11 @@ def parse_fnp() -> list[dict]:
     return all_items
 
 
-def parse_pcc() -> list[dict]:
-    """政府採購網：從 Make 每日更新的 GitHub Gist 讀取 HTML。
-    Gist 由 Make 定期 PATCH 更新，無 IP 封鎖問題。
-    欄位順序（依截圖）：
-      項次 | 機關名稱 | 標案案號↩標案名稱 | 傳輸次數 | 招標方式 |
-      採購性質 | 公告日期 | 截止投標 | 預算金額 | 功能選項(檢視)
-    關鍵字 / 地區篩選由 SOURCES.passes_filters() 統一處理。
-    """
+def _parse_pcc_gist() -> list[dict]:
+    """政府採購網主源：從 Make 每日更新的 GitHub Gist 讀取 HTML。"""
     from bs4 import BeautifulSoup
 
-    BASE     = "https://web.pcc.gov.tw"
+    BASE       = "https://web.pcc.gov.tw"
     GIST_ID    = "816c04d08f02cd2e6e7623f5f5450f8a"
     GIST_FILE  = "pcc.html"
     GIST_API   = f"https://api.github.com/gists/{GIST_ID}"
@@ -399,20 +393,18 @@ def parse_pcc() -> list[dict]:
 
     html = html.strip()
     if not html or html == "<!-- placeholder -->":
-        log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行，跳過")
+        log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行")
         return []
 
-    # Make 用 base64() 編碼後存入 Gist，先嘗試 decode
     try:
         import base64 as _b64
         html = _b64.b64decode(html).decode("utf-8")
     except Exception:
-        pass  # 非 base64（舊格式或直接 HTML），直接使用
+        pass
 
     soup  = BeautifulSoup(html, "lxml")
     items = []
 
-    # 結果 table：header 含「項次」且「功能選項」（與表單 table 區分）
     target_table = None
     for tbl in soup.find_all("table"):
         hdr = tbl.find("tr")
@@ -421,45 +413,139 @@ def parse_pcc() -> list[dict]:
             break
 
     if target_table:
-        # 欄位固定：[0]項次 [1]機關 [2]案號+案名 [3]傳輸次數
-        # [4]招標方式 [5]採購性質 [6]公告日期 [7]截止投標 [8]預算 [9]功能選項
         for row in target_table.find_all("tr")[1:]:
             tds = row.find_all("td")
             if len(tds) < 9:
                 continue
-
-            agency = tds[1].get_text(strip=True)
-
-            # ── 標案名稱：從 JS pageCode2Img("案名") 取出 ─────────────
+            agency   = tds[1].get_text(strip=True)
             name_td  = tds[2]
             td_html  = str(name_td)
             m_title  = re.search(r'pageCode2Img\("([^"]+)"\)', td_html)
             title    = m_title.group(1) if m_title else ""
-            # fallback：stripped_strings 最長一行
             if not title:
                 lines = list(name_td.stripped_strings)
                 title = max(lines, key=len) if lines else ""
-
             if not title or len(title) <= 3:
                 continue
-
-            # ── 檢視連結（td[9] 或 td[2] 的 <a>）──────────────────────
             view_url = SOURCE_URL
             view_a   = tds[9].find("a", href=True) or tds[2].find("a", href=True)
             if view_a:
                 href = view_a["href"]
                 view_url = href if href.startswith("http") else urljoin(BASE, href)
-
-            # ── 公告日期 ────────────────────────────────────────────────
             date_str = tds[6].get_text(strip=True)
-
             items.append({"title": title, "date": date_str, "url": view_url, "agency": agency})
 
-    # Claude fallback（HTML 無法解析時）
     if not items and CONFIG["api_key"]:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
 
+    return items
+
+
+def parse_pcc_ronny() -> list[dict]:
+    """政府採購網備援源：pcc.g0v.ronny.tw JSON API。
+    當 Make Gist 無資料時自動啟用。
+    API: GET /api/listbydate?date=YYYYMMDD
+    """
+    today = date.today().strftime("%Y%m%d")
+    BASE  = "https://pcc.g0v.ronny.tw"
+    try:
+        r = requests.get(f"{BASE}/api/listbydate?date={today}",
+                         headers=HTTP_HEADERS, timeout=20)
+        if r.status_code != 200:
+            log.warning(f"  [PCC ronny] HTTP {r.status_code}")
+            return []
+        data = r.json()
+    except Exception as e:
+        log.warning(f"  [PCC ronny] {e}")
+        return []
+
+    items = []
+    for rec in data.get("records", []):
+        brief    = rec.get("brief", {})
+        title    = brief.get("title", "")
+        if not title or len(title) <= 3:
+            continue
+        unit_id    = rec.get("unit_id", "")
+        job_number = rec.get("job_number", "")
+        detail_url = (f"{BASE}/tender/{unit_id}/{job_number}"
+                      if unit_id and job_number else BASE)
+        items.append({
+            "title":  title,
+            "date":   rec.get("date", ""),
+            "url":    detail_url,
+            "agency": rec.get("unit_name", ""),
+        })
+    log.info(f"  [PCC ronny] {len(items)} 筆")
+    return items
+
+
+def parse_pcc() -> list[dict]:
+    """政府採購網：主源 Make Gist，失敗時 fallback 到 ronny.tw API。"""
+    items = _parse_pcc_gist()
+    if not items:
+        log.warning("  [政府採購網] Gist 無資料，fallback 到 ronny.tw")
+        items = parse_pcc_ronny()
     log.info(f"  [政府採購網] {len(items)} 筆")
+    return items
+
+
+def parse_moe_xuechan() -> list[dict]:
+    """教育部學產基金：標租不動產公告（CCMS 系統，結構同台北市財政局）。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://depart.moe.edu.tw"
+    URL  = f"{BASE}/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr"):
+        tds = row.find_all("td")
+        if len(tds) < 2:
+            continue
+        a = row.find("a", href=True)
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True)
+        items.append({"title": title, "date": dt, "url": href, "agency": "教育部學產基金"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "教育部學產基金", BASE)
+    log.info(f"  [教育部學產基金] {len(items)} 筆")
+    return items
+
+
+def parse_taipei_udd() -> list[dict]:
+    """台北市都市發展局：不動產標售租公告。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://www.udd.gov.taipei"
+    URL  = f"{BASE}/events/psxwq1j"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr, .news-item, article, li"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True) if tds else ""
+        items.append({"title": title, "date": dt, "url": href, "agency": "台北市都發局"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北市都發局", BASE)
+    log.info(f"  [台北市都發局] {len(items)} 筆")
     return items
 
 
@@ -556,6 +642,20 @@ SOURCES = [
         "whitelist": ["出租", "標租", "租賃", "招租", "房地", "不動產", "標售", "廳舍", "地上物", "閒置空間", "公有土地"],
         "blacklist": [],
         "regions":   ["台北", "臺北", "新北"],
+    },
+    {
+        "name": "教育部學產基金",
+        "url":  "https://depart.moe.edu.tw/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D",
+        "fn":   parse_moe_xuechan,
+        "whitelist": ["標租", "出租", "租賃", "招租", "房地", "不動產", "標售"],
+        "blacklist": [],
+        "regions":   ["台北", "臺北", "新北"],  # 學產基金全國，篩雙北
+    },
+    {
+        "name": "台北市都發局",
+        "url":  "https://www.udd.gov.taipei/events/psxwq1j",
+        "fn":   parse_taipei_udd,
+        "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
     },
 ]
 
