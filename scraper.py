@@ -395,7 +395,11 @@ def _parse_pcc_gist() -> list[dict]:
             raw_url = file_meta.get("raw_url", "")
             log.info(f"  [政府採購網] Gist 內容截斷，改抓 raw_url")
             raw_resp = requests.get(raw_url, headers=gh_headers, timeout=30)
-            html = raw_resp.text
+            if raw_resp.status_code != 200:
+                log.warning(f"  [政府採購網] raw_url 讀取失敗：HTTP {raw_resp.status_code}")
+                html = ""
+            else:
+                html = raw_resp.text
         else:
             html = file_meta.get("content", "")
     except Exception as e:
