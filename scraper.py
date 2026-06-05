@@ -524,12 +524,18 @@ def parse_moe_xuechan() -> list[dict]:
 
 def parse_taipei_udd() -> list[dict]:
     """台北市都市發展局：不動產標售租公告。
-    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    注意：www.udd.gov.taipei 在 GitHub Actions 環境有 TLS SNI 問題，
+    用 verify=False 繞過（read-only 爬蟲，可接受）。
     """
     BASE = "https://www.udd.gov.taipei"
     URL  = f"{BASE}/events/psxwq1j"
-    r = get(URL)
-    if not r:
+    try:
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        r = requests.get(URL, headers=HTTP_HEADERS, timeout=20, verify=False)
+        r.encoding = r.apparent_encoding or "utf-8"
+    except Exception as e:
+        log.warning(f"GET 失敗 {URL}：{e}")
         return []
     from bs4 import BeautifulSoup
     soup  = BeautifulSoup(r.text, "lxml")
