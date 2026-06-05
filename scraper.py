@@ -50,6 +50,7 @@ import requests
 
 SCRIPT_DIR = Path(__file__).parent
 STATE_FILE = Path(os.getenv("STATE_FILE", SCRIPT_DIR / "state.json"))
+DRY_RUN    = os.getenv("DRY_RUN", "false").lower() == "true"
 
 CONFIG = {
     "api_key":      os.getenv("ANTHROPIC_API_KEY", ""),
@@ -615,7 +616,7 @@ SOURCES = [
         "name": "郵局房地產出租",
         "url":  "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904",
         "fn":   parse_post,
-        "whitelist": [], "blacklist": [], "regions": [],
+        "whitelist": [], "blacklist": [], "regions": ["台北", "臺北", "新北"],
     },
     {
         "name": "台北市財政局",
@@ -789,6 +790,9 @@ def is_within_date_window(item: dict, window: int = 1) -> bool:
 # ── LINE 推播 ─────────────────────────────────────────────────────────────────
 
 def _push(messages: list[dict]):
+    if DRY_RUN:
+        log.info(f"[DRY RUN] 略過 LINE 推播（{len(messages)} 則）")
+        return
     if not CONFIG["line_token"] or not CONFIG["line_user_id"]:
         log.warning("未設定 LINE_CHANNEL_TOKEN 或 LINE_USER_ID")
         return
