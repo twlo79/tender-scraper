@@ -278,14 +278,21 @@ def parse_hurc() -> list[dict]:
     return items
 
 
-def parse_fnp() -> list[dict]:
-    """國有財產署：SSR 頁面，ul > li > span.title-message + p.form-height 結構。
-    詳情 URL：https://esvc.fnp.gov.tw/rtMsg/showInfomation?msgId={msgId}
-    fallback：table tr（相容未來改版）
-    """
+# 國有財產署各分署 svcId
+# 可從 esvc.fnp.gov.tw/rtMsg 頁面取得更多分署 svcId 後直接新增
+FNP_SVC_IDS: dict[str, str] = {
+    "國有財產署":     "5eafac8df8c649ba9cf62a591e44223c",
+    # 其他分署：請從 esvc.fnp.gov.tw/rtMsg 主頁取得 svcId 後加入
+    # "北區分署":   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    # "台北辦事處": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    # "新北辦事處": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+}
+
+
+def _parse_fnp_single(office: str, svc_id: str) -> list[dict]:
+    """單一 svcId 的國有財產署資料抓取。"""
     BASE_URL   = "https://esvc.fnp.gov.tw"
-    SVC_ID     = "5eafac8df8c649ba9cf62a591e44223c"
-    SOURCE_URL = f"{BASE_URL}/rtMsg?svcId={SVC_ID}"
+    SOURCE_URL = f"{BASE_URL}/rtMsg?svcId={svc_id}"
     DETAIL_URL = f"{BASE_URL}/rtMsg/showInfomation"
 
     r = get(SOURCE_URL)
@@ -296,7 +303,6 @@ def parse_fnp() -> list[dict]:
     soup = BeautifulSoup(r.text, "lxml")
     items = []
 
-    # ── 主要策略：ul > li，每個 li 為一筆標案 ──────────────────────────
     for li in soup.select("ul li"):
         labels = [s.get_text(strip=True) for s in li.select("span.title-message")]
         values = [p.get_text(strip=True) for p in li.select("p.form-height")]
@@ -312,9 +318,7 @@ def parse_fnp() -> list[dict]:
         if not unit or unit in ("單位", "機關單位"):
             continue
 
-        # msgId：從 li 屬性或內部連結取得
-        msg_id = (li.get("data-msgid") or li.get("data-msg-id")
-                  or li.get("data-id") or "")
+        msg_id = (li.get("data-msgid") or li.get("data-msg-id") or li.get("data-id") or "")
         a = li.find("a", href=True)
         if a:
             href = a["href"]
@@ -326,9 +330,9 @@ def parse_fnp() -> list[dict]:
         href = f"{DETAIL_URL}?msgId={msg_id}" if msg_id else SOURCE_URL
 
         title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
-        items.append({"title": title, "date": pub_dt, "url": href})
+        items.append({"title": title, "date": pub_dt, "url": href, "agency": office})
 
-    # ── fallback：table tr ───────────────────────────────────────────────
+    # fallback：table tr
     if not items:
         for row in soup.select("table tbody tr, table tr"):
             tds = row.find_all("td")
@@ -346,10 +350,19 @@ def parse_fnp() -> list[dict]:
             href = a["href"] if a else SOURCE_URL
             if href and not href.startswith("http"):
                 href = urljoin(BASE_URL, href)
-            items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL})
+            items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL, "agency": office})
 
-    log.info(f"  [國有財產署] {len(items)} 筆")
     return items
+
+
+def parse_fnp() -> list[dict]:
+    """國有財產署：迭代 FNP_SVC_IDS，支援多分署。"""
+    all_items = []
+    for office, svc_id in FNP_SVC_IDS.items():
+        items = _parse_fnp_single(office, svc_id)
+        all_items.extend(items)
+    log.info(f"  [國有財產署] {len(all_items)} 筆（{len(FNP_SVC_IDS)} 個分署）")
+    return all_items
 
 
 def parse_pcc() -> list[dict]:
