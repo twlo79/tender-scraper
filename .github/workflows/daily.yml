@@ -1,0 +1,36 @@
+name: 每日標案爬蟲
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 每天 UTC 00:00 = 台灣時間 08:00
+  workflow_dispatch:        # 支援手動觸發（右上角 Run workflow）
+
+permissions:
+  contents: write           # 允許 workflow 將 state.json commit 回 main
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Run scraper
+        run: python scraper.py
+        env:
+          LINE_CHANNEL_TOKEN:  ${{ secrets.LINE_CHANNEL_TOKEN }}
+          LINE_USER_ID:        ${{ secrets.LINE_USER_ID }}
+          ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN:        ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO:         ${{ github.repository }}

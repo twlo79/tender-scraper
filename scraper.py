@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 """
-政府標案每日爬蟲 v6
+政府標案每日爬蟲 v7
 ================================================================
-收錄來源（9 個）：
-  台北自來水處、國營台鐵、新北市政府財政局、農業部 瑠公管理處
+收錄來源（13 個）：
+  台北自來水處、國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
-  國有財產署、政府採購網
+  國有財產署、政府採購網、教育部學產基金、台北市都發局
+  台北捷運局
 
 抓取策略：
-  台北自來水處          requests + table tbody tr（CCMS 格式）
-  國營台鐵             requests + CSS class / regex fallback
-  新北市政府財政局      靜態連結 + Claude fallback
-  農業部 瑠公管理處     requests + ul.commonList li parser
-  郵局房地產出租        requests + table/list parser
-  台北市財政局          requests + table tr（CCMS 格式）
-  國家住宅及都市更新中心 requests + table/article + Claude fallback
-  國有財產署            requests + ul li span/p parser（批號為 key）
-  政府採購網            GitHub Gist HTML（由 Make 每日更新）
+  台北自來水處            requests + table tbody tr（CCMS 格式）
+  國營台鐵               requests + CSS class / regex fallback
+  新北市政府不動產標租     requests + table/li parser + Claude fallback
+  農業部 瑠公管理處       requests + ul.commonList li parser
+  郵局房地產出租           requests + table/list parser
+  台北市財政局            requests + table tr（CCMS 格式）
+  國家住宅及都市更新中心   requests + table/article + Claude fallback
+  國有財產署              requests + ul li span/p parser（批號為 key）
+  政府採購網              GitHub Gist HTML（由 Make 每日更新）
+  教育部學產基金           requests + table tbody tr + Claude fallback
+  台北市都發局            requests + table tr + Claude fallback
+  台北捷運局              requests + table tbody tr（CCMS 格式）+ Claude fallback
 
 篩選架構（統一三層，設定於 SOURCES 每個來源）：
   regions   地區白名單 — 標題或機關名稱須含其中一詞
@@ -29,7 +33,7 @@
   LINE_USER_ID        推播目標 LINE User ID（U 開頭）
 
 選填：
-  ANTHROPIC_API_KEY   Claude API 金鑰（新北財政局 / 住都中心備援解析）
+  ANTHROPIC_API_KEY   Claude API 金鑰（備援解析用）
   GITHUB_TOKEN        GitHub Personal Access Token（用於儲存 state）
   GITHUB_REPO         格式 owner/repo（例如 yourname/tender-scraper）
   STATE_FILE          本地備援路徑（預設 state.json）
@@ -40,7 +44,7 @@ import logging
 import os
 import re
 from base64 import b64decode, b64encode
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -50,6 +54,7 @@ import requests
 
 SCRIPT_DIR = Path(__file__).parent
 STATE_FILE = Path(os.getenv("STATE_FILE", SCRIPT_DIR / "state.json"))
+DRY_RUN    = os.getenv("DRY_RUN", "false").lower() == "true"
 
 # ── 全域篩選器（所有來源共用）────────────────────────────────────────────────
 # whitelist：標題含任一詞才推播（空串列 = 不限）
@@ -181,31 +186,6 @@ def parse_tra() -> list[dict]:
     log.info(f"  [國營台鐵] {len(items)} 筆（僅臺北營業分處）")
     return items
 
-
-def parse_ntpc_finance() -> list[dict]:
-    """新北市政府財政局：呼叫後端 API（AJAX）"""
-    api_url = "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316"
-    r = get(api_url)
-    if not r: return []
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(r.text, "lxml")
-    items = []
-    for a in soup.select("a[href]"):
-        title = a.get_text(strip=True)
-        href  = a["href"]
-        if len(title) < 5: continue
-        if any(k in title for k in ["標租", "出租", "招標", "採購", "公告", "標售"]):
-            full_url = href if href.startswith("http") else urljoin("https://www.finance.ntpc.gov.tw", href)
-            items.append({"title": title, "date": "", "url": full_url})
-    # 若沒有，直接回傳頁面連結讓 Claude 備用解析
-    if not items:
-        log.warning("  [新北財政局] 靜態內容無法取得，嘗試 Claude 解析")
-        items = parse_with_claude_fallback(
-            soup.get_text("\n")[:8000], "新北市政府財政局",
-            "https://www.finance.ntpc.gov.tw"
-        )
-    log.info(f"  [新北市政府財政局] {len(items)} 筆")
-    return items
 
 
 def parse_ialgo() -> list[dict]:
@@ -387,17 +367,11 @@ def parse_fnp() -> list[dict]:
     return all_items
 
 
-def parse_pcc() -> list[dict]:
-    """政府採購網：從 Make 每日更新的 GitHub Gist 讀取 HTML。
-    Gist 由 Make 定期 PATCH 更新，無 IP 封鎖問題。
-    欄位順序（依截圖）：
-      項次 | 機關名稱 | 標案案號↩標案名稱 | 傳輸次數 | 招標方式 |
-      採購性質 | 公告日期 | 截止投標 | 預算金額 | 功能選項(檢視)
-    關鍵字 / 地區篩選由 SOURCES.passes_filters() 統一處理。
-    """
+def _parse_pcc_gist() -> list[dict]:
+    """政府採購網主源：從 Make 每日更新的 GitHub Gist 讀取 HTML。"""
     from bs4 import BeautifulSoup
 
-    BASE     = "https://web.pcc.gov.tw"
+    BASE       = "https://web.pcc.gov.tw"
     GIST_ID    = "816c04d08f02cd2e6e7623f5f5450f8a"
     GIST_FILE  = "pcc.html"
     GIST_API   = f"https://api.github.com/gists/{GIST_ID}"
@@ -421,20 +395,18 @@ def parse_pcc() -> list[dict]:
 
     html = html.strip()
     if not html or html == "<!-- placeholder -->":
-        log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行，跳過")
+        log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行")
         return []
 
-    # Make 用 base64() 編碼後存入 Gist，先嘗試 decode
     try:
         import base64 as _b64
         html = _b64.b64decode(html).decode("utf-8")
     except Exception:
-        pass  # 非 base64（舊格式或直接 HTML），直接使用
+        pass
 
     soup  = BeautifulSoup(html, "lxml")
     items = []
 
-    # 結果 table：header 含「項次」且「功能選項」（與表單 table 區分）
     target_table = None
     for tbl in soup.find_all("table"):
         hdr = tbl.find("tr")
@@ -443,45 +415,200 @@ def parse_pcc() -> list[dict]:
             break
 
     if target_table:
-        # 欄位固定：[0]項次 [1]機關 [2]案號+案名 [3]傳輸次數
-        # [4]招標方式 [5]採購性質 [6]公告日期 [7]截止投標 [8]預算 [9]功能選項
         for row in target_table.find_all("tr")[1:]:
             tds = row.find_all("td")
             if len(tds) < 9:
                 continue
-
-            agency = tds[1].get_text(strip=True)
-
-            # ── 標案名稱：從 JS pageCode2Img("案名") 取出 ─────────────
+            agency   = tds[1].get_text(strip=True)
             name_td  = tds[2]
             td_html  = str(name_td)
             m_title  = re.search(r'pageCode2Img\("([^"]+)"\)', td_html)
             title    = m_title.group(1) if m_title else ""
-            # fallback：stripped_strings 最長一行
             if not title:
                 lines = list(name_td.stripped_strings)
                 title = max(lines, key=len) if lines else ""
-
             if not title or len(title) <= 3:
                 continue
-
-            # ── 檢視連結（td[9] 或 td[2] 的 <a>）──────────────────────
             view_url = SOURCE_URL
             view_a   = tds[9].find("a", href=True) or tds[2].find("a", href=True)
             if view_a:
                 href = view_a["href"]
                 view_url = href if href.startswith("http") else urljoin(BASE, href)
-
-            # ── 公告日期 ────────────────────────────────────────────────
             date_str = tds[6].get_text(strip=True)
-
             items.append({"title": title, "date": date_str, "url": view_url, "agency": agency})
 
-    # Claude fallback（HTML 無法解析時）
     if not items and CONFIG["api_key"]:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
 
+    return items
+
+
+def parse_pcc_ronny() -> list[dict]:
+    """政府採購網備援源：pcc.g0v.ronny.tw JSON API。
+    當 Make Gist 無資料時自動啟用。
+    API: GET /api/listbydate?date=YYYYMMDD
+    """
+    today = date.today().strftime("%Y%m%d")
+    BASE  = "https://pcc.g0v.ronny.tw"
+    try:
+        r = requests.get(f"{BASE}/api/listbydate?date={today}",
+                         headers=HTTP_HEADERS, timeout=20)
+        if r.status_code != 200:
+            log.warning(f"  [PCC ronny] HTTP {r.status_code}")
+            return []
+        data = r.json()
+    except Exception as e:
+        log.warning(f"  [PCC ronny] {e}")
+        return []
+
+    items = []
+    for rec in data.get("records", []):
+        brief    = rec.get("brief", {})
+        title    = brief.get("title", "")
+        if not title or len(title) <= 3:
+            continue
+        unit_id    = rec.get("unit_id", "")
+        job_number = rec.get("job_number", "")
+        detail_url = (f"{BASE}/tender/{unit_id}/{job_number}"
+                      if unit_id and job_number else BASE)
+        items.append({
+            "title":  title,
+            "date":   rec.get("date", ""),
+            "url":    detail_url,
+            "agency": rec.get("unit_name", ""),
+        })
+    log.info(f"  [PCC ronny] {len(items)} 筆")
+    return items
+
+
+def parse_pcc() -> list[dict]:
+    """政府採購網：主源 Make Gist，失敗時 fallback 到 ronny.tw API。"""
+    items = _parse_pcc_gist()
+    if not items:
+        log.warning("  [政府採購網] Gist 無資料，fallback 到 ronny.tw")
+        items = parse_pcc_ronny()
     log.info(f"  [政府採購網] {len(items)} 筆")
+    return items
+
+
+def parse_moe_xuechan() -> list[dict]:
+    """教育部學產基金：標租不動產公告（CCMS 系統，結構同台北市財政局）。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://depart.moe.edu.tw"
+    URL  = f"{BASE}/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr"):
+        tds = row.find_all("td")
+        if len(tds) < 2:
+            continue
+        a = row.find("a", href=True)
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True)
+        items.append({"title": title, "date": dt, "url": href, "agency": "教育部學產基金"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "教育部學產基金", BASE)
+    log.info(f"  [教育部學產基金] {len(items)} 筆")
+    return items
+
+
+def parse_taipei_udd() -> list[dict]:
+    """台北市都市發展局：不動產標售租公告。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://www.udd.gov.taipei"
+    URL  = f"{BASE}/events/psxwq1j"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr, .news-item, article, li"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True) if tds else ""
+        items.append({"title": title, "date": dt, "url": href, "agency": "台北市都發局"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北市都發局", BASE)
+    log.info(f"  [台北市都發局] {len(items)} 筆")
+    return items
+
+
+def parse_taipei_dorts() -> list[dict]:
+    """台北捷運局：開發及租售公告（站體、橋下空間標租）。
+    CCMS 格式，同 parse_taipei_dof()。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://www.dorts.gov.taipei"
+    URL  = f"{BASE}/Content_List.aspx?n=72DD6F09410C38F5"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a or len(tds) < 2:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True)
+        items.append({"title": title, "date": dt, "url": href, "agency": "台北捷運局"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北捷運局", BASE)
+    log.info(f"  [台北捷運局] {len(items)} 筆")
+    return items
+
+
+def parse_ntpc_property() -> list[dict]:
+    """新北市政府公有不動產標租資訊。
+    換源：finance.ntpc.gov.tw 的公告頁為 AJAX 搜尋表單，無法靜態抓取。
+    改用 ntpc.gov.tw 的公有不動產標租資訊頁（CCMS 列表格式）。
+    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
+    """
+    BASE = "https://www.ntpc.gov.tw"
+    URL  = f"{BASE}/ch/home.jsp?id=b7c44e481de3b2bd"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr, .list-item, li"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        dt   = tds[-1].get_text(strip=True) if tds else ""
+        items.append({"title": title, "date": dt, "url": href, "agency": "新北市政府"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
+    log.info(f"  [新北市政府不動產標租] {len(items)} 筆")
     return items
 
 
@@ -519,15 +646,82 @@ def parse_with_claude_fallback(text: str, name: str, base: str) -> list[dict]:
 
 # ── 各網站設定 ────────────────────────────────────────────────────────────────
 SOURCES = [
-    {"name": "台北自來水處",       "url": "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",           "fn": parse_taipei_water},
-    {"name": "國營台鐵",           "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",                   "fn": parse_tra},
-    {"name": "新北市政府財政局",   "url": "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316",                              "fn": parse_ntpc_finance},
-    {"name": "農業部 瑠公管理處",  "url": "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",                                       "fn": parse_ialgo},
-    {"name": "郵局房地產出租",     "url": "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904",                        "fn": parse_post},
-    {"name": "台北市財政局",       "url": "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",                 "fn": parse_taipei_dof},
-    {"name": "國家住宅及都市更新中心", "url": "https://www.hurc.org.tw/hurc/procurement",                                             "fn": parse_hurc},
-    {"name": "國有財產署",         "url": "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",                    "fn": parse_fnp},
-    {"name": "政府採購網",         "url": "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",                         "fn": parse_pcc},
+    {
+        "name": "台北自來水處",
+        "url":  "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",
+        "fn":   parse_taipei_water,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "國營台鐵",
+        "url":  "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
+        "fn":   parse_tra,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "新北市政府不動產標租",
+        "url":  "https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd",
+        "fn":   parse_ntpc_property,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "農業部 瑠公管理處",
+        "url":  "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",
+        "fn":   parse_ialgo,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "郵局房地產出租",
+        "url":  "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904",
+        "fn":   parse_post,
+        "whitelist": [], "blacklist": [], "regions": ["台北", "臺北", "新北"],
+    },
+    {
+        "name": "台北市財政局",
+        "url":  "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",
+        "fn":   parse_taipei_dof,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "國家住宅及都市更新中心",
+        "url":  "https://www.hurc.org.tw/hurc/procurement",
+        "fn":   parse_hurc,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "國有財產署",
+        "url":  "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",
+        "fn":   parse_fnp,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "政府採購網",
+        "url":  "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic",
+        "fn":   parse_pcc,
+        "whitelist": ["出租", "標租", "租賃", "招租", "房地", "不動產", "標售", "廳舍", "地上物", "閒置空間", "公有土地"],
+        "blacklist": [],
+        "regions":   ["台北", "臺北", "新北"],
+    },
+    {
+        "name": "教育部學產基金",
+        "url":  "https://depart.moe.edu.tw/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D",
+        "fn":   parse_moe_xuechan,
+        "whitelist": ["標租", "出租", "租賃", "招租", "房地", "不動產", "標售"],
+        "blacklist": [],
+        "regions":   ["台北", "臺北", "新北"],  # 學產基金全國，篩雙北
+    },
+    {
+        "name": "台北市都發局",
+        "url":  "https://www.udd.gov.taipei/events/psxwq1j",
+        "fn":   parse_taipei_udd,
+        "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
+    },
+    {
+        "name": "台北捷運局",
+        "url":  "https://www.dorts.gov.taipei/Content_List.aspx?n=72DD6F09410C38F5",
+        "fn":   parse_taipei_dorts,
+        "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
+    },
 ]
 
 
@@ -685,8 +879,11 @@ def is_within_date_window(item: dict, window_days: int = DATE_WINDOW_DAYS) -> bo
 # ── LINE 推播 ─────────────────────────────────────────────────────────────────
 
 def _push(messages: list[dict]):
-    if not CONFIG["line_token"]:
-        log.warning("未設定 LINE_CHANNEL_TOKEN")
+    if DRY_RUN:
+        log.info(f"[DRY RUN] 略過 LINE 推播（{len(messages)} 則）")
+        return
+    if not CONFIG["line_token"] or not CONFIG["line_user_id"]:
+        log.warning("未設定 LINE_CHANNEL_TOKEN 或 LINE_USER_ID")
         return
     r = requests.post(
         "https://api.line.me/v2/bot/message/broadcast",
