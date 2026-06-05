@@ -1,53 +1,55 @@
 #!/usr/bin/env python3
 """
-政府標案每日爬蟲 v5
+政府標案每日爬蟲 v6
 ================================================================
-修正：
-  1. 各網站使用精準 parser（不再依賴 Claude 猜 selector）
-  2. state.json 自動 commit 回 GitHub（解決每次 VM 重置問題）
-  3. 郵局/國有財產署 URL 修正為頁面連結而非各別標案
+收錄來源（9 個）：
+  台北自來水處、國營台鐵、新北市政府財政局、農業部 瑠公管理處
+  郵局房地產出租、台北市財政局、國家住宅及都市更新中心
+  國有財產署、政府採購網
 
-網站                  抓取策略
-─────────────────────────────────────────────────────────────
-台北自來水處          requests + table tr parser
-國營台鐵             requests + 純文字 regex parser
-新北市政府財政局      直接呼叫後端 API（AJAX endpoint）
-農業部 瑠公管理處     requests + table tr parser
-郵局房地產出租        requests + table/list parser
-台北市財政局          requests + table tr parser
-國家住宅及都市更新中心 requests + JSON API
-國有財產署            requests + table tr parser（批號為 key）
+抓取策略：
+  台北自來水處          requests + table tbody tr（CCMS 格式）
+  國營台鐵             requests + CSS class / regex fallback
+  新北市政府財政局      靜態連結 + Claude fallback
+  農業部 瑠公管理處     requests + ul.commonList li parser
+  郵局房地產出租        requests + table/list parser
+  台北市財政局          requests + table tr（CCMS 格式）
+  國家住宅及都市更新中心 requests + table/article + Claude fallback
+  國有財產署            requests + ul li span/p parser（批號為 key）
+  政府採購網            GitHub Gist HTML（由 Make 每日更新）
+
+篩選架構（統一三層，設定於 SOURCES 每個來源）：
+  regions   地區白名單 — 標題或機關名稱須含其中一詞
+  whitelist 關鍵字白名單 — 標題須含其中一詞
+  blacklist 關鍵字黑名單 — 標題含任一詞則排除
+  + is_within_date_window() — 公告日期在當月 ±1 個月內
 
 環境變數（必填）：
-  ANTHROPIC_API_KEY   Claude API 金鑰（解析不確定的頁面時備用）
   LINE_CHANNEL_TOKEN  LINE Channel Access Token
   LINE_USER_ID        推播目標 LINE User ID（U 開頭）
 
 選填：
+  ANTHROPIC_API_KEY   Claude API 金鑰（新北財政局 / 住都中心備援解析）
   GITHUB_TOKEN        GitHub Personal Access Token（用於儲存 state）
   GITHUB_REPO         格式 owner/repo（例如 yourname/tender-scraper）
   STATE_FILE          本地備援路徑（預設 state.json）
-  ONLY_NEW            "false" 每次發送全部（預設只發新增）
 """
 
 import json
 import logging
 import os
 import re
-import subprocess
-import sys
 from base64 import b64decode, b64encode
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urljoin
 
 import requests
 
 # ── 設定 ──────────────────────────────────────────────────────────────────────
 
 SCRIPT_DIR = Path(__file__).parent
-STATE_FILE  = Path(os.getenv("STATE_FILE", SCRIPT_DIR / "state.json"))
-ONLY_NEW    = os.getenv("ONLY_NEW", "true").lower() != "false"
+STATE_FILE = Path(os.getenv("STATE_FILE", SCRIPT_DIR / "state.json"))
 
 CONFIG = {
     "api_key":      os.getenv("ANTHROPIC_API_KEY", ""),
@@ -76,15 +78,6 @@ def get(url, **kwargs) -> requests.Response | None:
         return r
     except Exception as e:
         log.warning(f"GET 失敗 {url}：{e}")
-        return None
-
-def post_json(url, payload, extra_headers=None) -> dict | None:
-    h = {**HTTP_HEADERS, "Content-Type": "application/json", **(extra_headers or {})}
-    try:
-        r = requests.post(url, headers=h, json=payload, timeout=20)
-        return r.json()
-    except Exception as e:
-        log.warning(f"POST 失敗 {url}：{e}")
         return None
 
 # ── 各網站精準 Parser ─────────────────────────────────────────────────────────
@@ -169,14 +162,7 @@ def parse_tra() -> list[dict]:
 
 def parse_ntpc_finance() -> list[dict]:
     """新北市政府財政局：呼叫後端 API（AJAX）"""
-    # 網站用 jQuery AJAX 送 POST 取得公告清單
     api_url = "https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316"
-    # 嘗試直接抓 API（常見的 JSP 網站後端格式）
-    api_candidates = [
-        "https://www.finance.ntpc.gov.tw/QueryBulletinListServlet",
-        "https://www.finance.ntpc.gov.tw/bulletin/query",
-    ]
-    # 先用 requests 抓原始頁面的所有連結（靜態部分）
     r = get(api_url)
     if not r: return []
     from bs4 import BeautifulSoup
@@ -367,11 +353,12 @@ def parse_fnp() -> list[dict]:
 
 
 def parse_pcc() -> list[dict]:
-    """政府採購網：從 Make 每日更新的 GitHub Gist 讀取 HTML，只保留採購性質=勞務類。
+    """政府採購網：從 Make 每日更新的 GitHub Gist 讀取 HTML。
     Gist 由 Make 定期 PATCH 更新，無 IP 封鎖問題。
     欄位順序（依截圖）：
       項次 | 機關名稱 | 標案案號↩標案名稱 | 傳輸次數 | 招標方式 |
       採購性質 | 公告日期 | 截止投標 | 預算金額 | 功能選項(檢視)
+    關鍵字 / 地區篩選由 SOURCES.passes_filters() 統一處理。
     """
     from bs4 import BeautifulSoup
 

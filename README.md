@@ -1,6 +1,6 @@
 # 政府標案每日爬蟲
 
-自動抓取 8 個政府機關網站的最新標案，每日透過 **LINE** 推播近期新增公告。
+自動抓取 9 個政府機關網站的最新標案，每日透過 **LINE** 推播近期新增公告。
 
 ---
 
@@ -9,13 +9,14 @@
 | 機關 | 公告頁面 | 抓取方式 | 備註 |
 |------|----------|----------|------|
 | 台北自來水處 | [連結](https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5) | `table tbody tr`（CCMS 格式） | 目前此環境 IP 被 WAF 封鎖，本機執行正常 |
-| 國營台鐵 | [連結](https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1) | CSS class + regex fallback | **只抓臺北營業分處**，其餘分處略過 |
+| 國營台鐵 | [連結](https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1) | CSS class + regex fallback | 只抓臺北營業分處，其餘分處略過 |
 | 新北市政府財政局 | [連結](https://www.finance.ntpc.gov.tw/home.jsp?id=8b767bd17dc29316) | 靜態連結 + Claude fallback | AJAX 動態頁面，靜態無法取得時用 Claude API 解析 |
 | 農業部 瑠公管理處 | [連結](https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010) | `ul.commonList li.commonList-item` | 無 table，為 ul/li 結構 |
 | 郵局房地產出租 | [連結](https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904) | `table tr` / `ul li` | 無各別標案頁，連結統一指向來源頁 |
 | 台北市財政局 | [連結](https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00) | `table tbody tr`（CCMS 格式） | 以 `data-title` 屬性精準取欄位 |
 | 國家住宅及都市更新中心 | [連結](https://www.hurc.org.tw/hurc/procurement) | `table tr` + Claude fallback | |
 | 國有財產署 | [連結](https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c) | `ul li > span.title-message + p.form-height` | SSR 頁面，詳情 URL 含 msgId |
+| 政府採購網 | [連結](https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic) | GitHub Gist HTML（由 Make 每日更新） | 套用地區 + 關鍵字白名單篩選 |
 
 ---
 
@@ -33,7 +34,7 @@
        ├─ 依各網站結構以 BeautifulSoup 解析 HTML
        │   └─ 若精準 parser 抓到 0 筆，部分網站會 fallback 呼叫 Claude API 解析純文字
        │
-       └─ 每筆標案輸出格式：{ title, date（公告日期）, url（詳情連結）}
+       └─ 每筆標案輸出格式：{ title, date（公告日期）, url（詳情連結）, agency（機關，選填）}
 ```
 
 ### 二、紀錄流程（state.json）
@@ -61,21 +62,39 @@
 新標案（不在 state 中）
        │
        ▼
-【地區篩選】（僅台鐵）
-  標題包含「臺北營業分處」→ ✅ 保留
-  其他分處（花蓮、高雄…） → ❌ 直接丟棄（爬取時就過濾）
+【關鍵字 / 地區篩選】（passes_filters，依 SOURCES 設定）
+  regions   地區白名單：標題或機關名稱含任一詞才保留（空 = 不限）
+  whitelist 關鍵字白名單：標題含任一詞才保留（空 = 不限）
+  blacklist 關鍵字黑名單：標題含任一詞則丟棄（空 = 不排除）
+
+  ✅ 通過 → 進入日期篩選
+  ❌ 不符 → 不推播（但仍存入 state 避免重複）
        │
        ▼
-【日期篩選】（所有來源）
-  讀取 date 欄位（公告日期 / 釋出日）
+【日期篩選】（is_within_date_window，所有來源）
+  讀取 date 欄位（公告日期）
   解析民國曆（115年05月）或西元曆（2026-05）
   在當月 ±1 個月內 → ✅ 加入推播清單（notify）
-  超出範圍         → ❌ 不推播（但仍存入 state 避免重複）
+  超出範圍         → ❌ 不推播（但仍存入 state）
   date 欄位為空    → 用 title 文字備援解析；仍無法解析 → 放行
        │
        ▼
 【推播】LINE Flex Message（每筆可點擊直達公告頁）
 ```
+
+**各來源篩選設定（`SOURCES` 內可直接調整）：**
+
+| 來源 | regions | whitelist | blacklist |
+|------|---------|-----------|-----------|
+| 台北自來水處 | — | — | — |
+| 國營台鐵 | — | — | — |
+| 新北市政府財政局 | — | — | — |
+| 農業部 瑠公管理處 | — | — | — |
+| 郵局房地產出租 | — | — | — |
+| 台北市財政局 | — | — | — |
+| 國家住宅及都市更新中心 | — | — | — |
+| 國有財產署 | — | — | — |
+| 政府採購網 | 台北、臺北、新北 | 出租、標租、租賃、招租、房地、不動產、標售、廳舍、地上物、閒置空間、公有土地 | — |
 
 **日期篩選設計原因：**
 正常每日執行時，爬到的新標案公告日期就是近期的，兩層篩選都會通過。
@@ -93,11 +112,12 @@
 ============================================================
   每日標案摘要  2026-05-14  08:00
 ============================================================
-  台北自來水處          共  0筆  ✅ 無新增
-  國營台鐵              共  2筆  ✅ 無新增
+  台北自來水處          共 20筆  ✅ 無新增
+  國營台鐵              共  1筆  ✅ 無新增
   農業部 瑠公管理處     共 14筆  🆕 新增 3 筆（推播 3 筆）
        ▸ 瑠公管理處 115 年度第 5 批...
   郵局房地產出租        共 83筆  ✅ 無新增
+  政府採購網            共100筆  ✅ 無新增
   ...
 ============================================================
   合計新增：3 筆  推播：3 筆
@@ -105,12 +125,11 @@
 ```
 
 - **新增 N 筆**：本次爬到且不在 state 中的標案數
-- **推播 N 筆**：通過日期篩選、實際送出 LINE 通知的標案數
-- 兩者相等表示所有新標案都是近期公告
+- **推播 N 筆**：通過關鍵字篩選 + 日期篩選、實際送出 LINE 通知的標案數
 
 ### 2. state.json 歷史記錄
 
-`state.json` 記錄每個來源已通知過的標案 key（標題），可直接查看：
+`state.json` 記錄每個來源已見過的標案 key（標題），可直接查看：
 
 ```bash
 cat state.json | python -m json.tool
