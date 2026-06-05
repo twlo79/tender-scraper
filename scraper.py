@@ -389,7 +389,15 @@ def _parse_pcc_gist() -> list[dict]:
     try:
         resp = requests.get(GIST_API, headers=gh_headers, timeout=15)
         gist_json = resp.json()
-        html = gist_json.get("files", {}).get(GIST_FILE, {}).get("content", "")
+        file_meta = gist_json.get("files", {}).get(GIST_FILE, {})
+        # 檔案 >1 MB 時 GitHub API 截斷，content 為空，需改抓 raw_url
+        if file_meta.get("truncated"):
+            raw_url = file_meta.get("raw_url", "")
+            log.info(f"  [政府採購網] Gist 內容截斷，改抓 raw_url")
+            raw_resp = requests.get(raw_url, headers=gh_headers, timeout=30)
+            html = raw_resp.text
+        else:
+            html = file_meta.get("content", "")
     except Exception as e:
         log.warning(f"  [政府採購網] Gist API 讀取失敗：{e}")
         return []
