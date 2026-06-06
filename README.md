@@ -44,7 +44,9 @@
   無法解析日期 → 放行
        │
        ▼
-【3. LINE 推播】Flex Message（可點擊直達公告頁）
+【3. LINE 推播】有新案才發；無新增時靜默
+  文字摘要：只列有新增的來源 + 案名
+  Flex Message：每個來源一張卡片，可點擊直達公告頁
 ```
 
 全域黑名單（所有來源共用）：開標結果、自動販賣機、場地短期出租、新建工程、財物採購、勞務採購 等。
@@ -55,22 +57,24 @@
 
 | 工作 | 時間（台灣） | 說明 |
 |------|-------------|------|
-| `daily.yml` — 標案爬蟲 | 每天 11:00 | 抓取 14 個來源，推播 LINE |
-| `log-check.yml` — 健康報告 | 每天 11:30 | 解析爬蟲 log，寫入 `daily_report.json` |
+| `daily.yml` — 標案爬蟲 | 每天 10:37 | 抓取 14 個來源，有新增才推播 LINE |
+| `log-check.yml` — 健康報告 | 每天 11:07 | 解析爬蟲 log，寫入 `daily_report.json` |
 
-`daily_report.json` 保留最近 30 天紀錄，格式：
+> 使用非整點奇數分鐘（`:37`、`:07`）以避開 GitHub Actions 高峰排隊延遲。
+
+`sent_log.json` 每次執行都完整記錄（無論有無新增），保留最近 30 天：
 
 ```json
 {
-  "2026-06-05": {
-    "date": "2026-06-05",
-    "sources": {
-      "台北自來水處": {"total": 20, "new": 0, "pushed": 0}
+  "2026-06-06 10:37": {
+    "_summary": {
+      "total_fetched": 225,
+      "total_new": 2,
+      "total_notify": 2,
+      "line_pushed": true
     },
-    "total_new": 3,
-    "total_pushed": 3,
-    "errors": [],
-    "line": "成功"
+    "台北自來水處": {"fetched": 8, "new": 2, "notify": 2, "items": ["案名A", "案名B"]},
+    "國營台鐵":     {"fetched": 1, "new": 0, "notify": 0}
   }
 }
 ```
@@ -112,10 +116,10 @@ pip install requests beautifulsoup4 lxml
 ### 執行
 
 ```bash
-# 正常執行（含 LINE 推播）
+# 正常執行（有新增才推播 LINE）
 python scraper.py
 
-# 測試用（不推播 LINE）
+# Dry-run：不推播 LINE、不寫入 state.json、不更新 sent_log.json
 DRY_RUN=true python scraper.py
 ```
 
@@ -128,7 +132,7 @@ DRY_RUN=true python scraper.py
 ```yaml
 on:
   schedule:
-    - cron: '0 3 * * *'   # 每天 UTC 03:00 = 台灣時間 11:00
+    - cron: '37 2 * * *'  # 每天 UTC 02:37 = 台灣時間 10:37
   workflow_dispatch:
 
 jobs:
