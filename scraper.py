@@ -2,13 +2,14 @@
 """
 政府標案每日爬蟲 v9
 ================================================================
-收錄來源（13 個）：
-  國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
+收錄來源（14 個）：
+  台北自來水處、國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
   國有財產署、政府採購網、教育部學產基金、台北市都發局
   國防部政治作戰局、土地銀行出租不動產、Google Alerts
 
 抓取策略：
+  台北自來水處            requests + table tbody tr（CCMS 格式）
   國營台鐵               requests + CSS class / regex fallback
   新北市政府不動產標租     requests + table tbody tr parser + Claude fallback
   農業部 瑠公管理處       requests + ul.commonList li parser
@@ -108,6 +109,42 @@ def get(url, **kwargs) -> requests.Response | None:
         return None
 
 # ── 各網站精準 Parser ─────────────────────────────────────────────────────────
+
+def parse_taipei_water() -> list[dict]:
+    """台北自來水處：CCMS 系統 table tbody tr。
+    欄位結構（每 td 含 data-title 屬性）：
+      編號 | 標案名稱（含 <a> 連結） | 公告日期 | 開標日期 | 標案進度 | 開標結果
+    注意：water.gov.taipei 目前有時 HTTP 403 host_not_allowed，視網路環境而定。
+    """
+    BASE = "https://www.water.gov.taipei"
+    r = get(f"{BASE}/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5")
+    if not r: return []
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr"):
+        tds = row.find_all("td")
+        if not tds:
+            continue
+        td_map = {td.get("data-title", ""): td for td in tds}
+        title_td = td_map.get("標案名稱") or td_map.get("標題") or td_map.get("主旨")
+        if not title_td:
+            title_td = next((td for td in tds if td.find("a", href=True)), None)
+        if not title_td:
+            continue
+        a = title_td.find("a", href=True)
+        if not a:
+            continue
+        title = a.get_text(strip=True)
+        href  = a["href"]
+        if not href.startswith("http"):
+            href = urljoin(BASE, href)
+        date_td = td_map.get("公告日期") or td_map.get("發布日期") or td_map.get("日期")
+        dt = date_td.get_text(strip=True) if date_td else ""
+        if title and len(title) > 3:
+            items.append({"title": title, "date": dt, "url": href})
+    log.info(f"  [台北自來水處] {len(items)} 筆")
+    return items
 
 
 def parse_tra() -> list[dict]:
@@ -652,6 +689,12 @@ def parse_with_claude_fallback(text: str, name: str, base: str) -> list[dict]:
 # ── 各網站設定 ────────────────────────────────────────────────────────────────
 SOURCES = [
     {
+        "name": "台北自來水處",
+        "url":  "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",
+        "fn":   parse_taipei_water,
+        "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
         "name": "國營台鐵",
         "url":  "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
         "fn":   parse_tra,
@@ -1019,7 +1062,7 @@ def main():
     # 一次性清除舊版本遺留的垃圾 state key（v9 升版後執行一次）
     _STATE_VER = 9
     if state.get("_version", 0) < _STATE_VER:
-        for _src in ["台北自來水處", "新北市政府不動產標租", "土地銀行出租不動產"]:
+        for _src in ["新北市政府不動產標租", "土地銀行出租不動產"]:
             if _src in state:
                 del state[_src]
                 log.info(f"♻️  清除舊 state key：{_src}")
