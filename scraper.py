@@ -540,7 +540,7 @@ def parse_taipei_udd() -> list[dict]:
     注意：www.udd.gov.taipei 在 GitHub Actions 環境有 TLS SNI 問題，
     用 verify=False 繞過（read-only 爬蟲，可接受）。
     """
-    BASE = "https://www.udd.gov.taipei"
+    BASE = "https://udd.gov.taipei"
     URL  = f"{BASE}/events/psxwq1j"
     try:
         import urllib3
@@ -812,7 +812,7 @@ SOURCES = [
     },
     {
         "name": "台北市都發局",
-        "url":  "https://www.udd.gov.taipei/events/psxwq1j",
+        "url":  "https://udd.gov.taipei/events/psxwq1j",
         "fn":   parse_taipei_udd,
         "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關
     },
