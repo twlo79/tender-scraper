@@ -701,7 +701,8 @@ SOURCES = [
         "name": "國有財產署",
         "url":  "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",
         "fn":   parse_fnp,
-        "whitelist": [], "blacklist": [], "regions": [],  # 已在 parser 內篩北區分署
+        "whitelist": [], "blacklist": [], "regions": [],
+        "skip_global_filter": True,  # 標題為組合字串，已在 parser 篩北區分署
     },
     {
         "name": "政府採購網",
@@ -1031,7 +1032,11 @@ def main():
         try:
             items        = src["fn"]()
             new_items    = find_new_items(name, items, state)
-            notify_items = [i for i in new_items if passes_filters(i) and is_within_date_window(i)]
+            skip_filters = src.get("skip_global_filter", False)
+            notify_items = [
+                i for i in new_items
+                if (skip_filters or passes_filters(i)) and is_within_date_window(i)
+            ]
             results[name] = {"all": items, "new": new_items, "notify": notify_items, "error": None}
             log.info(f"  → 共 {len(items)} 筆，新增 {len(new_items)} 筆，推播 {len(notify_items)} 筆")
         except Exception as e:
