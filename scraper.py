@@ -928,14 +928,30 @@ SENT_LOG_FILE = SCRIPT_DIR / "sent_log.json"
 SENT_LOG_KEEP_DAYS = 30
 
 
-def save_sent_log(results: dict, run_time: str):
-    """將本次推播的 notify 項目存入 sent_log.json，保留最近 N 天。"""
+def save_sent_log(results: dict, run_time: str, line_pushed: bool):
+    """將本次執行完整資訊存入 sent_log.json，保留最近 N 天。"""
     key = f"{date.today()} {run_time}"
+    total_fetched = sum(len(d.get("all", []))    for d in results.values())
+    total_new     = sum(len(d.get("new", []))    for d in results.values())
+    total_notify  = sum(len(d.get("notify", [])) for d in results.values())
+
     entry = {
-        name: d["notify"]
-        for name, d in results.items()
-        if d.get("notify")
+        "_summary": {
+            "total_fetched": total_fetched,
+            "total_new":     total_new,
+            "total_notify":  total_notify,
+            "line_pushed":   line_pushed,
+        }
     }
+    for name, d in results.items():
+        entry[name] = {
+            "fetched": len(d.get("all", [])),
+            "new":     len(d.get("new", [])),
+            "notify":  len(d.get("notify", [])),
+            **({"error": d["error"]} if d.get("error") else {}),
+            **({"items": [i.get("title", "") for i in d["notify"]]} if d.get("notify") else {}),
+        }
+
     try:
         log_data = json.loads(SENT_LOG_FILE.read_text(encoding="utf-8")) if SENT_LOG_FILE.exists() else {}
     except Exception:
@@ -1025,18 +1041,19 @@ def build_line_messages(results: dict, run_time: str, original_date: str = "") -
     total_notify = sum(len(v.get("notify", [])) for v in results.values())
     messages     = []
 
-    # 摘要文字（全部來源列出）
-    lines = [f"📋 政府標案通知 {today}", f"近期新增 {total_notify} 筆\n"]
+    # 摘要文字（只列有新增或錯誤的來源）
+    lines = [f"📋 政府標案通知 {today}", f"共新增 {total_notify} 筆\n"]
     for src in SOURCES:
-        name   = src["name"]
-        notify = len(results.get(name, {}).get("notify", []))
-        err    = results.get(name, {}).get("error")
+        name       = src["name"]
+        d          = results.get(name, {})
+        notify     = d.get("notify", [])
+        err        = d.get("error")
         if err:
             lines.append(f"⚠️ {name}：抓取失敗")
         elif notify:
-            lines.append(f"🆕 {name}：新增 {notify} 筆")
-        else:
-            lines.append(f"✅ {name}：無")
+            lines.append(f"\n🆕 {name}：{len(notify)} 筆")
+            for item in notify[:5]:
+                lines.append(f"  ▸ {item.get('title', '')[:40]}")
     lines.append("\n⚠️ 免責聲明：本通知由自動爬蟲產生，資料僅供參考，請以各機關官方公告為準。")
     messages.append({"type": "text", "text": "\n".join(lines)})
 
@@ -1112,7 +1129,10 @@ def main():
             log.error(f"  → 例外：{e}")
             results[name] = {"all": [], "new": [], "notify": [], "error": str(e)}
 
-    save_state(state)
+    if DRY_RUN:
+        log.info("[DRY RUN] 略過 save_state（不寫入 state.json）")
+    else:
+        save_state(state)
 
     # 摘要
     total_new    = sum(len(v["new"])    for v in results.values())
@@ -1139,13 +1159,21 @@ def main():
     print(f"  合計新增：{total_new} 筆  推播：{total_notify} 筆")
     print(f"{'='*60}\n")
 
-    # 儲存本次推播內容到 sent_log.json（供日後重播）
-    save_sent_log(results, run_time)
+    # LINE 推播（有新案才發）
+    line_pushed = False
+    if total_notify > 0:
+        messages = build_line_messages(results, run_time)
+        if messages:
+            push_in_batches(messages)
+            line_pushed = True
+    else:
+        log.info("無新增案件，略過 LINE 推播")
 
-    # LINE 推播（只發近期標案）
-    messages = build_line_messages(results, run_time)
-    if messages:
-        push_in_batches(messages)
+    # 儲存本次執行完整記錄到 sent_log.json（dry-run 不寫）
+    if DRY_RUN:
+        log.info("[DRY RUN] 略過 sent_log.json 更新")
+    else:
+        save_sent_log(results, run_time, line_pushed)
 
     log.info("=== 完成 ===")
 
