@@ -294,7 +294,10 @@ FNP_BASE = "https://esvc.fnp.gov.tw"
 
 
 def parse_fnp() -> list[dict]:
-    """國有財產署：抓取 4 個類別頁面，篩選北區分署的招標公告。"""
+    """國有財產署：抓取 4 個類別頁面，篩選北區分署的招標公告。
+    HTML 結構：a.message-flex > span.title-message + p.form-height
+    msgId 從 onclick="showInfomation('xxx')" 提取。
+    """
     from bs4 import BeautifulSoup
 
     all_items = []
@@ -304,55 +307,37 @@ def parse_fnp() -> list[dict]:
             log.warning(f"  [國有財產署/{page['cat']}] 連線失敗")
             continue
 
-        soup = BeautifulSoup(r.text, "lxml")
+        soup  = BeautifulSoup(r.text, "lxml")
+        count = 0
+        base_path = page["url"].split("?")[0]  # e.g. .../tenderSetSuperficies
 
-        # 找欄位含「單位」「批號」的 table
-        target_table = None
-        for tbl in soup.find_all("table"):
-            hdr_text = tbl.find("tr").get_text() if tbl.find("tr") else ""
-            if "單位" in hdr_text and "批號" in hdr_text:
-                target_table = tbl
-                break
+        for a in soup.select("a.message-flex"):
+            # 提取欄位（label → value）
+            labels = [s.get_text(strip=True) for s in a.select("span.title-message")]
+            values = [p.get_text(strip=True) for p in a.select("p.form-height")]
+            fields = dict(zip(labels, values))
 
-        if not target_table:
-            log.warning(f"  [國有財產署/{page['cat']}] 找不到資料表格")
-            continue
-
-        # 動態偵測欄位 index
-        hdr_cells = [th.get_text(strip=True) for th in target_table.find("tr").find_all(["th", "td"])]
-        idx = {name: i for i, name in enumerate(hdr_cells)}
-        i_unit   = idx.get("單位",   0)
-        i_year   = idx.get("年度",   1)
-        i_batch  = idx.get("批號",   2)
-        i_kind   = idx.get("種類",   3)
-        i_pubdt  = idx.get("公告日期", 4)
-        i_opendt = idx.get("開標日期", 5)
-
-        for row in target_table.find_all("tr")[1:]:
-            tds = row.find_all("td")
-            if len(tds) <= i_pubdt:
+            unit = fields.get("單位", "")
+            if not unit or FNP_TARGET_UNIT not in unit:
                 continue
-            unit = tds[i_unit].get_text(strip=True)
-            if FNP_TARGET_UNIT not in unit:
-                continue
-            year    = tds[i_year].get_text(strip=True)
-            batch   = tds[i_batch].get_text(strip=True)
-            kind    = tds[i_kind].get_text(strip=True) if len(tds) > i_kind else page["cat"]
-            pub_dt  = tds[i_pubdt].get_text(strip=True)
-            open_dt = tds[i_opendt].get_text(strip=True) if len(tds) > i_opendt else ""
 
-            # 嘗試取得詳細頁 URL
-            a = row.find("a", href=True)
-            if a:
-                href = a["href"]
-                url = href if href.startswith("http") else urljoin(FNP_BASE, href)
-            else:
-                url = page["url"]
+            year    = fields.get("年度", "")
+            batch   = fields.get("批號", "")
+            kind    = fields.get("種類", page["cat"])
+            pub_dt  = fields.get("公告日期", "")
+            open_dt = fields.get("開標日期", "")
+
+            # 從 onclick 取 msgId，組成詳細頁 URL
+            onclick = a.get("onclick", "")
+            m = re.search(r"showInfomation\('([^']+)'\)", onclick)
+            msg_id  = m.group(1) if m else ""
+            url = f"{base_path}/showInfomation?msgId={msg_id}" if msg_id else page["url"]
 
             title = f"【{page['cat']}】{unit} {year}年第{batch}批 {kind} 公告:{pub_dt} 開標:{open_dt}"
             all_items.append({"title": title, "date": pub_dt, "url": url, "agency": "國有財產署"})
+            count += 1
 
-        log.info(f"  [國有財產署/{page['cat']}] {sum(1 for i in all_items if page['cat'] in i['title'])} 筆")
+        log.info(f"  [國有財產署/{page['cat']}] {count} 筆")
 
     log.info(f"  [國有財產署] 合計 {len(all_items)} 筆（4 類別，{FNP_TARGET_UNIT}）")
     return all_items
