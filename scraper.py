@@ -16,7 +16,7 @@
   郵局房地產出租           requests + table/list parser
   台北市財政局            requests + table tr（CCMS 格式）
   國家住宅及都市更新中心   requests + table/article + Claude fallback
-  國有財產署              requests + ul li span/p parser（批號為 key）
+  國有財產署              4 頁面 table parser（招標/地上權/停車/創業，篩北區分署）
   政府採購網              直接抓取 PCC 查詢頁（近 7 天招標公告）
   教育部學產基金           requests + table tbody tr + Claude fallback
   台北市都發局            requests + table tr + Claude fallback
@@ -281,90 +281,80 @@ def parse_hurc() -> list[dict]:
     return items
 
 
-# 國有財產署各分署 svcId
-# 可從 esvc.fnp.gov.tw/rtMsg 頁面取得更多分署 svcId 後直接新增
-FNP_SVC_IDS: dict[str, str] = {
-    "國有財產署":     "5eafac8df8c649ba9cf62a591e44223c",
-    # 其他分署：請從 esvc.fnp.gov.tw/rtMsg 主頁取得 svcId 後加入
-    # "北區分署":   "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    # "台北辦事處": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    # "新北辦事處": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-}
-
-
-def _parse_fnp_single(office: str, svc_id: str) -> list[dict]:
-    """單一 svcId 的國有財產署資料抓取。"""
-    BASE_URL   = "https://esvc.fnp.gov.tw"
-    SOURCE_URL = f"{BASE_URL}/rtMsg?svcId={svc_id}"
-    DETAIL_URL = f"{BASE_URL}/rtMsg/showInfomation"
-
-    r = get(SOURCE_URL)
-    if not r:
-        return []
-
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(r.text, "lxml")
-    items = []
-
-    for li in soup.select("ul li"):
-        labels = [s.get_text(strip=True) for s in li.select("span.title-message")]
-        values = [p.get_text(strip=True) for p in li.select("p.form-height")]
-        if not labels or not values:
-            continue
-        fields = dict(zip(labels, values))
-
-        unit    = fields.get("單位", "")
-        year    = fields.get("年度", "")
-        batch   = fields.get("批號", "")
-        pub_dt  = fields.get("公告日期", "")
-        open_dt = fields.get("開標日期", "")
-        if not unit or unit in ("單位", "機關單位"):
-            continue
-
-        msg_id = (li.get("data-msgid") or li.get("data-msg-id") or li.get("data-id") or "")
-        a = li.find("a", href=True)
-        if a:
-            href = a["href"]
-            if not href.startswith("http"):
-                href = urljoin(BASE_URL, href)
-            m = re.search(r"msgId=([a-f0-9A-F]+)", href)
-            if m:
-                msg_id = m.group(1)
-        href = f"{DETAIL_URL}?msgId={msg_id}" if msg_id else SOURCE_URL
-
-        title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
-        items.append({"title": title, "date": pub_dt, "url": href, "agency": office})
-
-    # fallback：table tr
-    if not items:
-        for row in soup.select("table tbody tr, table tr"):
-            tds = row.find_all("td")
-            if len(tds) < 4:
-                continue
-            unit    = tds[0].get_text(strip=True)
-            year    = tds[1].get_text(strip=True)
-            batch   = tds[2].get_text(strip=True)
-            pub_dt  = tds[3].get_text(strip=True)
-            open_dt = tds[4].get_text(strip=True) if len(tds) > 4 else ""
-            if not unit or unit in ("單位", "機關單位"):
-                continue
-            title = f"{unit} {year}年第{batch}批 公告:{pub_dt} 開標:{open_dt}"
-            a = row.find("a", href=True)
-            href = a["href"] if a else SOURCE_URL
-            if href and not href.startswith("http"):
-                href = urljoin(BASE_URL, href)
-            items.append({"title": title, "date": pub_dt, "url": href or SOURCE_URL, "agency": office})
-
-    return items
+# 國有財產署 4 個類別頁面（北區分署）
+# 表格欄位：單位 | 年度 | 批號 | 種類 | 公告日期 | 開標日期 | 觀看人數
+FNP_PAGES = [
+    {"cat": "招標公告",   "url": "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c"},
+    {"cat": "地上權設定", "url": "https://esvc.fnp.gov.tw/tenderSetSuperficies?svcId=f6c87d65ebc84e988b4d245777d83a81"},
+    {"cat": "停車場",     "url": "https://esvc.fnp.gov.tw/parkingMsg?svcId=a211eb824d6841d598fc784fb44ba962"},
+    {"cat": "創業租賃",   "url": "https://esvc.fnp.gov.tw/crtMsg?svcId=ecc2694bdf6144e298053cb2a9f2460f"},
+]
+FNP_TARGET_UNIT = "北區分署"
+FNP_BASE = "https://esvc.fnp.gov.tw"
 
 
 def parse_fnp() -> list[dict]:
-    """國有財產署：迭代 FNP_SVC_IDS，支援多分署。"""
+    """國有財產署：抓取 4 個類別頁面，篩選北區分署的招標公告。"""
+    from bs4 import BeautifulSoup
+
     all_items = []
-    for office, svc_id in FNP_SVC_IDS.items():
-        items = _parse_fnp_single(office, svc_id)
-        all_items.extend(items)
-    log.info(f"  [國有財產署] {len(all_items)} 筆（{len(FNP_SVC_IDS)} 個分署）")
+    for page in FNP_PAGES:
+        r = get(page["url"])
+        if not r:
+            log.warning(f"  [國有財產署/{page['cat']}] 連線失敗")
+            continue
+
+        soup = BeautifulSoup(r.text, "lxml")
+
+        # 找欄位含「單位」「批號」的 table
+        target_table = None
+        for tbl in soup.find_all("table"):
+            hdr_text = tbl.find("tr").get_text() if tbl.find("tr") else ""
+            if "單位" in hdr_text and "批號" in hdr_text:
+                target_table = tbl
+                break
+
+        if not target_table:
+            log.warning(f"  [國有財產署/{page['cat']}] 找不到資料表格")
+            continue
+
+        # 動態偵測欄位 index
+        hdr_cells = [th.get_text(strip=True) for th in target_table.find("tr").find_all(["th", "td"])]
+        idx = {name: i for i, name in enumerate(hdr_cells)}
+        i_unit   = idx.get("單位",   0)
+        i_year   = idx.get("年度",   1)
+        i_batch  = idx.get("批號",   2)
+        i_kind   = idx.get("種類",   3)
+        i_pubdt  = idx.get("公告日期", 4)
+        i_opendt = idx.get("開標日期", 5)
+
+        for row in target_table.find_all("tr")[1:]:
+            tds = row.find_all("td")
+            if len(tds) <= i_pubdt:
+                continue
+            unit = tds[i_unit].get_text(strip=True)
+            if FNP_TARGET_UNIT not in unit:
+                continue
+            year    = tds[i_year].get_text(strip=True)
+            batch   = tds[i_batch].get_text(strip=True)
+            kind    = tds[i_kind].get_text(strip=True) if len(tds) > i_kind else page["cat"]
+            pub_dt  = tds[i_pubdt].get_text(strip=True)
+            open_dt = tds[i_opendt].get_text(strip=True) if len(tds) > i_opendt else ""
+
+            # 嘗試取得詳細頁 URL
+            a = row.find("a", href=True)
+            if a:
+                href = a["href"]
+                url = href if href.startswith("http") else urljoin(FNP_BASE, href)
+            else:
+                url = page["url"]
+
+            title = f"【{page['cat']}】{unit} {year}年第{batch}批 {kind} 公告:{pub_dt} 開標:{open_dt}"
+            all_items.append({"title": title, "date": pub_dt, "url": url, "agency": "國有財產署"})
+
+        log.info(f"  [國有財產署/{page['cat']}] {sum(1 for i in all_items if page['cat'] in i['title'])} 筆")
+
+    log.info(f"  [國有財產署] 合計 {len(all_items)} 筆（4 類別，{FNP_TARGET_UNIT}）")
     return all_items
 
 
@@ -726,7 +716,7 @@ SOURCES = [
         "name": "國有財產署",
         "url":  "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",
         "fn":   parse_fnp,
-        "whitelist": [], "blacklist": [], "regions": [],
+        "whitelist": [], "blacklist": [], "regions": [],  # 已在 parser 內篩北區分署
     },
     {
         "name": "政府採購網",
