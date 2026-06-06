@@ -10,17 +10,17 @@
 |---|------|----------|----------|----------|
 | 1 | 台北自來水處 | [連結](https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5) | `table tbody tr`（CCMS） | — |
 | 2 | 國營台鐵 | [連結](https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1) | CSS class + regex fallback | 臺北營業分處 |
-| 3 | 新北市政府不動產標租 | [連結](https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd) | `table tr` + Claude fallback | — |
+| 3 | 新北市政府不動產標租 | [連結](https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd) | `table tbody tr`（精準選取）+ Claude fallback | — |
 | 4 | 農業部 瑠公管理處 | [連結](https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010) | `ul.commonList li` | — |
 | 5 | 郵局房地產出租 | [連結](https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904) | `table tr` / `ul li` | 台北、新北 |
 | 6 | 台北市財政局 | [連結](https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00) | `table tbody tr`（CCMS） | — |
 | 7 | 國家住宅及都市更新中心 | [連結](https://www.hurc.org.tw/hurc/procurement) | `table tr` + Claude fallback | — |
 | 8 | 國有財產署 | [連結](https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c) | `ul li span/p` | — |
-| 9 | 政府採購網 | [連結](https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic) | 直接抓取查詢頁（近 7 天招標公告） | 台北、新北 |
-| 10 | 教育部學產基金 | [連結](https://depart.moe.edu.tw/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D) | `table tbody tr` + Claude fallback | 台北、新北 |
+| 9 | 政府採購網 | [連結](https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic) | 直接抓取查詢頁（出租／標租 關鍵字，近 7 天招標公告） | 台北、新北 |
+| 10 | 教育部學產基金 | [連結](https://depart.moe.edu.tw/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D) | `table tbody tr`（日期格式驗證）+ Claude fallback | 台北、新北 |
 | 11 | 台北市都發局 | [連結](https://udd.gov.taipei/events/psxwq1j) | `table tr` + Claude fallback | — |
 | 12 | 國防部政治作戰局 | [連結](https://gpwd.mnd.gov.tw/Publish.aspx?cnid=609) | `table tr` + Claude fallback | 台北、新北 |
-| 13 | 土地銀行出租不動產 | [連結](https://www.landbank.com.tw/Bulletin/RentRealty) | `table tr` / `ul li` + Claude fallback | 台北、新北 |
+| 13 | 土地銀行出租不動產 | [連結](https://www.landbank.com.tw/Bulletin/RentRealty) | `table tbody tr` + Claude fallback | 台北、新北 |
 | 14 | Google Alerts | RSS Feed | `xml.etree.ElementTree`（Atom） | 台北、新北、gov.tw |
 
 ---
