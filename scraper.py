@@ -17,7 +17,7 @@
   台北市財政局            requests + table tr（CCMS 格式）
   國家住宅及都市更新中心   requests + table/article + Claude fallback
   國有財產署              requests + ul li span/p parser（批號為 key）
-  政府採購網              GitHub Gist HTML（由 Make 每日更新）
+  政府採購網              直接抓取 PCC 查詢頁（近 7 天招標公告）
   教育部學產基金           requests + table tbody tr + Claude fallback
   台北市都發局            requests + table tr + Claude fallback
   國防部政治作戰局         requests + table tr + Claude fallback（眷村土地標租）
@@ -368,56 +368,37 @@ def parse_fnp() -> list[dict]:
     return all_items
 
 
-def _parse_pcc_gist() -> list[dict]:
-    """政府採購網主源：從 Make 每日更新的 GitHub Gist 讀取 HTML。"""
+def parse_pcc() -> list[dict]:
+    """政府採購網：直接抓取 PCC 查詢結果頁（近 7 天招標公告）。"""
     from bs4 import BeautifulSoup
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    BASE       = "https://web.pcc.gov.tw"
-    GIST_ID    = "816c04d08f02cd2e6e7623f5f5450f8a"
-    GIST_FILE  = "pcc.html"
-    GIST_API   = f"https://api.github.com/gists/{GIST_ID}"
-    SOURCE_URL = (
+    BASE  = "https://web.pcc.gov.tw"
+    today = date.today()
+    start = (today - timedelta(days=7)).strftime("%Y/%m/%d")
+    end   = today.strftime("%Y/%m/%d")
+    URL   = (
         f"{BASE}/prkms/tender/common/basic/readTenderBasic"
         f"?firstSearch=true&searchType=basic&isBinding=N&isLogIn=N"
-        f"&tenderType=TENDER_DECLARATION&tenderWay=TENDER_WAY_ALL_DECLARATION&dateType=isNow"
+        f"&orgName=&orgId=&tenderName=&tenderId="
+        f"&tenderType=TENDER_DECLARATION"
+        f"&tenderWay=TENDER_WAY_ALL_DECLARATION"
+        f"&dateType=isNow"
+        f"&tenderStartDate={start.replace('/', '%2F')}"
+        f"&tenderEndDate={end.replace('/', '%2F')}"
+        f"&radProctrgCate=&policyAdvocacy="
     )
 
-    gh_headers = {"Accept": "application/vnd.github+json"}
-    if CONFIG["gh_token"]:
-        gh_headers["Authorization"] = f"Bearer {CONFIG['gh_token']}"
-
     try:
-        resp = requests.get(GIST_API, headers=gh_headers, timeout=15)
-        gist_json = resp.json()
-        file_meta = gist_json.get("files", {}).get(GIST_FILE, {})
-        # 檔案 >1 MB 時 GitHub API 截斷，content 為空，需改抓 raw_url
-        if file_meta.get("truncated"):
-            raw_url = file_meta.get("raw_url", "")
-            log.info(f"  [政府採購網] Gist 內容截斷，改抓 raw_url")
-            raw_resp = requests.get(raw_url, headers=gh_headers, timeout=30)
-            if raw_resp.status_code != 200:
-                log.warning(f"  [政府採購網] raw_url 讀取失敗：HTTP {raw_resp.status_code}")
-                html = ""
-            else:
-                html = raw_resp.text
-        else:
-            html = file_meta.get("content", "")
+        r = requests.get(URL, headers=HTTP_HEADERS, timeout=30, verify=False)
+        r.raise_for_status()
+        r.encoding = r.apparent_encoding or "utf-8"
     except Exception as e:
-        log.warning(f"  [政府採購網] Gist API 讀取失敗：{e}")
+        log.warning(f"  [政府採購網] 連線失敗：{e}")
         return []
 
-    html = html.strip()
-    if not html or html == "<!-- placeholder -->":
-        log.warning("  [政府採購網] Gist 尚為 placeholder，Make 尚未執行")
-        return []
-
-    try:
-        import base64 as _b64
-        html = _b64.b64decode(html).decode("utf-8")
-    except Exception:
-        pass
-
-    soup  = BeautifulSoup(html, "lxml")
+    soup  = BeautifulSoup(r.text, "lxml")
     items = []
 
     target_table = None
@@ -432,18 +413,18 @@ def _parse_pcc_gist() -> list[dict]:
             tds = row.find_all("td")
             if len(tds) < 9:
                 continue
-            agency   = tds[1].get_text(strip=True)
-            name_td  = tds[2]
-            td_html  = str(name_td)
-            m_title  = re.search(r'pageCode2Img\("([^"]+)"\)', td_html)
-            title    = m_title.group(1) if m_title else ""
+            agency  = tds[1].get_text(strip=True)
+            name_td = tds[2]
+            td_html = str(name_td)
+            m_title = re.search(r'pageCode2Img\("([^"]+)"\)', td_html)
+            title   = m_title.group(1) if m_title else ""
             if not title:
                 lines = list(name_td.stripped_strings)
                 title = max(lines, key=len) if lines else ""
             if not title or len(title) <= 3:
                 continue
-            view_url = SOURCE_URL
-            view_a   = tds[9].find("a", href=True) or tds[2].find("a", href=True)
+            view_a   = (tds[9].find("a", href=True) if len(tds) > 9 else None) or tds[2].find("a", href=True)
+            view_url = URL
             if view_a:
                 href = view_a["href"]
                 view_url = href if href.startswith("http") else urljoin(BASE, href)
@@ -453,53 +434,6 @@ def _parse_pcc_gist() -> list[dict]:
     if not items and CONFIG["api_key"]:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
 
-    return items
-
-
-def parse_pcc_ronny() -> list[dict]:
-    """政府採購網備援源：pcc.g0v.ronny.tw JSON API。
-    當 Make Gist 無資料時自動啟用。
-    API: GET /api/listbydate?date=YYYYMMDD
-    """
-    today = date.today().strftime("%Y%m%d")
-    BASE  = "https://pcc.g0v.ronny.tw"
-    try:
-        r = requests.get(f"{BASE}/api/listbydate?date={today}",
-                         headers=HTTP_HEADERS, timeout=20)
-        if r.status_code != 200:
-            log.warning(f"  [PCC ronny] HTTP {r.status_code}")
-            return []
-        data = r.json()
-    except Exception as e:
-        log.warning(f"  [PCC ronny] {e}")
-        return []
-
-    items = []
-    for rec in data.get("records", []):
-        brief    = rec.get("brief", {})
-        title    = brief.get("title", "")
-        if not title or len(title) <= 3:
-            continue
-        unit_id    = rec.get("unit_id", "")
-        job_number = rec.get("job_number", "")
-        detail_url = (f"{BASE}/tender/{unit_id}/{job_number}"
-                      if unit_id and job_number else BASE)
-        items.append({
-            "title":  title,
-            "date":   rec.get("date", ""),
-            "url":    detail_url,
-            "agency": rec.get("unit_name", ""),
-        })
-    log.info(f"  [PCC ronny] {len(items)} 筆")
-    return items
-
-
-def parse_pcc() -> list[dict]:
-    """政府採購網：主源 Make Gist，失敗時 fallback 到 ronny.tw API。"""
-    items = _parse_pcc_gist()
-    if not items:
-        log.warning("  [政府採購網] Gist 無資料，fallback 到 ronny.tw")
-        items = parse_pcc_ronny()
     log.info(f"  [政府採購網] {len(items)} 筆")
     return items
 
