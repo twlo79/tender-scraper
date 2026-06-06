@@ -18,7 +18,7 @@
 | 8 | 國有財產署 | [連結](https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c) | `ul li span/p` | — |
 | 9 | 政府採購網 | [連結](https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic) | GitHub Gist（由 Make 每日更新） | 台北、新北 |
 | 10 | 教育部學產基金 | [連結](https://depart.moe.edu.tw/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D) | `table tbody tr` + Claude fallback | 台北、新北 |
-| 11 | 台北市都發局 | [連結](https://www.udd.gov.taipei/events/psxwq1j) | `table tr` + Claude fallback | — |
+| 11 | 台北市都發局 | [連結](https://udd.gov.taipei/events/psxwq1j) | `table tr` + Claude fallback | — |
 | 12 | 國防部政治作戰局 | [連結](https://gpwd.mnd.gov.tw/Publish.aspx?cnid=609) | `table tr` + Claude fallback | 台北、新北 |
 | 13 | 土地銀行出租不動產 | [連結](https://www.landbank.com.tw/Bulletin/RentRealty) | `table tr` / `ul li` + Claude fallback | 台北、新北 |
 | 14 | Google Alerts | RSS Feed | `xml.etree.ElementTree`（Atom） | 台北、新北、gov.tw |
