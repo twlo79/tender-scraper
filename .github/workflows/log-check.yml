@@ -2,7 +2,7 @@ name: 每日 Log 健康檢查
 
 on:
   schedule:
-    - cron: '30 3 * * *'   # UTC 03:30 = 台灣時間 11:30（爬蟲 11:00 跑完後 30 分鐘）
+    - cron: '7 23 * * *'   # UTC 23:07 = 台灣時間 07:07（爬蟲 06:37 跑完後 30 分鐘）
   workflow_dispatch:
 
 permissions:
