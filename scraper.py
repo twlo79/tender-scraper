@@ -1,27 +1,26 @@
 #!/usr/bin/env python3
 """
-政府標案每日爬蟲 v8
+政府標案每日爬蟲 v9
 ================================================================
-收錄來源（14 個）：
-  台北自來水處、國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
+收錄來源（13 個）：
+  國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
   國有財產署、政府採購網、教育部學產基金、台北市都發局
   國防部政治作戰局、土地銀行出租不動產、Google Alerts
 
 抓取策略：
-  台北自來水處            requests + table tbody tr（CCMS 格式）
   國營台鐵               requests + CSS class / regex fallback
-  新北市政府不動產標租     requests + table/li parser + Claude fallback
+  新北市政府不動產標租     requests + table tbody tr parser + Claude fallback
   農業部 瑠公管理處       requests + ul.commonList li parser
   郵局房地產出租           requests + table/list parser
   台北市財政局            requests + table tr（CCMS 格式）
   國家住宅及都市更新中心   requests + table/article + Claude fallback
   國有財產署              4 頁面 table parser（招標/地上權/停車/創業，篩北區分署）
-  政府採購網              直接抓取 PCC 查詢頁（近 7 天招標公告）
-  教育部學產基金           requests + table tbody tr + Claude fallback
+  政府採購網              直接抓取 PCC 查詢頁（出租/標租 關鍵字，近 7 天招標公告）
+  教育部學產基金           requests + table tbody tr（含日期格式驗證）+ Claude fallback
   台北市都發局            requests + table tr + Claude fallback
   國防部政治作戰局         requests + table tr + Claude fallback（眷村土地標租）
-  土地銀行出租不動產       requests + table/ul parser + Claude fallback
+  土地銀行出租不動產       requests + table tr + Claude fallback
 
 篩選架構（統一三層，設定於 SOURCES 每個來源）：
   regions   地區白名單 — 標題或機關名稱須含其中一詞
@@ -109,50 +108,6 @@ def get(url, **kwargs) -> requests.Response | None:
         return None
 
 # ── 各網站精準 Parser ─────────────────────────────────────────────────────────
-
-def parse_taipei_water() -> list[dict]:
-    """台北自來水處：CCMS 系統 table tbody tr。
-    欄位結構（每 td 含 data-title 屬性）：
-      編號 | 標案名稱（含 <a> 連結） | 公告日期 | 開標日期 | 標案進度 | 開標結果
-    修正說明：
-      1. 選 tbody tr 避免 thead（th 無 td，舊版 select("table tr") 仍能跳過，
-         但 water.gov.taipei 目前 HTTP 403 host_not_allowed，需等 IP 解封）
-      2. 用 td[data-title="標案名稱"] 精準取標案連結，避免誤抓「開標結果」欄的 PDF 連結
-      3. 日期取 td[data-title="公告日期"]，而非 tds[-1]（最後欄是「開標結果」非日期）
-    """
-    BASE = "https://www.water.gov.taipei"
-    r = get(f"{BASE}/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5")
-    if not r: return []
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(r.text, "lxml")
-    items = []
-    for row in soup.select("table tbody tr"):
-        tds = row.find_all("td")
-        if not tds:
-            continue
-        # 用 data-title 屬性建立欄位字典（CCMS 台北市 CMS 固定格式）
-        td_map = {td.get("data-title", ""): td for td in tds}
-        # 標案名稱欄（含連結）
-        title_td = td_map.get("標案名稱") or td_map.get("標題") or td_map.get("主旨")
-        if not title_td:
-            # fallback：找第一個含 <a href> 的 td
-            title_td = next((td for td in tds if td.find("a", href=True)), None)
-        if not title_td:
-            continue
-        a = title_td.find("a", href=True)
-        if not a:
-            continue
-        title = a.get_text(strip=True)
-        href  = a["href"]
-        if not href.startswith("http"):
-            href = urljoin(BASE, href)
-        # 公告日期（第 3 欄，data-title="公告日期"）
-        date_td = td_map.get("公告日期") or td_map.get("發布日期") or td_map.get("日期")
-        dt = date_td.get_text(strip=True) if date_td else ""
-        if title and len(title) > 3:
-            items.append({"title": title, "date": dt, "url": href})
-    log.info(f"  [台北自來水處] {len(items)} 筆")
-    return items
 
 
 def parse_tra() -> list[dict]:
@@ -343,20 +298,19 @@ def parse_fnp() -> list[dict]:
     return all_items
 
 
-def parse_pcc() -> list[dict]:
-    """政府採購網：直接抓取 PCC 查詢結果頁（近 7 天招標公告）。"""
+def _pcc_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
+    """抓取 PCC 單一關鍵字的查詢結果，回傳 item 清單。"""
     from bs4 import BeautifulSoup
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    BASE  = "https://web.pcc.gov.tw"
-    today = date.today()
-    start = (today - timedelta(days=7)).strftime("%Y/%m/%d")
-    end   = today.strftime("%Y/%m/%d")
-    URL   = (
+    BASE = "https://web.pcc.gov.tw"
+    URL  = (
         f"{BASE}/prkms/tender/common/basic/readTenderBasic"
         f"?firstSearch=true&searchType=basic&isBinding=N&isLogIn=N"
-        f"&orgName=&orgId=&tenderName=&tenderId="
+        f"&orgName=&orgId="
+        f"&tenderName={requests.utils.quote(keyword)}"
+        f"&tenderId="
         f"&tenderType=TENDER_DECLARATION"
         f"&tenderWay=TENDER_WAY_ALL_DECLARATION"
         f"&dateType=isNow"
@@ -364,13 +318,12 @@ def parse_pcc() -> list[dict]:
         f"&tenderEndDate={end.replace('/', '%2F')}"
         f"&radProctrgCate=&policyAdvocacy="
     )
-
     try:
         r = requests.get(URL, headers=HTTP_HEADERS, timeout=30, verify=False)
         r.raise_for_status()
         r.encoding = r.apparent_encoding or "utf-8"
     except Exception as e:
-        log.warning(f"  [政府採購網] 連線失敗：{e}")
+        log.warning(f"  [政府採購網/{keyword}] 連線失敗：{e}")
         return []
 
     soup  = BeautifulSoup(r.text, "lxml")
@@ -409,7 +362,30 @@ def parse_pcc() -> list[dict]:
     if not items and CONFIG["api_key"]:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
 
-    log.info(f"  [政府採購網] {len(items)} 筆")
+    log.info(f"  [政府採購網/{keyword}] {len(items)} 筆")
+    return items
+
+
+def parse_pcc() -> list[dict]:
+    """政府採購網：以「出租」和「標租」為關鍵字查詢近 7 天招標公告，合併去重。"""
+    today = date.today()
+    start = (today - timedelta(days=7)).strftime("%Y/%m/%d")
+    end   = today.strftime("%Y/%m/%d")
+
+    all_items: list[dict] = []
+    for kw in ["出租", "標租"]:
+        all_items.extend(_pcc_fetch_keyword(kw, start, end))
+
+    # 按 title 去重（兩個 keyword 查詢可能重疊）
+    seen: set[str] = set()
+    items: list[dict] = []
+    for i in all_items:
+        key = re.sub(r"\s+", "", i.get("title", ""))
+        if key not in seen:
+            seen.add(key)
+            items.append(i)
+
+    log.info(f"  [政府採購網] 合計 {len(items)} 筆（去重後）")
     return items
 
 
@@ -437,6 +413,9 @@ def parse_moe_xuechan() -> list[dict]:
             continue
         href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
         dt   = tds[-1].get_text(strip=True)
+        # 跳過最後欄不含日期格式的列（如橫幅廣告、宣傳文字）
+        if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
+            continue
         items.append({"title": title, "date": dt, "url": href, "agency": "教育部學產基金"})
     if not items:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "教育部學產基金", BASE)
@@ -493,16 +472,19 @@ def parse_ntpc_property() -> list[dict]:
     from bs4 import BeautifulSoup
     soup  = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tbody tr, table tr, .list-item, li"):
+    for row in soup.select("table tbody tr, table tr"):
         a   = row.find("a", href=True)
         tds = row.find_all("td")
-        if not a:
+        if not a or len(tds) < 2:
             continue
         title = a.get_text(strip=True)
-        if len(title) < 5:
+        if len(title) < 8:
             continue
         href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
-        dt   = tds[-1].get_text(strip=True) if tds else ""
+        dt   = tds[-1].get_text(strip=True)
+        # 跳過最後欄不含日期格式的列
+        if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
+            continue
         items.append({"title": title, "date": dt, "url": href, "agency": "新北市政府"})
     if not items:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
@@ -544,7 +526,7 @@ def parse_gpwd() -> list[dict]:
 
 def parse_landbank() -> list[dict]:
     """土地銀行：出租不動產公告。
-    採 table tr / ul li / article 多模式，失敗時 Claude fallback。
+    採 table tbody tr / article 模式，失敗時 Claude fallback。
     """
     BASE = "https://www.landbank.com.tw"
     URL  = f"{BASE}/Bulletin/RentRealty"
@@ -554,7 +536,7 @@ def parse_landbank() -> list[dict]:
     from bs4 import BeautifulSoup
     soup  = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tbody tr, table tr, .bulletin-item, .list-item, article, ul li"):
+    for row in soup.select("table tbody tr, table tr, .bulletin-item, .list-item, article"):
         a   = row.find("a", href=True)
         tds = row.find_all("td")
         if not a:
@@ -654,12 +636,6 @@ def parse_with_claude_fallback(text: str, name: str, base: str) -> list[dict]:
 
 # ── 各網站設定 ────────────────────────────────────────────────────────────────
 SOURCES = [
-    {
-        "name": "台北自來水處",
-        "url":  "https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5",
-        "fn":   parse_taipei_water,
-        "whitelist": [], "blacklist": [], "regions": [],
-    },
     {
         "name": "國營台鐵",
         "url":  "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
@@ -1025,6 +1001,15 @@ def main():
 
     state   = load_state()
     results = {}
+
+    # 一次性清除舊版本遺留的垃圾 state key（v9 升版後執行一次）
+    _STATE_VER = 9
+    if state.get("_version", 0) < _STATE_VER:
+        for _src in ["台北自來水處", "新北市政府不動產標租", "土地銀行出租不動產"]:
+            if _src in state:
+                del state[_src]
+                log.info(f"♻️  清除舊 state key：{_src}")
+        state["_version"] = _STATE_VER
 
     for src in SOURCES:
         name = src["name"]
