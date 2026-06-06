@@ -2,7 +2,7 @@ name: 每日標案爬蟲
 
 on:
   schedule:
-    - cron: '0 3 * * *'   # 每天 UTC 03:00 = 台灣時間 11:00
+    - cron: '37 22 * * *'  # 每天 UTC 22:37 = 台灣時間 06:37
   workflow_dispatch:        # 支援手動觸發（右上角 Run workflow）
 
 permissions:
