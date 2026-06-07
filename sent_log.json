@@ -6,5 +6,87 @@
   "2026-06-05 05:47": {},
   "2026-06-05 16:05": {},
   "2026-06-05 16:11": {},
-  "2026-06-05 16:15": {}
+  "2026-06-05 16:15": {},
+  "2026-06-07 06:49": {
+    "_summary": {
+      "total_fetched": 180,
+      "total_new": 40,
+      "total_notify": 2,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "新北市政府不動產標租": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 14,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 83,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 17,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 6,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 1,
+      "new": 1,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 36,
+      "new": 36,
+      "notify": 2,
+      "items": [
+        "不動產標售租公告",
+        "不動產標售租公告"
+      ]
+    },
+    "國防部政治作戰局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 2,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 1,
+      "new": 1,
+      "notify": 0
+    }
+  }
 }
