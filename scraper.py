@@ -31,7 +31,6 @@
 
 環境變數（必填）：
   LINE_CHANNEL_TOKEN  LINE Channel Access Token
-  LINE_USER_ID        推播目標 LINE User ID（U 開頭）
 
 選填：
   ANTHROPIC_API_KEY   Claude API 金鑰（備援解析用）
@@ -82,7 +81,6 @@ DATE_WINDOW_DAYS = 10  # 公告日期距今 ±10 天
 CONFIG = {
     "api_key":      os.getenv("ANTHROPIC_API_KEY", ""),
     "line_token":   os.getenv("LINE_CHANNEL_TOKEN", ""),
-    "line_user_id": os.getenv("LINE_USER_ID", ""),
     "gh_token":     os.getenv("GITHUB_TOKEN", ""),
     "gh_repo":      os.getenv("GITHUB_REPO", ""),   # e.g. "yourname/tender-scraper"
     "claude_model": "claude-sonnet-4-6",
@@ -853,12 +851,13 @@ def save_state(state: dict):
             log.warning(f"GitHub commit 異常：{e}")
 
 
-SENT_LOG_FILE = SCRIPT_DIR / "sent_log.json"
+SENT_LOG_FILE      = SCRIPT_DIR / "sent_log.json"
 SENT_LOG_KEEP_DAYS = 30
+GH_SENT_LOG_PATH   = "sent_log.json"
 
 
 def save_sent_log(results: dict, run_time: str, line_pushed: bool):
-    """將本次執行完整資訊存入 sent_log.json，保留最近 N 天。"""
+    """將本次執行完整資訊存入 sent_log.json，保留最近 N 天，並 commit 到 GitHub。"""
     key = f"{date.today()} {run_time}"
     total_fetched = sum(len(d.get("all", []))    for d in results.values())
     total_new     = sum(len(d.get("new", []))    for d in results.values())
@@ -881,10 +880,29 @@ def save_sent_log(results: dict, run_time: str, line_pushed: bool):
             **({"items": [i.get("title", "") for i in d["notify"]]} if d.get("notify") else {}),
         }
 
-    try:
-        log_data = json.loads(SENT_LOG_FILE.read_text(encoding="utf-8")) if SENT_LOG_FILE.exists() else {}
-    except Exception:
-        log_data = {}
+    # 從 GitHub 讀取現有記錄（取得 sha 供更新用）
+    log_data: dict = {}
+    gh_sha: str | None = None
+    if CONFIG["gh_token"] and CONFIG["gh_repo"]:
+        try:
+            r = requests.get(
+                f"https://api.github.com/repos/{CONFIG['gh_repo']}/contents/{GH_SENT_LOG_PATH}",
+                headers={"Authorization": f"Bearer {CONFIG['gh_token']}", "Accept": "application/vnd.github+json"},
+                timeout=15,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                gh_sha   = data["sha"]
+                log_data = json.loads(b64decode(data["content"]).decode("utf-8"))
+        except Exception as e:
+            log.warning(f"GitHub 讀取 sent_log 失敗：{e}")
+
+    # 若 GitHub 讀取失敗，退回本地
+    if not log_data and SENT_LOG_FILE.exists():
+        try:
+            log_data = json.loads(SENT_LOG_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
 
     log_data[key] = entry
 
@@ -892,8 +910,33 @@ def save_sent_log(results: dict, run_time: str, line_pushed: bool):
     cutoff = (date.today() - timedelta(days=SENT_LOG_KEEP_DAYS)).strftime("%Y-%m-%d")
     log_data = {k: v for k, v in log_data.items() if k[:10] >= cutoff}
 
+    # 寫本地備份
     SENT_LOG_FILE.write_text(json.dumps(log_data, ensure_ascii=False, indent=2), encoding="utf-8")
     log.info(f"✅ sent_log.json 已更新（key: {key}）")
+
+    # commit 到 GitHub
+    if CONFIG["gh_token"] and CONFIG["gh_repo"]:
+        try:
+            today_str = date.today().strftime("%Y-%m-%d")
+            payload = {
+                "message": f"chore: update sent_log.json {today_str}",
+                "content": b64encode(json.dumps(log_data, ensure_ascii=False, indent=2).encode()).decode(),
+                "branch":  "main",
+            }
+            if gh_sha:
+                payload["sha"] = gh_sha
+            r = requests.put(
+                f"https://api.github.com/repos/{CONFIG['gh_repo']}/contents/{GH_SENT_LOG_PATH}",
+                headers={"Authorization": f"Bearer {CONFIG['gh_token']}", "Accept": "application/vnd.github+json"},
+                json=payload,
+                timeout=15,
+            )
+            if r.status_code in (200, 201):
+                log.info("✅ sent_log.json 已 commit 到 GitHub")
+            else:
+                log.warning(f"GitHub commit sent_log 失敗：{r.status_code} {r.text[:200]}")
+        except Exception as e:
+            log.warning(f"GitHub commit sent_log 異常：{e}")
 
 
 def item_key(item: dict) -> str:
