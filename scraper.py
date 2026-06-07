@@ -205,26 +205,35 @@ def parse_ialgo() -> list[dict]:
 
 
 def parse_post() -> list[dict]:
-    """郵局房地產出租：只抓 table tr，避免 ul li 選到整個網站導覽選單。"""
-    r = get("https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904")
+    """郵局房地產出租：ul.NewsList li a 結構。
+    HTML: <a href="index.jsp?...news_no=N...">
+            <span class="Date">115/06/04</span>
+            <span class="Topic">公告標題<span class="label"></span></span>
+            <p class="Thumbs">摘要...</p>
+          </a>
+    """
+    BASE = "https://www.post.gov.tw/post/internet/Real_estate/"
+    URL  = f"{BASE}index.jsp?ID=904"
+    r = get(URL)
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    SOURCE_URL = "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904"
-    for row in soup.select("table tr"):
-        tds = row.find_all("td")
-        if len(tds) < 2: continue
-        a = row.find("a", href=True)
-        title = a.get_text(strip=True) if a else tds[0].get_text(strip=True)
-        if len(title) < 8: continue
-        # 跳過導覽樣式（「1.集郵資訊」格式）
-        if re.match(r"^\d+\.", title): continue
-        href = SOURCE_URL
-        if a and a["href"] and a["href"] not in ("#", "javascript:void(0)"):
-            href = a["href"] if a["href"].startswith("http") else urljoin("https://www.post.gov.tw", a["href"])
-        dt = tds[-1].get_text(strip=True)
-        items.append({"title": title, "date": dt, "url": href})
+    for a in soup.select("ul.NewsList li a[href]"):
+        date_span  = a.find("span", class_="Date")
+        topic_span = a.find("span", class_="Topic")
+        if not topic_span:
+            continue
+        # 移除 span.Topic 內的巢狀 span（例如 span.label 空白標籤）
+        for nested in topic_span.find_all("span"):
+            nested.decompose()
+        title = topic_span.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        dt   = date_span.get_text(strip=True) if date_span else ""
+        href = a["href"]
+        full_href = href if href.startswith("http") else BASE + href
+        items.append({"title": title, "date": dt, "url": full_href})
     log.info(f"  [郵局房地產出租] {len(items)} 筆")
     return items
 
