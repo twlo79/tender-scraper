@@ -205,24 +205,25 @@ def parse_ialgo() -> list[dict]:
 
 
 def parse_post() -> list[dict]:
-    """郵局房地產出租：table/list，URL 統一指向該頁（無各別連結）"""
+    """郵局房地產出租：只抓 table tr，避免 ul li 選到整個網站導覽選單。"""
     r = get("https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904")
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
     SOURCE_URL = "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904"
-    for row in soup.select("table tr, .list tr, ul li"):
-        a = row.find("a", href=True)
+    for row in soup.select("table tr"):
         tds = row.find_all("td")
-        if not a and len(tds) < 2: continue
+        if len(tds) < 2: continue
+        a = row.find("a", href=True)
         title = a.get_text(strip=True) if a else tds[0].get_text(strip=True)
-        if len(title) < 5: continue
-        # 郵局沒有各別標案頁，URL 用來源頁
+        if len(title) < 8: continue
+        # 跳過導覽樣式（「1.集郵資訊」格式）
+        if re.match(r"^\d+\.", title): continue
         href = SOURCE_URL
         if a and a["href"] and a["href"] not in ("#", "javascript:void(0)"):
             href = a["href"] if a["href"].startswith("http") else urljoin("https://www.post.gov.tw", a["href"])
-        dt = tds[-1].get_text(strip=True) if len(tds) >= 2 else ""
+        dt = tds[-1].get_text(strip=True)
         items.append({"title": title, "date": dt, "url": href})
     log.info(f"  [郵局房地產出租] {len(items)} 筆")
     return items
@@ -460,8 +461,8 @@ def parse_moe_xuechan() -> list[dict]:
 
 def parse_taipei_udd() -> list[dict]:
     """台北市都市發展局：不動產標售租公告。
-    注意：www.udd.gov.taipei 在 GitHub Actions 環境有 TLS SNI 問題，
-    用 verify=False 繞過（read-only 爬蟲，可接受）。
+    表格結構：tds[0]=公告標題文字, tds[1]=類別連結（不動產標售租公告）, tds[-1]=日期
+    不用 a.get_text()（會得到類別名稱），改用 tds[0] 完整文字取得實際標題。
     """
     BASE = "https://udd.gov.taipei"
     URL  = f"{BASE}/events/psxwq1j"
@@ -476,16 +477,25 @@ def parse_taipei_udd() -> list[dict]:
     from bs4 import BeautifulSoup
     soup  = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tbody tr, table tr, .news-item, article, li"):
-        a   = row.find("a", href=True)
+    for row in soup.select("table tbody tr, table tr"):
         tds = row.find_all("td")
-        if not a:
+        if len(tds) < 2:
             continue
-        title = a.get_text(strip=True)
-        if len(title) < 5:
+        # 標題取第一欄完整文字（非 <a> 的連結文字）
+        title = tds[0].get_text(strip=True)
+        if len(title) < 8:
             continue
-        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
-        dt   = tds[-1].get_text(strip=True) if tds else ""
+        # 最後欄必須含日期，否則跳過（排除表頭列）
+        dt = tds[-1].get_text(strip=True)
+        if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
+            continue
+        # URL：優先取第一欄的連結（文章連結），其次任何列內連結，最後 fallback listing
+        a = tds[0].find("a", href=True) or row.find("a", href=True)
+        href = URL
+        if a:
+            raw = a["href"]
+            if raw and raw not in ("#", "javascript:void(0)", "/"):
+                href = raw if raw.startswith("http") else urljoin(BASE, raw)
         items.append({"title": title, "date": dt, "url": href, "agency": "台北市都發局"})
     if not items:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北市都發局", BASE)
@@ -1088,10 +1098,11 @@ def main():
     state   = load_state()
     results = {}
 
-    # 一次性清除舊版本遺留的垃圾 state key（v9 升版後執行一次）
-    _STATE_VER = 9
+    # 一次性清除舊版本遺留的垃圾 state key（v10 升版後執行一次）
+    _STATE_VER = 10
     if state.get("_version", 0) < _STATE_VER:
-        for _src in ["新北市政府不動產標租", "土地銀行出租不動產"]:
+        for _src in ["新北市政府不動產標租", "土地銀行出租不動產",
+                     "台北市都發局", "郵局房地產出租"]:
             if _src in state:
                 del state[_src]
                 log.info(f"♻️  清除舊 state key：{_src}")
