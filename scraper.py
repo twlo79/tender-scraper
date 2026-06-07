@@ -146,35 +146,37 @@ def parse_taipei_water() -> list[dict]:
 
 
 def parse_tra() -> list[dict]:
-    """國營台鐵：純文字 block，格式固定"""
-    r = get("https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1")
+    """國營台鐵：ul.tender-list li.rent-item 結構。
+    div.item-name = 標題
+    ul.item-info li[招標日期] = 招標日期 range（取開始日期）
+    div.btn-box a = 詳細頁 URL
+    """
+    BASE = "https://www.railway.gov.tw"
+    URL  = f"{BASE}/tra-tip-web/adr/rent-tender-1?&activePage=1"
+    r = get(URL)
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    # 每個標案區塊包含標題、類別、業管單位、招標日期、查看詳情連結
-    for block in soup.select(".tender-item, .list-item, article, .item-block"):
-        a = block.find("a", href=True)
-        title_el = block.find(class_=re.compile(r"title|name|subject"))
-        date_el  = block.find(string=re.compile(r"\d{4}/\d{2}/\d{2}"))
-        if not title_el and not a: continue
-        title = (title_el or a).get_text(strip=True)
-        href  = urljoin("https://www.railway.gov.tw", a["href"]) if a else "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1"
-        items.append({"title": title, "date": str(date_el).strip() if date_el else "", "url": href})
-
-    # fallback：純文字 regex
-    if not items:
-        text = soup.get_text("\n")
-        # 找每個 【...】 開頭的標案
-        for m in re.finditer(r"(【[^】]+】[^\n招]{5,80})\n.*?招標日期：(\d{4}/\d{2}/\d{2}[^\n]*)", text, re.DOTALL):
-            items.append({
-                "title": m.group(1).strip(),
-                "date":  m.group(2).strip(),
-                "url":   "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1?&activePage=1",
-            })
+    for item in soup.select("ul.tender-list li.rent-item"):
+        name_div = item.find("div", class_="item-name")
+        if not name_div: continue
+        title = name_div.get_text(strip=True)
+        if len(title) < 5: continue
+        dt = unit = ""
+        for li in item.select("ul.item-info li"):
+            txt = li.get_text(strip=True)
+            if txt.startswith("招標日期："):
+                # 取 range 起始日期（2026/06/05~2026/06/17 → 2026/06/05）
+                dt = txt.replace("招標日期：", "").split("~")[0].split("－")[0].strip()
+            elif txt.startswith("業管單位："):
+                unit = txt.replace("業管單位：", "").strip()
+        a = item.select_one("div.btn-box a[href]")
+        href = urljoin(BASE, a["href"]) if a else URL
+        items.append({"title": title, "date": dt, "url": href, "agency": unit})
     # 只保留臺北營業分處的標案
-    items = [i for i in items if "臺北營業分處" in i.get("title", "")]
-    log.info(f"  [國營台鐵] {len(items)} 筆（僅臺北營業分處）")
+    items = [i for i in items if "臺北營業分處" in i.get("agency", "") + i.get("title", "")]
+    log.info(f"  [國營台鐵] {len(items)} 筆（臺北營業分處）")
     return items
 
 
@@ -264,24 +266,45 @@ def parse_taipei_dof() -> list[dict]:
 
 
 def parse_hurc() -> list[dict]:
-    """國家住宅及都市更新中心：requests + div/table"""
-    r = get("https://www.hurc.org.tw/hurc/procurement")
+    """國家住宅及都市更新中心：table 第 2 張（採購案號|類別|案名|業務單位|公告日期|截止日期|備註|領標資料）
+    各 td 無 data-title，文字含欄位前綴如「案名XXX」「公告日期YYYY/MM/DD」，需 strip 前綴。
+    """
+    BASE = "https://www.hurc.org.tw"
+    URL  = f"{BASE}/hurc/procurement"
+    r = get(URL)
     if not r: return []
     from bs4 import BeautifulSoup
+    import re as _re
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tr, .list-item, .procurement-item, article"):
-        a = row.find("a", href=True)
-        tds = row.find_all("td")
-        if not a: continue
-        title = a.get_text(strip=True)
-        href  = a["href"] if a["href"].startswith("http") else urljoin("https://www.hurc.org.tw", a["href"])
-        dt    = tds[-1].get_text(strip=True) if tds else ""
-        if title and len(title) > 3:
+    tables = soup.find_all("table")
+    # 採購資料表：第 2 張（index 1），欄位數 8
+    data_table = next((t for t in tables if len(t.find_all("td")) > 0
+                       and len(t.find("tr").find_all(["td","th"])) >= 6), None)
+    if data_table:
+        for row in data_table.find_all("tr"):
+            tds = row.find_all("td")
+            if len(tds) < 6:
+                continue
+            # tds[2] = 案名（含前綴）, tds[4] = 公告日期（含前綴）
+            raw_title = tds[2].get_text(strip=True)
+            title = _re.sub(r"^案名", "", raw_title).strip()
+            if len(title) < 5:
+                continue
+            raw_date = tds[4].get_text(strip=True)
+            dt = _re.sub(r"^公告日期", "", raw_date).strip()
+            a = tds[2].find("a", href=True)
+            if a:
+                href = a["href"]
+                href = href if href.startswith("http") else urljoin(BASE, href)
+                if href.startswith("javascript"):
+                    href = URL
+            else:
+                href = URL
             items.append({"title": title, "date": dt, "url": href})
     # fallback Claude
     if not items:
-        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國家住宅及都市更新中心", "https://www.hurc.org.tw")
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國家住宅及都市更新中心", BASE)
     log.info(f"  [國家住宅及都市更新中心] {len(items)} 筆")
     return items
 
