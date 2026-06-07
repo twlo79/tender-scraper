@@ -5,12 +5,15 @@ on:
     - cron: '0 2 * * 0'   # 每週日 02:00 UTC 自動跑
   workflow_dispatch:       # 也可手動觸發
 
+permissions:
+  contents: write
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
       - name: Delete old claude/* branches (older than 7 days)
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { data: branches } = await github.rest.repos.listBranches({
