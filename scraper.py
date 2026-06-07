@@ -239,21 +239,26 @@ def parse_post() -> list[dict]:
 
 
 def parse_taipei_dof() -> list[dict]:
-    """台北市財政局：table tr"""
+    """台北市財政局：CCMS table tr。
+    欄位：編號 | 標案名稱 | 公告日期(data-title) | 開標日期 | 標案進度 | 開標結果
+    使用 data-title 定位「公告日期」欄，避免抓到最後欄「開標結果」。
+    """
     r = get("https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00")
     if not r: return []
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tr"):
+    for row in soup.select("table tbody tr, table tr"):
         a = row.find("a", href=True)
         tds = row.find_all("td")
         if not a or len(tds) < 2: continue
         title = a.get_text(strip=True)
+        if len(title) < 4: continue
         href  = a["href"] if a["href"].startswith("http") else urljoin("https://dof.gov.taipei", a["href"])
-        dt    = tds[-1].get_text(strip=True)
-        if title and len(title) > 3:
-            items.append({"title": title, "date": dt, "url": href})
+        td_map = {td.get("data-title", ""): td for td in tds}
+        date_td = td_map.get("公告日期") or td_map.get("發布日期") or td_map.get("日期")
+        dt = date_td.get_text(strip=True) if date_td else ""
+        items.append({"title": title, "date": dt, "url": href})
     log.info(f"  [台北市財政局] {len(items)} 筆")
     return items
 
@@ -972,7 +977,7 @@ def _extract_dates(text: str) -> list[date]:
     """從字串擷取完整日期（年月日），支援民國／西元、多種分隔符。"""
     found = []
     # 西元：2026-05-12、2026/05/12、2026年05月12日
-    for m in re.finditer(r"(20\d{2})[/-年](\d{1,2})[/-月](\d{1,2})", text):
+    for m in re.finditer(r"(20\d{2})[-/年](\d{1,2})[-/月](\d{1,2})", text):
         try:
             found.append(date(int(m.group(1)), int(m.group(2)), int(m.group(3))))
         except ValueError:
