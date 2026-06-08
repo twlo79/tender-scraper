@@ -1,155 +1,243 @@
 # 政府標案每日爬蟲
 
-自動抓取 14 個政府機關網站的最新標案，每日透過 **LINE** 推播近期新增公告，並產生每日健康報告。
+自動抓取 14 個政府機關網站，篩選**台北／新北地區**公有不動產標租公告，每日透過 **LINE** 推播標案名稱、公告日期與連結。
+
+---
+
+## 目的與核心規則
+
+**目標**：找到雙北地區近期公告的不動產標租案，並在第一時間推播 LINE 通知。
+
+**推播內容**：每筆標案包含
+- 標案名稱
+- 公告日期
+- 原始公告 URL
+
+**篩選條件（三層，全部通過才推播）**：
+
+| 層次 | 條件 | 說明 |
+|------|------|------|
+| ① 地區 | 標題或機關名含「台北」「臺北」「新北」 | 部分來源本身就是雙北專屬，不做地區過濾 |
+| ② 關鍵字 | 標題含白名單詞（出租、標租、不動產…）且不含黑名單詞 | 排除開標結果、短期場地、財物採購等雜訊 |
+| ③ 日期窗口 | 公告日期在今天 ±10 天內；無法解析日期則放行 | 避免推播過期或未來案件 |
+
+去重機制另外透過 `state.json` 確保同一案件不重複推播。
 
 ---
 
 ## 執行流程
 
 ```
-每天 10:37（台灣時間）
+每天 ~10:37（台灣時間）
        │
        ▼
-  scraper.py 執行
+  GitHub Actions 執行 scraper.py
        │
        ├─ 爬 14 個來源
        │
-       ├─ 和 state.json 比對（有沒有見過）
+       ├─ 和 state.json 比對（去重）
        │      已見過 → 跳過
-       │      沒見過 → 「新增」
+       │      沒見過 → 進入篩選
        │
-       ├─ 對「新增」套三層篩選
-       │      ① 地區白名單（台北 / 新北）
-       │      ② 關鍵字白名單（出租、標租、不動產…）
-       │      ③ 日期窗口（±10 天內）
+       ├─ 三層篩選
+       │      ① 地區（雙北）
+       │      ② 關鍵字白名單 / 黑名單
+       │      ③ 日期窗口（±10 天）
        │
-       ├─ 通過篩選的筆數 = total_notify
+       ├─ total_notify > 0 → 推播 LINE（標案名 + 公告日 + URL）
+       │  total_notify = 0 → 靜默，不發送
        │
-       ├─ total_notify > 0 → 推播 LINE ✅
-       │  total_notify = 0 → 靜默（不發送）✅
-       │
-       ├─ state.json commit 到 GitHub（持久保存）✅
-       └─ sent_log.json commit 到 GitHub（執行紀錄）✅
+       ├─ state.json commit 到 GitHub
+       └─ sent_log.json commit 到 GitHub
 
-每天 11:07（台灣時間）
+每天 ~11:07（台灣時間）
        │
        ▼
-  log_checker.py 執行
-       │
-       └─ 讀 Actions log → 解析 → 存 daily_report.json ✅
+  GitHub Actions 執行 log_checker.py
+       └─ 解析 Actions log → 寫入 daily_report.json
 ```
 
-> **推播規則**：只有在當天出現「通過三層篩選的新案件」時才發 LINE，
-> 無新增時完全靜默，不會發送空白或摘要訊息。
+> 排程使用非整點奇數分鐘（`:37`、`:07`）以避開 GitHub Actions 高峰排隊。
+> GitHub Actions 在尖峰時段可能延遲 30 分鐘至數小時，為正常現象。
+
+---
+
+## 檔案說明
+
+### 主要腳本
+
+| 檔案 | 用途 |
+|------|------|
+| `scraper.py` | 主爬蟲。抓取 14 個來源、篩選、去重、推播 LINE、更新 state/sent_log |
+| `log_checker.py` | 解析 GitHub Actions 執行 log，寫入 `daily_report.json` |
+| `dry_run_all_regions.py` | 測試用：移除地區限制執行所有 parser，驗證標題/日期/URL 格式 |
+| `qa_report.py` | QA 監測：讀取 sent_log.json，輸出爬蟲健康報告 |
+
+### 資料檔案
+
+| 檔案 | 用途 | 存放位置 |
+|------|------|---------|
+| `state.json` | 去重記錄。每個來源最多保留 300 筆標題 key | GitHub repo（每次執行後 commit） |
+| `sent_log.json` | 執行記錄。保留最近 30 天，每筆含各來源統計 | GitHub repo（每次執行後 commit） |
+| `daily_report.json` | 健康報告。由 log_checker.py 產生 | GitHub repo |
+
+### GitHub Actions Workflows
+
+| 檔案 | 排程 | 說明 |
+|------|------|------|
+| `.github/workflows/daily.yml` | 每天 UTC 02:37（台灣 10:37） | 主爬蟲 |
+| `.github/workflows/log-check.yml` | 每天 UTC 03:07（台灣 11:07） | 健康報告 |
+| `.github/workflows/cleanup-branches.yml` | 每週日 UTC 02:00（台灣 10:00） | 刪除超過 7 天的 `claude/*` 分支 |
+
+---
+
+## 腳本參數說明
+
+### `scraper.py`
+
+```bash
+python scraper.py                    # 正常執行
+DRY_RUN=true python scraper.py       # 不推播 LINE、不寫 state/sent_log
+```
+
+| 環境變數 | 必填 | 說明 |
+|---------|------|------|
+| `LINE_CHANNEL_TOKEN` | ✅ | LINE Channel Access Token |
+| `GITHUB_TOKEN` | 建議 | 用於 state/sent_log 持久化到 repo |
+| `GITHUB_REPO` | 建議 | 格式 `owner/repo` |
+| `ANTHROPIC_API_KEY` | 選填 | Claude API（備援解析 JS 渲染頁面用） |
+
+### `dry_run_all_regions.py`
+
+```bash
+python dry_run_all_regions.py                  # 全台所有（含雙北，標記區分）
+python dry_run_all_regions.py --non-taipei     # 只顯示非台北/新北（debug 用）
+python dry_run_all_regions.py --source 郵局    # 只測試特定來源
+python dry_run_all_regions.py --debug          # 顯示每筆 raw item 資料
+```
+
+> 安全：不寫入 state.json 或 sent_log.json，可重複執行。
+
+### `qa_report.py`
+
+```bash
+python qa_report.py              # 最新一次執行報告 + 7 天趨勢
+python qa_report.py --days 14    # 改成 14 天趨勢
+python qa_report.py --full       # 顯示所有推播項目（含正常的）
+```
+
+> 優先從 GitHub API 取最新 sent_log.json，需設定 `GITHUB_TOKEN`；無 token 則讀本地檔案。
+
+---
+
+## sent_log.json 格式
+
+```json
+{
+  "2026-06-07 06:49": {
+    "_summary": {
+      "total_fetched": 180,
+      "total_new": 40,
+      "total_notify": 2,
+      "line_pushed": true
+    },
+    "台北自來水處": { "fetched": 8, "new": 0, "notify": 0 },
+    "台北市都發局": {
+      "fetched": 36, "new": 2, "notify": 2,
+      "items": ["標案名稱A", "標案名稱B"]
+    }
+  }
+}
+```
+
+> 若當次所有來源 fetched=0，`_summary` 會加上 `"note": "⚠️ 所有來源 fetched=0，疑似網路失敗或全部被 IP 封鎖"`。
 
 ---
 
 ## 收錄來源（14 個）
 
-| # | 機關 | 公告頁面 | 抓取方式 | 地區篩選 |
-|---|------|----------|----------|----------|
-| 1 | 台北自來水處 | [連結](https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5) | `table tbody tr`（CCMS） | — |
-| 2 | 國營台鐵 | [連結](https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1) | CSS class + regex fallback | 臺北營業分處 |
-| 3 | 新北市政府不動產標租 | [連結](https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd) | `table tbody tr` + Claude fallback | — |
-| 4 | 農業部 瑠公管理處 | [連結](https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010) | `ul.commonList li` | — |
-| 5 | 郵局房地產出租 | [連結](https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904) | `table tr` / `ul li` | 台北、新北 |
-| 6 | 台北市財政局 | [連結](https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00) | `table tbody tr`（CCMS） | — |
-| 7 | 國家住宅及都市更新中心 | [連結](https://www.hurc.org.tw/hurc/procurement) | `table tr` + Claude fallback | — |
-| 8 | 國有財產署 | [連結](https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c) | `ul li span/p` | — |
-| 9 | 政府採購網 | [連結](https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic) | 關鍵字查詢（出租／標租，近 7 天） | 台北、新北 |
-| 10 | 教育部學產基金 | [連結](https://depart.moe.edu.tw/ed4100/News.aspx?n=D62A8AE8773C5F8A&sms=4FEEAAFFCFBA1F3D) | `table tbody tr`（日期格式驗證）+ Claude fallback | 台北、新北 |
-| 11 | 台北市都發局 | [連結](https://udd.gov.taipei/events/psxwq1j) | `table tr` + Claude fallback | — |
-| 12 | 國防部政治作戰局 | [連結](https://gpwd.mnd.gov.tw/Publish.aspx?cnid=609) | `table tr` + Claude fallback | 台北、新北 |
-| 13 | 土地銀行出租不動產 | [連結](https://www.landbank.com.tw/Bulletin/RentRealty) | `table tbody tr` + Claude fallback | 台北、新北 |
-| 14 | Google Alerts | RSS Feed | `xml.etree.ElementTree`（Atom） | 台北、新北、gov.tw |
+| # | 機關 | 抓取方式 | 地區篩選 |
+|---|------|----------|----------|
+| 1 | 台北自來水處 | `table tbody tr`（CCMS） | 來源本身限雙北 |
+| 2 | 國營台鐵 | `ul.tender-list li.rent-item` | 臺北營業分處 |
+| 3 | 新北市政府不動產標租 | `table tbody tr` + Claude fallback | 來源本身限雙北 |
+| 4 | 農業部 瑠公管理處 | `ul.commonList li.commonList-item` | 全台（關鍵字篩） |
+| 5 | 郵局房地產出租 | `ul.NewsList li a` | 台北、新北 |
+| 6 | 台北市財政局 | `table tbody tr`（CCMS，data-title 定位公告日期） | 來源本身限雙北 |
+| 7 | 國家住宅及都市更新中心 | `table tr`（tds[2]=案名，tds[4]=公告日期） | 全台（關鍵字篩） |
+| 8 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | 北區分署 |
+| 9 | 政府採購網 | 關鍵字 API 查詢（出租／標租，近 7 天） | 台北、新北 |
+| 10 | 教育部學產基金 | `table tbody tr` + Claude fallback | 台北、新北 |
+| 11 | 台北市都發局 | `table tr` + Claude fallback | 來源本身限雙北 |
+| 12 | 國防部政治作戰局 | `table tr` + Claude fallback | 台北、新北 |
+| 13 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 台北、新北 |
+| 14 | Google Alerts | RSS Atom feed | 台北、新北、gov.tw |
+
+> **Claude fallback**：部分 JS 渲染頁面無法直接解析時，改用 Claude API 從 HTML 文字擷取結構化資料。需設定 `ANTHROPIC_API_KEY`。
 
 ---
 
-## 三層篩選說明
+## Claude Code 例行 QA 流程
 
-每筆「新增」標案依序通過以下三層，全部通過才進入推播清單：
+每次開啟 Claude Code session 時，依序執行以下監測：
 
-| 層次 | 說明 | 未通過則 |
-|------|------|----------|
-| ① 地區 + 關鍵字 | 標題或機關名含地區詞；標題含白名單關鍵字；標題不含黑名單關鍵字 | 丟棄 |
-| ② 日期窗口 | 公告日期在今天 ±10 天內；無法解析日期則放行 | 丟棄 |
-| ③ 去重 | 標題（去除空白）不在 state.json 中 | 丟棄 |
-
-**全域黑名單**（所有來源共用）：開標結果、自動販賣機、場地短期出租、新建工程、財物採購、勞務採購 等。
-
----
-
-## 去重機制（state.json）
-
-```
-每次執行
-  ├─ 啟動：從 GitHub repo 載入 state.json（失敗改讀本地）
-  ├─ 比對：以標題（去除空白）為唯一 key
-  │   ├─ 已在 state → 舊標案，略過
-  │   └─ 不在 state → 新標案，進入篩選
-  ├─ 每個來源最多保留 300 筆 key（自動輪替舊 key）
-  └─ 結束：state.json commit 到 GitHub（確保下次執行能讀到）
-```
-
----
-
-## 每日排程
-
-| Workflow | 時間（台灣） | 說明 |
-|----------|-------------|------|
-| `daily.yml` — 標案爬蟲 | 每天 10:37 | 抓取 14 個來源，有新增才推播 LINE |
-| `log-check.yml` — 健康報告 | 每天 11:07 | 解析爬蟲 log，寫入 `daily_report.json` |
-| `cleanup-branches.yml` — 清理分支 | 每週日 10:00 | 刪除超過 7 天的 `claude/*` 分支 |
-
-> 使用非整點奇數分鐘（`:37`、`:07`）以避開 GitHub Actions 高峰排隊延遲。
-
-### sent_log.json 格式
-
-每次執行都會寫入並 commit 到 GitHub，保留最近 30 天：
-
-```json
-{
-  "2026-06-06 10:37": {
-    "_summary": {
-      "total_fetched": 225,
-      "total_new": 2,
-      "total_notify": 2,
-      "line_pushed": true
-    },
-    "台北自來水處": {"fetched": 8, "new": 2, "notify": 2, "items": ["案名A", "案名B"]},
-    "國營台鐵":     {"fetched": 1, "new": 0, "notify": 0}
-  }
-}
-```
-
----
-
-## 安裝與執行
-
-### 相依套件
+### 步驟 1：QA 報告（每天）
 
 ```bash
-pip install requests beautifulsoup4 lxml
+python qa_report.py
 ```
 
-### 環境變數
+檢查：
+- 最新一次 Actions 執行是否正常（各來源 fetched 數量）
+- 推播項目是否有噪音（標題格式異常、含黑名單詞）
+- 是否有來源連線失敗（fetched=0）或全部空跑
 
-| 變數 | 必填 | 說明 |
-|------|------|------|
-| `LINE_CHANNEL_TOKEN` | ✅ | LINE Channel Access Token（broadcast 推播） |
-| `GITHUB_TOKEN` | 建議 | 用於持久化 state.json / sent_log.json 到 repo |
-| `GITHUB_REPO` | 建議 | 格式 `owner/repo` |
-| `ANTHROPIC_API_KEY` | 選填 | Claude API 金鑰（備援解析用） |
-
-### 執行
+### 步驟 2：parser 驗證（懷疑有問題時）
 
 ```bash
-# 正常執行（有新增才推播 LINE）
-python scraper.py
-
-# Dry-run：不推播 LINE、不寫入 state.json、不更新 sent_log.json
-DRY_RUN=true python scraper.py
+python dry_run_all_regions.py --debug --source 來源名稱
 ```
+
+確認該來源的標題、公告日、URL 格式是否正確。
+
+### 步驟 3：全來源測試（每週或修改後）
+
+```bash
+python dry_run_all_regions.py --non-taipei   # 看非雙北的標案有無格式問題
+python dry_run_all_regions.py --debug        # 全台 raw data 檢視
+```
+
+---
+
+## 優化路線圖
+
+### 第一優先：確保基礎正確
+
+目前階段以「debug 確認符合標準」為第一目標，確保每個 parser 能穩定產出正確的標題、公告日、URL。
+
+| 項目 | 狀態 |
+|------|------|
+| 所有 parser 標題正確（非分類名稱、非噪音） | 進行中 |
+| 日期解析涵蓋民國／西元／各種分隔符 | ✅ 已修（regex 字元類 bug） |
+| URL 為個別文章連結（非列表頁） | 進行中 |
+| sent_log 無論有無推播都寫入 | ✅ 已修 |
+| 空跑（fetched=0）有備註標記 | ✅ 已加 |
+
+### 第二優先：優化篩選精準度
+
+| 項目 | 說明 |
+|------|------|
+| 監測無效案源 | 長期 fetched=0 或推播內容無關的來源，考慮移除或調整 |
+| 白名單／黑名單細化 | 減少「停車場標租」「場地出租」等低相關案件 |
+| 日期窗口可設定化 | 改成環境變數 `DATE_WINDOW_DAYS`，不需改程式碼 |
+
+### 第三優先：新增案源
+
+| 候選來源 | 說明 |
+|---------|------|
+| 內政部不動產資訊平台 | 全國公有不動產標租公告 |
+| 各縣市政府資產活化公告 | 台北市／新北市政府資產管理局 |
+| 財政部國有財產署（南中東部分署） | 目前只收北區分署 |
 
 ---
 
@@ -160,8 +248,8 @@ DRY_RUN=true python scraper.py
 ```yaml
 on:
   schedule:
-    - cron: '37 2 * * *'  # 每天 UTC 02:37 = 台灣時間 10:37
-  workflow_dispatch:
+    - cron: '37 2 * * *'  # UTC 02:37 = 台灣 10:37
+  workflow_dispatch:       # 支援手動觸發
 
 permissions:
   contents: write
@@ -182,37 +270,15 @@ jobs:
           ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-Secrets 在 GitHub repo → **Settings → Secrets and variables → Actions** 中設定。
+Secrets 設定位置：GitHub repo → **Settings → Secrets and variables → Actions**
 
 ---
 
-## 未來優化建議
+## 安裝（本地執行）
 
-### 短期（低成本、高效益）
-
-| 項目 | 說明 |
-|------|------|
-| **新增來源** | 內政部不動產資訊平台、各縣市政府資產活化公告 |
-| **日期窗口可設定化** | 目前硬寫 ±10 天，改成環境變數 `DATE_WINDOW_DAYS` 方便調整 |
-| **推播內容加入圖片或 Rich Menu** | 目前純文字 + Flex Message，可加入縮圖提升點閱率 |
-| **Dry-run 模式加強** | 目前 DRY_RUN 只跳過推播，可加 `--preview` 輸出「今天會推什麼」 |
-
-### 中期（架構調整）
-
-| 項目 | 說明 |
-|------|------|
-| **失敗來源自動重試** | 單一來源 HTTP 逾時時重試 2 次，減少因暫時性網路問題造成的漏抓 |
-| **Claude fallback 結果快取** | 同一 HTML 已用 Claude 解析過，今天若內容沒變則不重複呼叫 API，降低成本 |
-| **關鍵字 / 地區設定外部化** | 將白名單、黑名單、地區詞移到 `config.json`，不用改程式碼就能調整篩選條件 |
-| **daily_report.json 視覺化** | 在 repo 的 GitHub Pages 上顯示近 30 天的每日統計圖表 |
-
-### 長期（擴展性）
-
-| 項目 | 說明 |
-|------|------|
-| **多用戶訂閱** | 改為 LINE LIFF 讓用戶自選感興趣的地區 / 關鍵字，後端存 per-user 設定 |
-| **資料庫替代 state.json** | 當來源超過 30 個、state 超過 10 萬筆時，改用 SQLite 或雲端 DB |
-| **異常即時告警** | 連續 2 天某來源 fetched=0 時，透過 LINE 發送警告（目前需手動查 log） |
+```bash
+pip install requests beautifulsoup4 lxml
+```
 
 ---
 
