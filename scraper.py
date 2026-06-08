@@ -910,12 +910,14 @@ def save_sent_log(results: dict, run_time: str, line_pushed: bool):
     total_new     = sum(len(d.get("new", []))    for d in results.values())
     total_notify  = sum(len(d.get("notify", [])) for d in results.values())
 
+    all_zero = total_fetched == 0
     entry = {
         "_summary": {
             "total_fetched": total_fetched,
             "total_new":     total_new,
             "total_notify":  total_notify,
             "line_pushed":   line_pushed,
+            **({"note": "⚠️ 所有來源 fetched=0，疑似網路失敗或全部被 IP 封鎖"} if all_zero else {}),
         }
     }
     for name, d in results.items():
