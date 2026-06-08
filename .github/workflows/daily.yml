@@ -1,9 +1,7 @@
 name: 每日標案爬蟲
 
 on:
-  schedule:
-    - cron: '37 2 * * *'   # 每天 UTC 02:37 = 台灣時間 10:37
-  workflow_dispatch:        # 支援手動觸發（右上角 Run workflow）
+  workflow_dispatch:        # 由 Make.com 定時觸發，或手動觸發（右上角 Run workflow）
 
 permissions:
   contents: write           # 允許 workflow 將 state.json commit 回 main
