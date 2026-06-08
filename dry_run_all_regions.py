@@ -4,15 +4,15 @@
 =====================
 功能：執行所有 parser，移除地區（台北/新北）限制，顯示所有通過關鍵字+日期篩選的標案。
 用途：
-  - 驗證各 parser 的標題 / 日期 / URL 是否正確
-  - 確認雙北標案若符合條件，是否正確出現
-  - 模擬 bug 修正後的推播內容（無地區限制版）
+  - 看「平常被地區過濾擋掉」的非雙北標案，驗證 parser 標題/日期/URL 是否正確
+  - 模擬若擴大收錄範圍時實際會出現的內容，做為修 bug 的依據
+  - 雙北標案仍會標記 🔔[雙北]，方便對照
 
 注意：此腳本只讀取頁面，不寫入 state.json / sent_log.json，可安全重複執行。
 
 執行：
-  python dry_run_all_regions.py
-  python dry_run_all_regions.py --only-taipei    # 僅顯示含台北/新北的項目
+  python dry_run_all_regions.py                  # 全台所有（含雙北，標記區分）
+  python dry_run_all_regions.py --non-taipei     # 僅顯示非台北/新北的項目（主要 debug 用途）
   python dry_run_all_regions.py --source 郵局    # 僅測試特定來源
   python dry_run_all_regions.py --debug          # 顯示每筆 raw item 資料
 
@@ -32,7 +32,7 @@ import scraper
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 
 # ── 參數 ──────────────────────────────────────────────────────────────────────
-ONLY_TAIPEI   = "--only-taipei" in sys.argv
+NON_TAIPEI    = "--non-taipei"  in sys.argv
 DEBUG         = "--debug"       in sys.argv
 SOURCE_FILTER = None
 for i, arg in enumerate(sys.argv):
@@ -47,7 +47,7 @@ for src in scraper.SOURCES:
 # ── 執行 ──────────────────────────────────────────────────────────────────────
 print(f"\n{'='*70}")
 print(f"  地區限制解除測試  {date.today()}")
-print(f"  模式: {'僅顯示台北/新北' if ONLY_TAIPEI else '全台所有'}"
+print(f"  模式: {'僅顯示非台北/新北（debug 用）' if NON_TAIPEI else '全台所有（雙北標記）'}"
       + (" | DEBUG" if DEBUG else ""))
 if SOURCE_FILTER:
     print(f"  來源篩選: {SOURCE_FILTER}")
@@ -97,10 +97,10 @@ for src in scraper.SOURCES:
         if not scraper.is_within_date_window(item):
             continue
 
-        if ONLY_TAIPEI:
+        if NON_TAIPEI:
             text = title + item.get("agency", "")
-            if not any(k in text for k in ["台北", "臺北", "新北"]):
-                continue
+            if any(k in text for k in ["台北", "臺北", "新北"]):
+                continue  # 排除雙北，只留其他地區
 
         passed.append(item)
 
