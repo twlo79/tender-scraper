@@ -1,6 +1,6 @@
 # 政府標案每日爬蟲
 
-自動抓取 14 個政府機關網站，篩選**台北／新北地區**公有不動產標租公告，每日透過 **LINE** 推播標案名稱、公告日期與連結。
+自動抓取 13 個政府機關網站，篩選**台北／新北地區**公有不動產標租公告，每日透過 **LINE** 推播標案名稱、公告日期與連結。
 
 ---
 
@@ -33,7 +33,7 @@
        ▼
   GitHub Actions 執行 scraper.py
        │
-       ├─ 爬 14 個來源
+       ├─ 爬 13 個來源
        │
        ├─ 和 state.json 比對（去重）
        │      已見過 → 跳過
@@ -68,7 +68,7 @@
 
 | 檔案 | 用途 |
 |------|------|
-| `scraper.py` | 主爬蟲。抓取 14 個來源、篩選、去重、推播 LINE、更新 state/sent_log |
+| `scraper.py` | 主爬蟲。抓取 13 個來源、篩選、去重、推播 LINE、更新 state/sent_log |
 | `log_checker.py` | 解析 GitHub Actions 執行 log，寫入 `daily_report.json` |
 | `dry_run_all_regions.py` | 測試用：移除地區限制執行所有 parser，驗證標題/日期/URL 格式 |
 | `qa_report.py` | QA 監測：讀取 sent_log.json，輸出爬蟲健康報告 |
@@ -154,24 +154,23 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 
 ---
 
-## 收錄來源（14 個）
+## 收錄來源（13 個）
 
 | # | 機關 | 抓取方式 | 地區篩選 |
 |---|------|----------|----------|
 | 1 | 台北自來水處 | `table tbody tr`（CCMS） | 來源本身限雙北 |
 | 2 | 國營台鐵 | `ul.tender-list li.rent-item` | 臺北營業分處 |
-| 3 | 新北市政府不動產標租 | `table tbody tr` + Claude fallback | 來源本身限雙北 |
-| 4 | 農業部 瑠公管理處 | `ul.commonList li.commonList-item` | 全台（關鍵字篩） |
-| 5 | 郵局房地產出租 | `ul.NewsList li a` | 台北、新北 |
-| 6 | 台北市財政局 | `table tbody tr`（CCMS，data-title 定位公告日期） | 來源本身限雙北 |
-| 7 | 國家住宅及都市更新中心 | `table tr`（tds[2]=案名，tds[4]=公告日期） | 全台（關鍵字篩） |
-| 8 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | 北區分署 |
-| 9 | 政府採購網 | 關鍵字 API 查詢（出租／標租，近 7 天） | 台北、新北 |
-| 10 | 教育部學產基金 | `table tbody tr` + Claude fallback | 台北、新北 |
-| 11 | 台北市都發局 | `table tr` + Claude fallback | 來源本身限雙北 |
-| 12 | 國防部政治作戰局 | `table tr` + Claude fallback | 台北、新北 |
-| 13 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 台北、新北 |
-| 14 | Google Alerts | RSS Atom feed | 台北、新北、gov.tw |
+| 3 | 農業部 瑠公管理處 | `ul.commonList li.commonList-item` | 全台（關鍵字篩） |
+| 4 | 郵局房地產出租 | `ul.NewsList li a` | 台北、新北 |
+| 5 | 台北市財政局 | `table tbody tr`（CCMS，data-title 定位公告日期） | 來源本身限雙北 |
+| 6 | 國家住宅及都市更新中心 | `table tr`（tds[2]=案名，tds[4]=公告日期） | 全台（關鍵字篩） |
+| 7 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | 北區分署 |
+| 8 | 政府採購網 | 關鍵字 API 查詢（出租／標租，近 7 天） | 台北、新北 |
+| 9 | 教育部學產基金 | `table tbody tr` + Claude fallback | 台北、新北 |
+| 10 | 台北市都發局 | `table tr` + Claude fallback | 來源本身限雙北 |
+| 11 | 國防部政治作戰局 | `table tr` + Claude fallback | 台北、新北 |
+| 12 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 台北、新北 |
+| 13 | Google Alerts | RSS Atom feed | 台北、新北、gov.tw |
 
 > **Claude fallback**：部分 JS 渲染頁面無法直接解析時，改用 Claude API 從 HTML 文字擷取結構化資料。需設定 `ANTHROPIC_API_KEY`。
 

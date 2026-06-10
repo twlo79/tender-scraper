@@ -2,8 +2,8 @@
 """
 政府標案每日爬蟲 v9
 ================================================================
-收錄來源（14 個）：
-  台北自來水處、國營台鐵、新北市政府不動產標租、農業部 瑠公管理處
+收錄來源（13 個）：
+  台北自來水處、國營台鐵、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
   國有財產署、政府採購網、教育部學產基金、台北市都發局
   國防部政治作戰局、土地銀行出租不動產、Google Alerts
@@ -11,7 +11,6 @@
 抓取策略：
   台北自來水處            requests + table tbody tr（CCMS 格式）
   國營台鐵               requests + CSS class / regex fallback
-  新北市政府不動產標租     requests + table tbody tr parser + Claude fallback
   農業部 瑠公管理處       requests + ul.commonList li parser
   郵局房地產出租           requests + table/list parser
   台北市財政局            requests + table tr（CCMS 格式）
@@ -548,42 +547,6 @@ def parse_taipei_udd() -> list[dict]:
     return items
 
 
-def parse_ntpc_property() -> list[dict]:
-    """新北市政府公有不動產標租資訊。
-    換源：finance.ntpc.gov.tw 的公告頁為 AJAX 搜尋表單，無法靜態抓取。
-    改用 ntpc.gov.tw 的公有不動產標租資訊頁（CCMS 列表格式）。
-    注意：部分雲端環境 IP 被 WAF 封鎖，GitHub Actions runner 可正常存取。
-    """
-    BASE = "https://www.ntpc.gov.tw"
-    URL  = f"{BASE}/ch/home.jsp?id=b7c44e481de3b2bd"
-    r = get(URL)
-    if not r or r.status_code == 403:
-        # WAF 封鎖此 IP，無法取得真實內容，跳過（不進 Claude fallback 避免誤報）
-        log.warning("  [新北市政府不動產標租] 頁面 403，跳過")
-        return []
-    from bs4 import BeautifulSoup
-    soup  = BeautifulSoup(r.text, "lxml")
-    items = []
-    for row in soup.select("table tbody tr, table tr"):
-        a   = row.find("a", href=True)
-        tds = row.find_all("td")
-        if not a or len(tds) < 2:
-            continue
-        title = a.get_text(strip=True)
-        if len(title) < 8:
-            continue
-        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
-        dt   = tds[-1].get_text(strip=True)
-        # 跳過最後欄不含日期格式的列
-        if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
-            continue
-        items.append({"title": title, "date": dt, "url": href, "agency": "新北市政府"})
-    if not items:
-        raw   = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
-        items = [i for i in raw if not _is_junk(i)]
-    log.info(f"  [新北市政府不動產標租] {len(items)} 筆")
-    return items
-
 
 def parse_gpwd() -> list[dict]:
     """國防部政治作戰局：國軍老舊眷村土地標租公告。
@@ -741,13 +704,7 @@ SOURCES = [
         "fn":   parse_tra,
         "whitelist": [], "blacklist": [], "regions": [],
     },
-    {
-        "name": "新北市政府不動產標租",
-        "url":  "https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd",
-        "fn":   parse_ntpc_property,
-        "whitelist": ["標租", "出租", "租賃", "招租", "招商", "標售", "不動產", "房地"],
-        "blacklist": [], "regions": [],
-    },
+
     {
         "name": "農業部 瑠公管理處",
         "url":  "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",
@@ -1151,8 +1108,8 @@ def main():
     # 一次性清除舊版本遺留的垃圾 state key（v10 升版後執行一次）
     _STATE_VER = 10
     if state.get("_version", 0) < _STATE_VER:
-        for _src in ["新北市政府不動產標租", "土地銀行出租不動產",
-                     "台北市都發局", "郵局房地產出租"]:
+        for _src in ["新北市政府不動產標租", "新北市政府財政局",
+                     "土地銀行出租不動產", "台北市都發局", "郵局房地產出租"]:
             if _src in state:
                 del state[_src]
                 log.info(f"♻️  清除舊 state key：{_src}")
