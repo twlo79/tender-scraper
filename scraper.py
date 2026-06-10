@@ -106,6 +106,14 @@ def get(url, **kwargs) -> requests.Response | None:
         log.warning(f"GET 失敗 {url}：{e}")
         return None
 
+# ── 說明文 / 導覽文過濾器（防 Claude fallback 誤抓）──────────────────────────
+_JUNK_RE = re.compile(
+    r"請至|查詢頁面|機關名稱輸入|洽詢電話|如有疑問|本頁面|回首頁|請點選|請選擇|資料來源|網頁更新"
+)
+
+def _is_junk(item: dict) -> bool:
+    return bool(_JUNK_RE.search(item.get("title", "")))
+
 # ── 各網站精準 Parser ─────────────────────────────────────────────────────────
 
 def parse_taipei_water() -> list[dict]:
@@ -549,7 +557,9 @@ def parse_ntpc_property() -> list[dict]:
     BASE = "https://www.ntpc.gov.tw"
     URL  = f"{BASE}/ch/home.jsp?id=b7c44e481de3b2bd"
     r = get(URL)
-    if not r:
+    if not r or r.status_code == 403:
+        # WAF 封鎖此 IP，無法取得真實內容，跳過（不進 Claude fallback 避免誤報）
+        log.warning("  [新北市政府不動產標租] 頁面 403，跳過")
         return []
     from bs4 import BeautifulSoup
     soup  = BeautifulSoup(r.text, "lxml")
@@ -569,7 +579,8 @@ def parse_ntpc_property() -> list[dict]:
             continue
         items.append({"title": title, "date": dt, "url": href, "agency": "新北市政府"})
     if not items:
-        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
+        raw   = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
+        items = [i for i in raw if not _is_junk(i)]
     log.info(f"  [新北市政府不動產標租] {len(items)} 筆")
     return items
 
