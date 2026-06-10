@@ -394,7 +394,7 @@ def _pcc_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
         f"&tenderId="
         f"&tenderType=TENDER_DECLARATION"
         f"&tenderWay=TENDER_WAY_ALL_DECLARATION"
-        f"&dateType=isNow"
+        f"&dateType=isDate"
         f"&tenderStartDate={start.replace('/', '%2F')}"
         f"&tenderEndDate={end.replace('/', '%2F')}"
         f"&radProctrgCate=&policyAdvocacy="
