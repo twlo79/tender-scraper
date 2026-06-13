@@ -482,5 +482,78 @@
         "公告停止標租「臺北市公有環南市場第一期2樓B區至D3區房地第六次公開標租案」。 - 市場處"
       ]
     }
+  },
+  "2026-06-13 03:37": {
+    "_summary": {
+      "total_fetched": 110,
+      "total_new": 3,
+      "total_notify": 0,
+      "line_pushed": false
+    },
+    "台北自來水處": {
+      "fetched": 6,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 17,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 16,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 3,
+      "new": 3,
+      "notify": 0
+    }
   }
 }
