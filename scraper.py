@@ -113,6 +113,16 @@ _JUNK_RE = re.compile(
 def _is_junk(item: dict) -> bool:
     return bool(_JUNK_RE.search(item.get("title", "")))
 
+
+def _safe_url(raw: str, base: str, fallback: str) -> str:
+    """將 href 轉換成安全的絕對 URL，過濾 javascript: / empty / # 等無效 scheme。"""
+    raw = (raw or "").strip()
+    if not raw or raw.startswith(("javascript:", "#", "mailto:")):
+        return fallback
+    if raw.startswith("http"):
+        return raw
+    return urljoin(base, raw)
+
 # ── 各網站精準 Parser ─────────────────────────────────────────────────────────
 
 def parse_taipei_water() -> list[dict]:
@@ -186,6 +196,37 @@ def parse_tra() -> list[dict]:
     log.info(f"  [國營台鐵] {len(items)} 筆（臺北營業分處）")
     return items
 
+
+def parse_ntpc_property() -> list[dict]:
+    """新北市政府公有不動產標租資訊（CCMS 列表格式）。
+    選取 table tbody tr，要求 len(tds) >= 2 且日期欄含日期格式，
+    避免抓到導覽列或廣告 li 項目。
+    """
+    BASE = "https://www.ntpc.gov.tw"
+    URL  = f"{BASE}/ch/home.jsp?id=b7c44e481de3b2bd"
+    r = get(URL)
+    if not r:
+        return []
+    from bs4 import BeautifulSoup
+    soup  = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr"):
+        a   = row.find("a", href=True)
+        tds = row.find_all("td")
+        if not a or len(tds) < 2:
+            continue
+        title = a.get_text(strip=True)
+        if len(title) < 8:
+            continue
+        href = _safe_url(a["href"], BASE, URL)
+        dt   = tds[-1].get_text(strip=True)
+        if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
+            continue
+        items.append({"title": title, "date": dt, "url": href, "agency": "新北市政府"})
+    if not items:
+        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
+    log.info(f"  [新北市政府不動產標租] {len(items)} 筆")
+    return items
 
 
 def parse_ialgo() -> list[dict]:
@@ -491,7 +532,7 @@ def parse_moe_xuechan() -> list[dict]:
         title = a.get_text(strip=True)
         if len(title) < 5:
             continue
-        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+        href = _safe_url(a["href"], BASE, URL)
         dt   = tds[-1].get_text(strip=True)
         # 跳過最後欄不含日期格式的列（如橫幅廣告、宣傳文字）
         if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
@@ -704,7 +745,13 @@ SOURCES = [
         "fn":   parse_tra,
         "whitelist": [], "blacklist": [], "regions": [],
     },
-
+    {
+        "name": "新北市政府不動產標租",
+        "url":  "https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd",
+        "fn":   parse_ntpc_property,
+        "whitelist": ["標租", "出租", "租賃", "招租", "招商", "標售", "不動產", "房地"],
+        "blacklist": [], "regions": [],
+    },
     {
         "name": "農業部 瑠公管理處",
         "url":  "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",
@@ -1057,6 +1104,8 @@ def build_line_messages(results: dict, run_time: str, original_date: str = "") -
             title = item.get("title", "（無標題）")[:60]
             dt    = item.get("date", "")
             url   = item.get("url", src["url"])
+            if not url or not url.startswith("http"):
+                url = src["url"]
 
             title_obj = {"type": "text", "text": f"🔗 {title}", "size": "sm", "color": "#1d4ed8", "wrap": True}
             row = {
