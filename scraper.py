@@ -197,38 +197,6 @@ def parse_tra() -> list[dict]:
     return items
 
 
-def parse_ntpc_property() -> list[dict]:
-    """新北市政府公有不動產標租資訊（CCMS 列表格式）。
-    選取 table tbody tr，要求 len(tds) >= 2 且日期欄含日期格式，
-    避免抓到導覽列或廣告 li 項目。
-    """
-    BASE = "https://www.ntpc.gov.tw"
-    URL  = f"{BASE}/ch/home.jsp?id=b7c44e481de3b2bd"
-    r = get(URL)
-    if not r:
-        return []
-    from bs4 import BeautifulSoup
-    soup  = BeautifulSoup(r.text, "lxml")
-    items = []
-    for row in soup.select("table tbody tr, table tr"):
-        a   = row.find("a", href=True)
-        tds = row.find_all("td")
-        if not a or len(tds) < 2:
-            continue
-        title = a.get_text(strip=True)
-        if len(title) < 8:
-            continue
-        href = _safe_url(a["href"], BASE, URL)
-        dt   = tds[-1].get_text(strip=True)
-        if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
-            continue
-        items.append({"title": title, "date": dt, "url": href, "agency": "新北市政府"})
-    if not items:
-        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "新北市政府不動產標租", BASE)
-    log.info(f"  [新北市政府不動產標租] {len(items)} 筆")
-    return items
-
-
 def parse_ialgo() -> list[dict]:
     """農業部 瑠公管理處：ul.commonList li.commonList-item > a.newsItem"""
     BASE = "https://www.ialgo.nat.gov.tw"
@@ -746,13 +714,6 @@ SOURCES = [
         "whitelist": [], "blacklist": [], "regions": [],
     },
     {
-        "name": "新北市政府不動產標租",
-        "url":  "https://www.ntpc.gov.tw/ch/home.jsp?id=b7c44e481de3b2bd",
-        "fn":   parse_ntpc_property,
-        "whitelist": ["標租", "出租", "租賃", "招租", "招商", "標售", "不動產", "房地"],
-        "blacklist": [], "regions": [],
-    },
-    {
         "name": "農業部 瑠公管理處",
         "url":  "https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010",
         "fn":   parse_ialgo,
@@ -1154,8 +1115,8 @@ def main():
     state   = load_state()
     results = {}
 
-    # 一次性清除舊版本遺留的垃圾 state key（v10 升版後執行一次）
-    _STATE_VER = 10
+    # 一次性清除舊版本遺留的垃圾 state key（v11：永久移除新北市政府不動產標租，雜訊來源）
+    _STATE_VER = 11
     if state.get("_version", 0) < _STATE_VER:
         for _src in ["新北市政府不動產標租", "新北市政府財政局",
                      "土地銀行出租不動產", "台北市都發局", "郵局房地產出租"]:
