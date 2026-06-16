@@ -91,5 +91,13 @@
       "GET å¤±æ https://www.ialgo.nat.gov.tw/news/NewsPage3?a=10010ï¼('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))"
     ],
     "line": "無推播（0 筆）"
+  },
+  "2026-06-16": {
+    "date": "2026-06-16",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
+    "line": "無推播（0 筆）"
   }
 }
