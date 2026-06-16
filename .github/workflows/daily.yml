@@ -2,7 +2,7 @@ name: 每日標案爬蟲
 
 on:
   schedule:
-    - cron: '37 3 * * *'      # 每天 03:37 UTC 自動 dry-run（QA 預覽，不推播 LINE、不寫 state/sent_log）
+    - cron: '37 22 * * *'     # 每天 22:37 UTC（= 台灣時間 06:37）自動 dry-run（QA 預覽，不推播 LINE、不寫 state/sent_log）
   workflow_dispatch:           # 手動觸發：確認 dry-run QA 沒問題後，人工執行才真正推播
     inputs:
       dry_run:
