@@ -1,9 +1,7 @@
 name: 每日標案爬蟲
 
 on:
-  schedule:
-    - cron: '37 22 * * *'     # 每天 22:37 UTC（= 台灣時間 06:37）自動 dry-run（QA 預覽，不推播 LINE、不寫 state/sent_log）
-  workflow_dispatch:           # 手動觸發：確認 dry-run QA 沒問題後，人工執行才真正推播
+  workflow_dispatch:           # 由 Make.com 定時呼叫（dry-run 與真推播都用這個），或手動觸發
     inputs:
       dry_run:
         description: 'Dry run（不推播 LINE、不寫 state/sent_log）'
@@ -40,17 +38,16 @@ jobs:
           ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN:        ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO:         ${{ github.repository }}
-          # 排程觸發 = 強制 dry-run（QA 預覽）；手動觸發則依 input 決定（預設真推播）
-          DRY_RUN: ${{ github.event_name == 'schedule' && 'true' || (github.event.inputs.dry_run || 'false') }}
+          DRY_RUN: ${{ inputs.dry_run }}
 
       - name: 寫入 Job Summary（供人工或 Claude Code 自動 QA 閱讀）
         if: always()
         run: |
           {
-            if [ "${{ github.event_name }}" = "schedule" ]; then
-              echo "## 🔍 排程 Dry-Run（QA 預覽，未推播 LINE）"
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "## 🔍 Dry-Run（QA 預覽，未推播 LINE）"
             else
-              echo "## 🚀 手動執行（dry_run=${{ github.event.inputs.dry_run || 'false' }}）"
+              echo "## 🚀 真實執行（已推播 LINE）"
             fi
             echo '```'
             cat scraper_output.log
