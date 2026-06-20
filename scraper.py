@@ -967,10 +967,24 @@ def save_sent_log(results: dict, run_time: str, line_pushed: bool):
 def item_key(item: dict) -> str:
     return re.sub(r"\s+", "", item.get("title", ""))
 
+def _entry_key(entry) -> str:
+    if isinstance(entry, str):
+        return re.sub(r"\s+", "", entry)
+    return item_key(entry)
+
 def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
-    seen = set(state.get(name, []))
+    existing = state.get(name, [])
+    seen = {_entry_key(e) for e in existing}
     new  = [i for i in items if item_key(i) not in seen]
-    state[name] = list(seen | {item_key(i) for i in items})[-300:]
+    # 合併：舊記錄升格為 dict，新項目直接存 {title, date, url}
+    merged: dict[str, dict] = {}
+    for e in existing:
+        k = _entry_key(e)
+        merged[k] = {"title": e, "date": "", "url": ""} if isinstance(e, str) else e
+    for i in items:
+        k = item_key(i)
+        merged[k] = {"title": i.get("title", ""), "date": i.get("date", ""), "url": i.get("url", "")}
+    state[name] = list(merged.values())[-300:]
     return new
 
 
