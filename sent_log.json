@@ -1763,5 +1763,81 @@
         "[三峽國光二期青年社會住宅附屬設施空間專案提供銀光咖啡館] 公開標租案投標須知 - 新北市政府"
       ]
     }
+  },
+  "2026-07-01 01:30": {
+    "_summary": {
+      "total_fetched": 115,
+      "total_new": 9,
+      "total_notify": 1,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 3,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【臺北營業分處】【土地出租】【新北巿中和區新民段262及262之1地號部分土地】【115.07.01~115.07.16】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 14,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 15,
+      "new": 1,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 2,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 5,
+      "new": 5,
+      "notify": 0
+    }
   }
 }
