@@ -1,17 +1,4 @@
 {
-  "2026-06-06": {
-    "date": "2026-06-06",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [
-      "[æ¿åºæ¡è³¼ç¶²] Gist å°çº placeholderï¼Make å°æªå·è¡",
-      "[æ¿åºæ¡è³¼ç¶²] Gist ç¡è³æï¼fallback å° ronny.tw",
-      "[PCC ronny] HTTPSConnectionPool(host='pcc.g0v.ronny.tw', port=443): Max retries exceeded with url: /api/listbydate?date=20260606 (Caused by ConnectTimeoutError(<HTTPSConnection(host='pcc.g0v.ronny.tw', port=443) at 0x7f3b175d7a10>, 'Connection to pcc.g0v.ronny.tw timed out. (connect timeout=20)'))",
-      "GET å¤±æ https://www.udd.gov.taipei/events/psxwq1jï¼HTTPSConnectionPool(host='www.udd.gov.taipei', port=443): Max retries exceeded with url: /events/psxwq1j (Caused by SSLError(SSLError(1, '[SSL: TLSV1_UNRECOGNIZED_NAME] tlsv1 unrecognized name (_ssl.c:1016)')))"
-    ],
-    "line": "無推播（0 筆）"
-  },
   "2026-06-07": {
     "date": "2026-06-07",
     "sources": {},
@@ -250,6 +237,14 @@
   },
   "2026-07-05": {
     "date": "2026-07-05",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-07-06": {
+    "date": "2026-07-06",
     "sources": {},
     "total_new": 0,
     "total_pushed": 0,
