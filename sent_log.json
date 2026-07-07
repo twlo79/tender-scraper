@@ -2222,5 +2222,85 @@
       "new": 0,
       "notify": 0
     }
+  },
+  "2026-07-07 01:30": {
+    "_summary": {
+      "total_fetched": 107,
+      "total_new": 7,
+      "total_notify": 3,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 2,
+      "new": 2,
+      "notify": 2,
+      "items": [
+        "【臺北營業分處】【車站旅運販賣空間標租】【本公司南港車站B2旅運販賣空間】【1150707~1150721】",
+        "【臺北營業分處】【土地標租】【新北巿淡水區314地號部分土地】【1150707~1150721】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 10,
+      "new": 1,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 13,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 13,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 3,
+      "new": 3,
+      "notify": 1,
+      "items": [
+        "臺北市市場處財物標租文件一覽表"
+      ]
+    }
   }
 }
