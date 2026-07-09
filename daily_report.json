@@ -1,12 +1,4 @@
 {
-  "2026-06-09": {
-    "date": "2026-06-09",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-06-10": {
     "date": "2026-06-10",
     "sources": {},
@@ -249,6 +241,19 @@
     "total_new": 0,
     "total_pushed": 0,
     "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-07-09": {
+    "date": "2026-07-09",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "GET å¤±æ https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00ï¼HTTPSConnectionPool(host='dof.gov.taipei', port=443): Max retries exceeded with url: /News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00 (Caused by NewConnectionError(\"HTTPSConnection(host='dof.gov.taipei', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
+      "GET å¤±æ https://esvc.fnp.gov.tw/tenderSetSuperficies?svcId=f6c87d65ebc84e988b4d245777d83a81ï¼HTTPSConnectionPool(host='esvc.fnp.gov.tw', port=443): Max retries exceeded with url: /tenderSetSuperficies?svcId=f6c87d65ebc84e988b4d245777d83a81 (Caused by ConnectTimeoutError(<HTTPSConnection(host='esvc.fnp.gov.tw', port=443) at 0x7f48fd83b990>, 'Connection to esvc.fnp.gov.tw timed out. (connect timeout=20)'))",
+      "[åæè²¡ç¢ç½²/å°ä¸æ¬è¨­å®] é£ç·å¤±æ",
+      "[æ¿åºæ¡è³¼ç¶²/æ¨ç§] é£ç·å¤±æï¼HTTPSConnectionPool(host='web.pcc.gov.tw', port=443): Max retries exceeded with url: /prkms/tender/common/basic/readTenderBasic?firstSearch=true&searchType=basic&isBinding=N&isLogIn=N&orgName=&orgId=&tenderName=%E6%A8%99%E7%A7%9F&tenderId=&tenderType=TENDER_DECLARATION&tenderWay=TENDER_WAY_ALL_DECLARATION&dateType=isDate&tenderStartDate=2026%2F07%2F02&tenderEndDate=2026%2F07%2F09&radProctrgCate=&policyAdvocacy= (Caused by NewConnectionError(\"HTTPSConnection(host='web.pcc.gov.tw', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))"
+    ],
     "line": "無推播（0 筆）"
   }
 }
