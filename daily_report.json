@@ -1,14 +1,4 @@
 {
-  "2026-06-11": {
-    "date": "2026-06-11",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [
-      "GET å¤±æ https://www.landbank.com.tw/Bulletin/RentRealtyï¼HTTPSConnectionPool(host='www.landbank.com.tw', port=443): Max retries exceeded with url: /Bulletin/RentRealty (Caused by ConnectTimeoutError(<HTTPSConnection(host='www.landbank.com.tw', port=443) at 0x7f81d10bd990>, 'Connection to www.landbank.com.tw timed out. (connect timeout=20)'))"
-    ],
-    "line": "無推播（0 筆）"
-  },
   "2026-06-12": {
     "date": "2026-06-12",
     "sources": {},
@@ -250,6 +240,14 @@
   },
   "2026-07-10": {
     "date": "2026-07-10",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-07-11": {
+    "date": "2026-07-11",
     "sources": {},
     "total_new": 0,
     "total_pushed": 0,
