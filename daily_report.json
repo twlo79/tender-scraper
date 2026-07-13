@@ -1,16 +1,4 @@
 {
-  "2026-06-13": {
-    "date": "2026-06-13",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [
-      "[æ¿åºæ¡è³¼ç¶²/åºç§] é£ç·å¤±æï¼HTTPSConnectionPool(host='webtest.pcc.gov.tw', port=443): Max retries exceeded with url: /maintenance/web3maintain.html (Caused by NewConnectionError(\"HTTPSConnection(host='webtest.pcc.gov.tw', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
-      "[æ¿åºæ¡è³¼ç¶²/æ¨ç§] é£ç·å¤±æï¼HTTPSConnectionPool(host='webtest.pcc.gov.tw', port=443): Max retries exceeded with url: /maintenance/web3maintain.html (Caused by NewConnectionError(\"HTTPSConnection(host='webtest.pcc.gov.tw', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
-      "GET å¤±æ https://www.landbank.com.tw/Bulletin/RentRealtyï¼HTTPSConnectionPool(host='www.landbank.com.tw', port=443): Read timed out. (read timeout=20)"
-    ],
-    "line": "無推播（0 筆）"
-  },
   "2026-06-14": {
     "date": "2026-06-14",
     "sources": {},
@@ -248,6 +236,14 @@
   },
   "2026-07-12": {
     "date": "2026-07-12",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-07-13": {
+    "date": "2026-07-13",
     "sources": {},
     "total_new": 0,
     "total_pushed": 0,
