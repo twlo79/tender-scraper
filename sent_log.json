@@ -1,89 +1,4 @@
 {
-  "2026-06-16 03:37": {
-    "_summary": {
-      "total_fetched": 116,
-      "total_new": 9,
-      "total_notify": 3,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 5,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 2,
-      "notify": 2,
-      "items": [
-        "【臺北營業分處】【機械類標租】【臺北等11站部分空間設置共享雨傘租借站】",
-        "【臺北營業分處】【土地出租】【新北巿中和區新民段262及262之1地號部分土地】【115.06.16~115.06.30】"
-      ]
-    },
-    "新北市政府不動產標租": {
-      "fetched": 1,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "公有不動產標租資訊（新北市政府各機關公開標租案件）"
-      ]
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 1,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 17,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 18,
-      "new": 2,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 1,
-      "new": 1,
-      "notify": 0
-    }
-  },
   "2026-06-17 02:56": {
     "_summary": {
       "total_fetched": 113,
@@ -2261,6 +2176,86 @@
       "fetched": 1,
       "new": 1,
       "notify": 0
+    }
+  },
+  "2026-07-17 01:30": {
+    "_summary": {
+      "total_fetched": 106,
+      "total_new": 6,
+      "total_notify": 3,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【臺北營業分處】【土地出租】【新竹市香山區美山段154及154之1地號部分土地】【115.07.16~115.07.30】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 14,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 4,
+      "new": 4,
+      "notify": 2,
+      "items": [
+        "臺北市市場處標租文件一覽表",
+        "臺北市文山區公所-里公布欄-「臺北市公有興隆市場1樓45、48、 49、50、51、70號攤位公開標租 ..."
+      ]
     }
   }
 }
