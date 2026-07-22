@@ -1,12 +1,4 @@
 {
-  "2026-06-22": {
-    "date": "2026-06-22",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-06-23": {
     "date": "2026-06-23",
     "sources": {},
@@ -246,6 +238,14 @@
     "errors": [
       "GET å¤±æ https://udd.gov.taipei/events/psxwq1jï¼HTTPSConnectionPool(host='udd.gov.taipei', port=443): Read timed out. (read timeout=20)"
     ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-07-22": {
+    "date": "2026-07-22",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
     "line": "無推播（0 筆）"
   }
 }
