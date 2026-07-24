@@ -386,6 +386,16 @@
       "title": "【臺北營業分處】【土地出租】【新竹市香山區美山段154及154之1地號部分土地】【115.07.16~115.07.30】",
       "date": "2026/07/16",
       "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6447&activePage=1"
+    },
+    {
+      "title": "【臺北營業分處】【廣告標租】【臺北站B1層高鐵西進剪票口外牆面廣告出租經營案】【1150724─1150813】",
+      "date": "2026/07/24",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6464&activePage=1"
+    },
+    {
+      "title": "【臺北營業分處】【廣告標租】【臺北車站外東側機房牆面廣告出租經營案】【1150724─1150813】",
+      "date": "2026/07/24",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6463&activePage=1"
     }
   ],
   "新北市政府財政局": [],
@@ -814,11 +824,6 @@
   ],
   "政府採購網": [
     {
-      "title": "南市崇明國小115學年度二、五年級戶外教育勞務採購案",
-      "date": "",
-      "url": ""
-    },
-    {
       "title": "115學年度游泳教學",
       "date": "",
       "url": ""
@@ -1120,8 +1125,8 @@
     },
     {
       "title": "115年停車場標租經營管理案",
-      "date": "115/06/26",
-      "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEyNTk5MDU="
+      "date": "115/07/24",
+      "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEyODMyNzI="
     },
     {
       "title": "處理單元塔槽模擬建構與操作優化分析工作",
@@ -2312,6 +2317,11 @@
       "title": "南港調車場都市更新案不動產出租經營暨設立法人體制經營不動產事業策略研析顧問委託專業服務案 ",
       "date": "115/07/16",
       "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEyNzY1OTY="
+    },
+    {
+      "title": "新北市立南勢國民中學設置太陽光電發電系統公開標租案",
+      "date": "115/07/24",
+      "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEyODM4MDE="
     }
   ],
   "台北自來水處招租專區": [],
@@ -2983,6 +2993,16 @@
       "title": "公告標租本市楠梓分局援中派出所暨多功能社區中心5樓 - 高雄市政府衛生局",
       "date": "2026-07-21",
       "url": "https://health.kcg.gov.tw/News_Content.aspx?n=51623F92649C1BE2&sms=F9373F0CFE2E3F24&s=3E97958B0F309F68"
+    },
+    {
+      "title": "【招租】本處辦理「八田與一紀念園區市川及田中宅出租案」公開標租，請踴躍參加投標。",
+      "date": "2026-07-23",
+      "url": "https://admin.taiwan.net.tw/siraya-nsa/NewsSiraya/News?a=823&id=34989&p=3"
+    },
+    {
+      "title": "國有房地標租續租新制上路，盼加速活化國有資產 - 財政部",
+      "date": "2026-07-23",
+      "url": "https://www.mof.gov.tw/singlehtml/384fb3077bb349ea973e7fc6f13b6974?cntId=166dedc34c4b4cf78296cf85774eda62"
     }
   ],
   "國防部政治作戰局": [
@@ -3382,6 +3402,11 @@
       "title": "本行「智能客服」將於115/7/21（二）17時至20時進行系統維護作業，屆時將暫停服務",
       "date": "",
       "url": "https://www.landbank.com.tw/Bulletin/Detail/7fa53e1c-198f-4b6d-8038-b37600980c6f?code=H400"
+    },
+    {
+      "title": "配合財金公司資訊線路優化改接作業，115年7月24日(星期五)22:00~23:00本行企業網路銀行(含APP、企業委託付款、FEDI)系統將暫停服務",
+      "date": "",
+      "url": "https://www.landbank.com.tw/Bulletin/Detail/b04a586e-7e52-481d-8ae7-b490007299ca?code=H400"
     }
   ]
 }
