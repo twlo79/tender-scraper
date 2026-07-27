@@ -29,7 +29,8 @@
 
 ```
 每天 ~10:37（台灣時間）
-       │
+       │  Make.com 定時呼叫 daily.yml（workflow_dispatch）
+       │  ※ daily.yml 本身沒有 cron，觸發完全依賴 Make
        ▼
   GitHub Actions 執行 scraper.py
        │
@@ -46,6 +47,8 @@
        │
        ├─ total_notify > 0 → 推播 LINE（標案名 + 公告日 + URL）
        │  total_notify = 0 → 靜默，不發送
+       │  ※ 使用 broadcast 端點：推送給該 LINE OA 的「所有好友」，
+       │    非指定單一 User ID。每 5 則訊息一批送出。
        │
        ├─ state.json commit 到 GitHub
        └─ sent_log.json commit 到 GitHub
@@ -59,6 +62,11 @@
 
 > 排程使用非整點奇數分鐘（`:37`、`:07`）以避開 GitHub Actions 高峰排隊。
 > GitHub Actions 在尖峰時段可能延遲 30 分鐘至數小時，為正常現象。
+>
+> ⚠️ **單點故障**：`daily.yml` 沒有 cron，只有 `workflow_dispatch`，
+> 由 Make.com 每日呼叫觸發。Make 若額度用盡或流程停用，爬蟲會靜默不執行，
+> 而「沒收到 LINE」與「今天沒有新標案」表徵完全相同，不易察覺。
+> 補一組 cron 作為備援可消除此風險。
 
 ---
 
@@ -72,6 +80,7 @@
 | `log_checker.py` | 解析 GitHub Actions 執行 log，寫入 `daily_report.json` |
 | `dry_run_all_regions.py` | 測試用：移除地區限制執行所有 parser，驗證標題/日期/URL 格式 |
 | `qa_report.py` | QA 監測：讀取 sent_log.json，輸出爬蟲健康報告 |
+| `resend.py` | 重播指定日期的 LINE 推播內容（重用 scraper 的 build_line_messages） |
 
 ### 資料檔案
 
@@ -83,11 +92,11 @@
 
 ### GitHub Actions Workflows
 
-| 檔案 | 排程 | 說明 |
-|------|------|------|
-| `.github/workflows/daily.yml` | 每天 UTC 02:37（台灣 10:37） | 主爬蟲 |
-| `.github/workflows/log-check.yml` | 每天 UTC 03:07（台灣 11:07） | 健康報告 |
-| `.github/workflows/cleanup-branches.yml` | 每週日 UTC 02:00（台灣 10:00） | 刪除超過 7 天的 `claude/*` 分支 |
+| 檔案 | 觸發方式 | 說明 |
+|------|---------|------|
+| `.github/workflows/daily.yml` | `workflow_dispatch`（Make.com 每天約 10:37 呼叫，或手動） | 主爬蟲。支援 `dry_run` 輸入參數 |
+| `.github/workflows/log-check.yml` | cron `7 3 * * *`（UTC 03:07 = 台灣 11:07） | 健康報告 |
+| `.github/workflows/cleanup-branches.yml` | cron `0 2 * * 0`（每週日 UTC 02:00 = 台灣 10:00） | 刪除超過 7 天的 `claude/*` 分支 |
 
 ---
 
@@ -176,6 +185,32 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 
 ---
 
+## Claude Code 分支自動化（`.claude/`）
+
+| 檔案 | 用途 |
+|------|------|
+| `.claude/settings.json` | 設定 **Stop hook**：session 結束時自動執行下方腳本 |
+| `.claude/merge-to-main.sh` | 將 `claude/*` session branch merge 回 main 並 push |
+
+`merge-to-main.sh` 行為：
+
+- 僅處理 `claude/*` 開頭的分支，其他分支直接跳過
+- 沒有領先 `origin/main` 的 commit 時不動作
+- merge 衝突若發生在 `state.json`，自動保留 main 版本（`--ours`）後續完成 commit
+- 其他檔案衝突則 abort 並切回原分支，需人工處理
+
+搭配 `cleanup-branches.yml`，整體循環為：
+
+```
+Claude 開 claude/* 分支做事 → session 結束自動 merge 回 main → 一週後分支自動刪除
+```
+
+> ⚠️ `.claude/settings.json` 中的 hook 指令為硬編碼路徑 `/home/user/tender-scraper/.claude/merge-to-main.sh`，
+> 僅適用於原本的雲端執行環境。在其他機器上此 hook 不會生效（腳本本身以 `git rev-parse` 定位 repo，
+> 是動態的，只有 settings 這行路徑需要調整）。
+
+---
+
 ## Claude Code 例行 QA 流程
 
 每次開啟 Claude Code session 時，依序執行以下監測：
@@ -228,7 +263,8 @@ python dry_run_all_regions.py --debug        # 全台 raw data 檢視
 |------|------|
 | 監測無效案源 | 長期 fetched=0 或推播內容無關的來源，考慮移除或調整 |
 | 白名單／黑名單細化 | 減少「停車場標租」「場地出租」等低相關案件 |
-| 日期窗口可設定化 | 改成環境變數 `DATE_WINDOW_DAYS`，不需改程式碼 |
+| 日期窗口可設定化 | 目前為 `scraper.py` 內的常數 `DATE_WINDOW_DAYS = 10`，可改為讀環境變數 |
+| daily.yml 補 cron 備援 | 目前僅靠 Make.com 觸發，Make 停擺時爬蟲會靜默失效 |
 
 ### 第三優先：新增案源
 
@@ -242,34 +278,45 @@ python dry_run_all_regions.py --debug        # 全台 raw data 檢視
 
 ## GitHub Actions 設定
 
-`.github/workflows/daily.yml`：
+`.github/workflows/daily.yml`（實際內容摘要）：
 
 ```yaml
 on:
-  schedule:
-    - cron: '37 2 * * *'  # UTC 02:37 = 台灣 10:37
-  workflow_dispatch:       # 支援手動觸發
+  workflow_dispatch:        # 由 Make.com 定時呼叫，或手動觸發
+    inputs:
+      dry_run:
+        description: 'Dry run（不推播 LINE、不寫 state/sent_log）'
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
+  contents: write           # 允許將 state.json commit 回 main
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
+        with: {ref: main}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install requests beautifulsoup4 lxml
-      - run: python scraper.py
+      - run: python scraper.py 2>&1 | tee scraper_output.log
         env:
           LINE_CHANNEL_TOKEN: ${{ secrets.LINE_CHANNEL_TOKEN }}
           GITHUB_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO:        ${{ github.repository }}
           ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          DRY_RUN:            ${{ inputs.dry_run }}
+      # 最後一步將 scraper_output.log 寫入 Job Summary，
+      # 供人工或 Claude Code 自動 QA 閱讀
 ```
 
 Secrets 設定位置：GitHub repo → **Settings → Secrets and variables → Actions**
+
+從 Actions 頁面手動觸發時可勾選 `dry_run`，僅預覽篩選結果、不推播也不寫檔。
 
 ---
 
