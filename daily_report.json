@@ -1,12 +1,4 @@
 {
-  "2026-06-30": {
-    "date": "2026-06-30",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-07-01": {
     "date": "2026-07-01",
     "sources": {},
@@ -247,6 +239,19 @@
   },
   "2026-07-29": {
     "date": "2026-07-29",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "[æ¿åºæ¡è³¼ç¶²] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
+      "[æè²é¨å­¸ç¢åºé] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
+      "[å°åå¸é½ç¼å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
+      "[åé²é¨æ¿æ²»ä½æ°å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled."
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-07-30": {
+    "date": "2026-07-30",
     "sources": {},
     "total_new": 0,
     "total_pushed": 0,
