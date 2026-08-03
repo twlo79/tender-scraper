@@ -1,12 +1,4 @@
 {
-  "2026-07-04": {
-    "date": "2026-07-04",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-07-05": {
     "date": "2026-07-05",
     "sources": {},
@@ -272,6 +264,18 @@
     "total_pushed": 0,
     "errors": [
       "[æ¿åºæ¡è³¼ç¶²] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
+      "[æè²é¨å­¸ç¢åºé] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
+      "[å°åå¸é½ç¼å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
+      "[åé²é¨æ¿æ²»ä½æ°å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled."
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-08-03": {
+    "date": "2026-08-03",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
       "[æè²é¨å­¸ç¢åºé] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
       "[å°åå¸é½ç¼å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
       "[åé²é¨æ¿æ²»ä½æ°å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled."
