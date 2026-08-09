@@ -1,77 +1,4 @@
 {
-  "2026-07-09 01:30": {
-    "_summary": {
-      "total_fetched": 92,
-      "total_new": 6,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 12,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 6,
-      "new": 6,
-      "notify": 0
-    }
-  },
   "2026-07-10 01:30": {
     "_summary": {
       "total_fetched": 103,
@@ -2313,6 +2240,82 @@
       "fetched": 1,
       "new": 0,
       "notify": 0
+    }
+  },
+  "2026-08-09 01:30": {
+    "_summary": {
+      "total_fetched": 57,
+      "total_new": 3,
+      "total_notify": 1,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 12,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 3,
+      "new": 3,
+      "notify": 1,
+      "items": [
+        "公告「臺北市公有木柵市場2樓97號攤位公開標租」開標日期及地點。"
+      ]
     }
   }
 }
