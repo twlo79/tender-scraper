@@ -874,11 +874,6 @@
   ],
   "政府採購網": [
     {
-      "title": "DR-2000測試控制系統保養維護(含故障修復)等2項",
-      "date": "",
-      "url": ""
-    },
-    {
       "title": "115年中區事務大隊查處非法外國人講習會委託服務案",
       "date": "",
       "url": ""
@@ -2372,6 +2367,11 @@
       "title": "設置自動販賣機場地出租",
       "date": "115/08/05",
       "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEyOTI4NTQ="
+    },
+    {
+      "title": "北站轄管出租國宅社區樓梯防護網及屋頂欄杆等設備預約財物採購",
+      "date": "115/08/14",
+      "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEzMDE2Mjc="
     }
   ],
   "台北自來水處招租專區": [],
@@ -3131,8 +3131,8 @@
     },
     {
       "title": "電子布告欄 - 新北市八里區公所",
-      "date": "2026-07-29",
-      "url": "https://www.bali.ntpc.gov.tw/home.jsp?id=9a041045a03d7782&act=be4f48068b2b0031&dataserno=0a73cb79467d994356f1dd22bf9cc1c8&mserno=a97f7821ace243fc5ae5656d96ee84ae"
+      "date": "2026-08-13",
+      "url": "https://www.bali.ntpc.gov.tw/home.jsp?id=9a041045a03d7782&act=be4f48068b2b0031&dataserno=2c59ac1102bfd52d1a1f12f173afe4bd&mserno=a97f7821ace243fc5ae5656d96ee84ae"
     },
     {
       "title": "【標租公告】臺北校區之【五育樓A7櫃位(案號 - 總務處",
@@ -3373,6 +3373,16 @@
       "title": "標租決標公告)臺中市甲興社會福利綜合大樓屋頂設置太陽光電發電系統公開標租案(案號1150424A01)",
       "date": "2026-08-12",
       "url": "https://www.society.taichung.gov.tw/3344718/post"
+    },
+    {
+      "title": "財政部國有財產署南區分署臺南辦事處115年度招標第10批第4標標租不動產資訊",
+      "date": "2026-08-13",
+      "url": "https://esvc.fnp.gov.tw/rtMsg/showLocationPicture?rtS1Id=4c28c2bee9d34563923c4afc0eb6d91c"
+    },
+    {
+      "title": "苗栗管理處公告標租115年度第4批農田水利非事業用不動產共1標，請踴躍參加投標。",
+      "date": "2026-08-13",
+      "url": "https://www.iamli.nat.gov.tw/news/Articles?a=10303&id=29473"
     }
   ],
   "國防部政治作戰局": [
@@ -3857,6 +3867,11 @@
       "title": "本行個人網路銀行及行動銀行將於115年8月12日（星期三）15:30~18:00進行系統維護作業，作業期間如遇連線中斷或無法登入，敬請重新操作或稍後再試。",
       "date": "",
       "url": "https://www.landbank.com.tw/Bulletin/Detail/81e1d596-62be-49d2-98f2-b4a400118af0?code=H400"
+    },
+    {
+      "title": "本行個人網路銀行及行動銀行將於115年8月13日（星期四）16:00~19:00進行系統維護作業，作業期間如遇連線中斷或無法登入，敬請重新操作或稍後再試。",
+      "date": "",
+      "url": "https://www.landbank.com.tw/Bulletin/Detail/cedb9526-8182-4f2c-910d-b4a50015a1ce?code=H400"
     }
   ]
 }
