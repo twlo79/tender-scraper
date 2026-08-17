@@ -1,84 +1,4 @@
 {
-  "2026-07-17 01:30": {
-    "_summary": {
-      "total_fetched": 106,
-      "total_new": 6,
-      "total_notify": 3,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "【臺北營業分處】【土地出租】【新竹市香山區美山段154及154之1地號部分土地】【115.07.16~115.07.30】"
-      ]
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 14,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 4,
-      "new": 4,
-      "notify": 2,
-      "items": [
-        "臺北市市場處標租文件一覽表",
-        "臺北市文山區公所-里公布欄-「臺北市公有興隆市場1樓45、48、 49、50、51、70號攤位公開標租 ..."
-      ]
-    }
-  },
   "2026-07-18 01:30": {
     "_summary": {
       "total_fetched": 102,
@@ -2316,6 +2236,83 @@
       "fetched": 0,
       "new": 0,
       "notify": 0
+    }
+  },
+  "2026-08-17 01:30": {
+    "_summary": {
+      "total_fetched": 96,
+      "total_new": 3,
+      "total_notify": 2,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 6,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 4,
+      "new": 1,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 2,
+      "new": 2,
+      "notify": 2,
+      "items": [
+        "公告金門縣政府114年度金門縣金湖鎮新市段946地號縣有房地(共1 標)及新北市中和區大同段 ...",
+        "公告「新北市萬里區設置社區式長照機構」公開標租之決標結果一案 - 新北市衛生局"
+      ]
     }
   }
 }
