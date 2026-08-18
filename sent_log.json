@@ -1,77 +1,4 @@
 {
-  "2026-07-18 01:30": {
-    "_summary": {
-      "total_fetched": 102,
-      "total_new": 1,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 14,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 1,
-      "new": 1,
-      "notify": 0
-    }
-  },
   "2026-07-19 01:30": {
     "_summary": {
       "total_fetched": 103,
@@ -2313,6 +2240,82 @@
         "公告金門縣政府114年度金門縣金湖鎮新市段946地號縣有房地(共1 標)及新北市中和區大同段 ...",
         "公告「新北市萬里區設置社區式長照機構」公開標租之決標結果一案 - 新北市衛生局"
       ]
+    }
+  },
+  "2026-08-18 01:30": {
+    "_summary": {
+      "total_fetched": 98,
+      "total_new": 4,
+      "total_notify": 1,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 3,
+      "new": 1,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【臺北營業分處】【土地標租】【新竹縣湖口鄉力行段679地號部分土地暨新竹縣湖口鄉綠園段400、401、410、419－1、425、571－1、580－1、581－2、583地號部分土地】【115.8.18~115.9.1】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 6,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
     }
   }
 }
