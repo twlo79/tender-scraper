@@ -1,14 +1,4 @@
 {
-  "2026-07-23": {
-    "date": "2026-07-23",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [
-      "GET å¤±æ https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00ï¼HTTPSConnectionPool(host='dof.gov.taipei', port=443): Read timed out. (read timeout=20)"
-    ],
-    "line": "無推播（0 筆）"
-  },
   "2026-07-24": {
     "date": "2026-07-24",
     "sources": {},
@@ -308,6 +298,14 @@
   },
   "2026-08-21": {
     "date": "2026-08-21",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-08-22": {
+    "date": "2026-08-22",
     "sources": {},
     "total_new": 0,
     "total_pushed": 0,
