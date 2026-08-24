@@ -1,84 +1,4 @@
 {
-  "2026-07-24 01:30": {
-    "_summary": {
-      "total_fetched": 99,
-      "total_new": 6,
-      "total_notify": 3,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 2,
-      "notify": 2,
-      "items": [
-        "【臺北營業分處】【廣告標租】【臺北站B1層高鐵西進剪票口外牆面廣告出租經營案】【1150724─1150813】",
-        "【臺北營業分處】【廣告標租】【臺北車站外東側機房牆面廣告出租經營案】【1150724─1150813】"
-      ]
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 14,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "新北市立南勢國民中學設置太陽光電發電系統公開標租案"
-      ]
-    },
-    "教育部學產基金": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 2,
-      "new": 2,
-      "notify": 0
-    }
-  },
   "2026-07-25 01:30": {
     "_summary": {
       "total_fetched": 104,
@@ -2274,6 +2194,82 @@
     "郵局房地產出租": {
       "fetched": 7,
       "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 1,
+      "new": 1,
+      "notify": 0
+    }
+  },
+  "2026-08-24 01:30": {
+    "_summary": {
+      "total_fetched": 98,
+      "total_new": 3,
+      "total_notify": 1,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 4,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【臺北營業分處】【廣告標租】【臺北車站外東側機房牆面廣告出租經營案】【1150824–1150908】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 8,
+      "new": 1,
       "notify": 0
     },
     "台北市財政局": {
