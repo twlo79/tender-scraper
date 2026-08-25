@@ -1,77 +1,4 @@
 {
-  "2026-07-25 01:30": {
-    "_summary": {
-      "total_fetched": 104,
-      "total_new": 5,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 14,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 7,
-      "new": 5,
-      "notify": 0
-    }
-  },
   "2026-07-26 01:30": {
     "_summary": {
       "total_fetched": 98,
@@ -2289,6 +2216,79 @@
     },
     "政府採購網": {
       "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 1,
+      "new": 1,
+      "notify": 0
+    }
+  },
+  "2026-08-25 01:30": {
+    "_summary": {
+      "total_fetched": 95,
+      "total_new": 2,
+      "total_notify": 0,
+      "line_pushed": false
+    },
+    "台北自來水處": {
+      "fetched": 4,
+      "new": 1,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
       "new": 0,
       "notify": 0
     },
