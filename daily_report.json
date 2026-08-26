@@ -1,12 +1,4 @@
 {
-  "2026-07-27": {
-    "date": "2026-07-27",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-07-28": {
     "date": "2026-07-28",
     "sources": {},
@@ -310,6 +302,17 @@
     "total_new": 0,
     "total_pushed": 0,
     "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-08-26": {
+    "date": "2026-08-26",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "GET å¤±æ https://esvc.fnp.gov.tw/tenderSetSuperficies?svcId=f6c87d65ebc84e988b4d245777d83a81ï¼HTTPSConnectionPool(host='esvc.fnp.gov.tw', port=443): Max retries exceeded with url: /tenderSetSuperficies?svcId=f6c87d65ebc84e988b4d245777d83a81 (Caused by ConnectTimeoutError(<HTTPSConnection(host='esvc.fnp.gov.tw', port=443) at 0x7f84335f99d0>, 'Connection to esvc.fnp.gov.tw timed out. (connect timeout=20)'))",
+      "[åæè²¡ç¢ç½²/å°ä¸æ¬è¨­å®] é£ç·å¤±æ"
+    ],
     "line": "無推播（0 筆）"
   }
 }
