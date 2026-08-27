@@ -914,16 +914,6 @@
   ],
   "政府採購網": [
     {
-      "title": "臺中酒廠廢活性碳清運處理",
-      "date": "",
-      "url": ""
-    },
-    {
-      "title": "臺南市南化區農會0121地震災後重建大樓工程委託規畫設計監造",
-      "date": "",
-      "url": ""
-    },
-    {
       "title": "115學年度臺中市國民中、小學﹝海區﹞學生健康檢查委託專業服務採購",
       "date": "",
       "url": ""
@@ -2412,6 +2402,16 @@
       "title": "臺中捷運綠線四維國小站(G5)及文華高中站(G8)土地開發公有非公用不動產估價、標租售及相關程序委託案",
       "date": "115/08/17",
       "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEzMDMxNjc="
+    },
+    {
+      "title": "115年度臺北市出租國宅社區消防安全設備預約維修勞務採購",
+      "date": "115/08/27",
+      "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEzMTA4MDk="
+    },
+    {
+      "title": "臺中市太平區公所115年設置太陽光電發電系統公開標租",
+      "date": "115/08/27",
+      "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEzMTA4OTA="
     }
   ],
   "台北自來水處招租專區": [],
@@ -3573,6 +3573,46 @@
       "title": "公開標租「臺北市殯葬管理處市有公用房地（懷愛館景行樓3樓）提供作為靈位牌區供飯業務使用案」",
       "date": "2026-08-25",
       "url": "https://mso.gov.taipei/News_Content.aspx?n=8F9CE918E4CEE380&sms=95DAB778B6CB4C7F&s=56134B7A56493745"
+    },
+    {
+      "title": "青年創意轉化為防災行動臺南市府支持後壁試行備援通訊 - 臺灣導報",
+      "date": "2026-08-26",
+      "url": "https://taiwanreports.com/archives/1008855"
+    },
+    {
+      "title": "臺南鐵路地下化專案照顧住宅剩6店舖13格汽車停車位公告標租 - 蕃新聞",
+      "date": "2026-08-26",
+      "url": "https://n.yam.com/Article/20260827159450"
+    },
+    {
+      "title": "退休校長潘明智巧思創作創意對聯肯定吳松儒伉儷助學善行 - 臺灣導報",
+      "date": "2026-08-26",
+      "url": "https://taiwanreports.com/archives/1008857"
+    },
+    {
+      "title": "鐵路地下化照顧住宅餘屋標租6店舖13車位搶進南臺南副都心 - PCHOME NEWS",
+      "date": "2026-08-26",
+      "url": "https://news.pchome.com.tw/living/greatnews/20260826/index-78773624910898209009.html"
+    },
+    {
+      "title": "高哲翰講座教授點評「病患急診等床」因應策略 - 台灣華報",
+      "date": "2026-08-26",
+      "url": "https://www.kingtop.com.tw/detail.php?type=gallery&id=53183"
+    },
+    {
+      "title": "鐵路地下化照顧住宅餘屋標租6店舖13車位搶進南臺南副都心 - 媒事．看新聞",
+      "date": "2026-08-26",
+      "url": "https://times.586.com.tw/2026/08/989784/"
+    },
+    {
+      "title": "南市鐵路地下化照顧住宅餘屋店舖與車位今起公開標租| 中華日報 - LINE TODAY",
+      "date": "2026-08-26",
+      "url": "https://today.line.me/tw/v3/article/rmRwaxe"
+    },
+    {
+      "title": "入住南台南副都心！南鐵地下化照顧住宅釋出6戶店舖、13格車位 - 好房網News",
+      "date": "2026-08-26",
+      "url": "https://news.housefun.com.tw/news/article/amp/805864488483.html"
     }
   ],
   "國防部政治作戰局": [
