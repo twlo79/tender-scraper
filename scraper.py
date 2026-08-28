@@ -1121,7 +1121,44 @@ def build_line_messages(results: dict, run_time: str, original_date: str = "") -
 
 
 # ── 主程式 ────────────────────────────────────────────────────────────────────
+# ── 送一份到安幸 ERP（標案追蹤器）────────────────────────────────────────────
 
+def push_to_anxing(results: dict):
+    """把今天要推播的標案送一份到安幸 ERP。只送 notify，跟 LINE 一模一樣。
+
+    ★ 失敗不 raise —— LINE 推播是主要功能，不能被這個拖累。
+    """
+    url = os.getenv("ANXING_URL", "")
+    key = os.getenv("ANXING_KEY", "")
+    if not url or not key:
+        log.info("  ↷ 沒設 ANXING_URL / ANXING_KEY，跳過 ERP 匯入")
+        return
+
+    records = []
+    for name, d in results.items():
+        for it in d.get("notify", []):
+            records.append({
+                "source": name,
+                "title":  it.get("title", ""),
+                "url":    it.get("url") or "",
+                "agency": it.get("agency") or "",
+                "date":   it.get("date") or "",   # 公告日期，不是截標日期
+            })
+
+    if not records:
+        log.info("  ↷ 今天沒有要推播的，不打 ERP")
+        return
+
+    try:
+        r = requests.post(url, json={"records": records},
+                          headers={"x-import-key": key}, timeout=30)
+        if r.status_code == 200:
+            log.info(f"  ✅ ERP 匯入：{r.text[:200]}")
+        else:
+            log.warning(f"  ⚠ ERP 匯入失敗 {r.status_code}：{r.text[:200]}")
+    except Exception as e:
+        log.warning(f"  ⚠ ERP 匯入異常（不影響 LINE 推播）：{e}")
+      
 def main():
     run_time = datetime.now().strftime("%H:%M")
     log.info(f"=== 開始執行 {date.today()} {run_time} ===")
@@ -1160,6 +1197,7 @@ def main():
         log.info("[DRY RUN] 略過 save_state（不寫入 state.json）")
     else:
         save_state(state)
+        push_to_anxing(results)
 
     # 摘要
     total_new    = sum(len(v["new"])    for v in results.values())
