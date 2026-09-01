@@ -1,77 +1,4 @@
 {
-  "2026-08-01 01:30": {
-    "_summary": {
-      "total_fetched": 62,
-      "total_new": 9,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 13,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 8,
-      "new": 8,
-      "notify": 0
-    }
-  },
   "2026-08-02 01:30": {
     "_summary": {
       "total_fetched": 55,
@@ -2381,6 +2308,87 @@
     "Google Alerts": {
       "fetched": 4,
       "new": 4,
+      "notify": 0
+    }
+  },
+  "2026-09-01 01:30": {
+    "_summary": {
+      "total_fetched": 91,
+      "total_new": 6,
+      "total_notify": 4,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 3,
+      "new": 3,
+      "notify": 3,
+      "items": [
+        "【臺北營業分處】【土地出租】【臺北市北投區大業段三小段562之6地號部分土地】【1150901~1150915】",
+        "【臺北營業分處】【土地出租】【基隆市安樂區西定段326之2地號部分土地(土地供設置電動汽車公共充電樁)】【115.09.01~115.09.15】",
+        "【臺北營業分處】【土地出租】【臺北市中正區公園段一小段74地號土地】【1150901~1150915】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 7,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 1,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【招標公告】北區分署 115年第17批 招標公告 公告:115年08月31日 開標:115年09月15日"
+      ]
+    },
+    "政府採購網": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 1,
+      "new": 1,
       "notify": 0
     }
   }
