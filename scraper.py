@@ -302,7 +302,9 @@ def parse_hurc() -> list[dict]:
             tds = row.find_all("td")
             if len(tds) < 6:
                 continue
-            # tds[2] = 案名（含前綴）, tds[4] = 公告日期（含前綴）
+            # tds[0] = 採購案號（含前綴）, tds[2] = 案名（含前綴）, tds[4] = 公告日期（含前綴）
+            raw_id = tds[0].get_text(strip=True)
+            case_id = _re.sub(r"^採購案號", "", raw_id).strip()
             raw_title = tds[2].get_text(strip=True)
             title = _re.sub(r"^案名", "", raw_title).strip()
             if len(title) < 5:
@@ -317,7 +319,10 @@ def parse_hurc() -> list[dict]:
                     href = URL
             else:
                 href = URL
-            items.append({"title": title, "date": dt, "url": href})
+            # 案號帶進 id：流標後「第二次招標」會沿用同一案名重新公告，
+            # 但案號會多一個 -1／-2 尾碼（如 115B-043 → 115B-043-1），
+            # 靠案號才能正確判斷是新公告而非舊案重複，不能只比對案名。
+            items.append({"id": case_id, "title": title, "date": dt, "url": href})
     # fallback Claude
     if not items:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國家住宅及都市更新中心", BASE)
@@ -965,7 +970,11 @@ def save_sent_log(results: dict, run_time: str, line_pushed: bool):
 
 
 def item_key(item: dict) -> str:
-    return re.sub(r"\s+", "", item.get("title", ""))
+    # 整條記錄一起當 key（案號＋案名＋公告日期＋url），而不是只比對案名。
+    # 同一案名「流標後第二次招標」會有新的公告日期（多半也有新案號／新 url），
+    # 只用案名比對會誤判成舊案而漏推。id 欄位非必填，多數來源留空不影響比對。
+    parts = (item.get("id", ""), item.get("title", ""), item.get("date", ""), item.get("url", ""))
+    return re.sub(r"\s+", "", "|".join(parts))
 
 def _entry_key(entry) -> str:
     if isinstance(entry, str):
@@ -976,14 +985,14 @@ def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
     existing = state.get(name, [])
     seen = {_entry_key(e) for e in existing}
     new  = [i for i in items if item_key(i) not in seen]
-    # 合併：舊記錄升格為 dict，新項目直接存 {title, date, url}
+    # 合併：舊記錄升格為 dict，新項目直接存 {id, title, date, url}
     merged: dict[str, dict] = {}
     for e in existing:
         k = _entry_key(e)
         merged[k] = {"title": e, "date": "", "url": ""} if isinstance(e, str) else e
     for i in items:
         k = item_key(i)
-        merged[k] = {"title": i.get("title", ""), "date": i.get("date", ""), "url": i.get("url", "")}
+        merged[k] = {"id": i.get("id", ""), "title": i.get("title", ""), "date": i.get("date", ""), "url": i.get("url", "")}
     state[name] = list(merged.values())[-300:]
     return new
 
