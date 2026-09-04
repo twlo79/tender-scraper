@@ -156,8 +156,10 @@ def parse_taipei_water() -> list[dict]:
             href = urljoin(BASE, href)
         date_td = td_map.get("公告日期") or td_map.get("發布日期") or td_map.get("日期")
         dt = date_td.get_text(strip=True) if date_td else ""
+        id_td = td_map.get("編號")
+        case_id = id_td.get_text(strip=True) if id_td else ""
         if title and len(title) > 3:
-            items.append({"title": title, "date": dt, "url": href})
+            items.append({"id": case_id, "title": title, "date": dt, "url": href})
     log.info(f"  [台北自來水處] {len(items)} 筆")
     return items
 
@@ -383,7 +385,7 @@ def parse_fnp() -> list[dict]:
             url = f"{base_path}/showInfomation?msgId={msg_id}" if msg_id else page["url"]
 
             title = f"【{page['cat']}】{unit} {year}年第{batch}批 {kind} 公告:{pub_dt} 開標:{open_dt}"
-            all_items.append({"title": title, "date": pub_dt, "url": url, "agency": "國有財產署"})
+            all_items.append({"id": msg_id, "title": title, "date": pub_dt, "url": url, "agency": "國有財產署"})
             count += 1
 
         log.info(f"  [國有財產署/{page['cat']}] {count} 筆")
@@ -510,7 +512,10 @@ def parse_moe_xuechan() -> list[dict]:
         # 跳過最後欄不含日期格式的列（如橫幅廣告、宣傳文字）
         if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
             continue
-        items.append({"title": title, "date": dt, "url": href, "agency": "教育部學產基金"})
+        # 結構同台北市財政局（CCMS），若有 data-title="編號" 一併取，供二次招標判斷用
+        id_td = {td.get("data-title", ""): td for td in tds}.get("編號")
+        case_id = id_td.get_text(strip=True) if id_td else ""
+        items.append({"id": case_id, "title": title, "date": dt, "url": href, "agency": "教育部學產基金"})
     if not items:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "教育部學產基金", BASE)
     log.info(f"  [教育部學產基金] {len(items)} 筆")
@@ -584,10 +589,12 @@ def parse_gpwd() -> list[dict]:
         if len(title) < 5:
             continue
         href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
-        dt_td = ({td.get("data-title", ""): td for td in tds}.get("公告日期")
-                 or {td.get("data-title", ""): td for td in tds}.get("日期"))
+        td_map = {td.get("data-title", ""): td for td in tds}
+        dt_td = td_map.get("公告日期") or td_map.get("日期")
         dt = dt_td.get_text(strip=True) if dt_td else tds[-1].get_text(strip=True)
-        items.append({"title": title, "date": dt, "url": href, "agency": "國防部政治作戰局"})
+        id_td = td_map.get("編號")
+        case_id = id_td.get_text(strip=True) if id_td else ""
+        items.append({"id": case_id, "title": title, "date": dt, "url": href, "agency": "國防部政治作戰局"})
     if not items:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國防部政治作戰局", BASE)
     log.info(f"  [國防部政治作戰局] {len(items)} 筆")
