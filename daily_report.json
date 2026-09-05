@@ -1,17 +1,4 @@
 {
-  "2026-08-06": {
-    "date": "2026-08-06",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [
-      "[æ¿åºæ¡è³¼ç¶²] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
-      "[æè²é¨å­¸ç¢åºé] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
-      "[å°åå¸é½ç¼å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled.",
-      "[åé²é¨æ¿æ²»ä½æ°å±] Claude API é¯èª¤ï¼invalid_request_error â This organization has been disabled."
-    ],
-    "line": "無推播（0 筆）"
-  },
   "2026-08-07": {
     "date": "2026-08-07",
     "sources": {},
@@ -275,6 +262,16 @@
   },
   "2026-09-04": {
     "date": "2026-09-04",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "â  ERP å¯å¥ç°å¸¸ï¼ä¸å½±é¿ LINE æ¨æ­ï¼ï¼Invalid leading whitespace, reserved character(s), or return character(s) in header value: '***\\n'"
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-09-05": {
+    "date": "2026-09-05",
     "sources": {},
     "total_new": 0,
     "total_pushed": 0,
