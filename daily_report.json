@@ -1,12 +1,4 @@
 {
-  "2026-08-12": {
-    "date": "2026-08-12",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-08-13": {
     "date": "2026-08-13",
     "sources": {},
@@ -252,6 +244,17 @@
     "total_new": 0,
     "total_pushed": 0,
     "errors": [
+      "â  ERP å¯å¥ç°å¸¸ï¼ä¸å½±é¿ LINE æ¨æ­ï¼ï¼Invalid leading whitespace, reserved character(s), or return character(s) in header value: '***\\n'"
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-09-11": {
+    "date": "2026-09-11",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "GET å¤±æ https://www.landbank.com.tw/Bulletin/RentRealtyï¼HTTPSConnectionPool(host='www.landbank.com.tw', port=443): Read timed out. (read timeout=20)",
       "â  ERP å¯å¥ç°å¸¸ï¼ä¸å½±é¿ LINE æ¨æ­ï¼ï¼Invalid leading whitespace, reserved character(s), or return character(s) in header value: '***\\n'"
     ],
     "line": "無推播（0 筆）"
