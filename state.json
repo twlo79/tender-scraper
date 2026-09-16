@@ -336,6 +336,30 @@
       "title": "延性鑄鐵直管及管件財物採購(開口契約含後續擴充)",
       "date": "",
       "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjM2Mjk="
+    },
+    {
+      "id": "1",
+      "title": "115至117年臺北南區供水管網改善配合工程",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjY5NzU="
+    },
+    {
+      "id": "2",
+      "title": "116年直潭場淤泥處理廠委外操作維護勞務採購(開口契約含數量及年度擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjQ4NjE="
+    },
+    {
+      "id": "3",
+      "title": "116年淤泥餅清運再利用勞務採購(開口契約含數量及年度擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjUwNTc="
+    },
+    {
+      "id": "4",
+      "title": "延性鑄鐵直管及管件財物採購(開口契約含後續擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjM2Mjk="
     }
   ],
   "國營台鐵": [
@@ -1072,6 +1096,18 @@
       "id": "案號115B-050",
       "title": "林口世大運選手村社會住宅店舖招租(115年第2批)",
       "date": "2026/09/10",
+      "url": "https://www.hurc.org.tw/hurc/procurement"
+    },
+    {
+      "id": "案號115B-041",
+      "title": "高雄市三民區覆鼎金段覆鼎金小段1236地號土地租賃案",
+      "date": "2026/09/16",
+      "url": "https://www.hurc.org.tw/hurc/procurement"
+    },
+    {
+      "id": "案號115B-051",
+      "title": "新都安居A社會住宅115年第2批店鋪招租(115年第2批)",
+      "date": "2026/09/16",
       "url": "https://www.hurc.org.tw/hurc/procurement"
     }
   ],
@@ -4112,6 +4148,18 @@
       "title": "臺北市公有環南市場公開標租攤位一覽表",
       "date": "2026-09-14",
       "url": "https://www-ws.gov.taipei/Download.ashx?u=LzAwMS9VcGxvYWQvNDA3L3JlbGZpbGUvNTMxOTYvOTcwNzYzMy9iMGM1OWFiOC1mZWNmLTQ2NjktYmVjNy1lYjg5N2UyNzUxZDUucGRm&n=5YWs5ZGK6ZmE5Lu2LeiHuuWMl%2BW4guWFrOacieeSsOWNl%2BW4guWgtOWFrOmWi%2Baomeenn%2BaUpOS9jeS4gOimveihqC5wZGY%3D&icon=..pdf"
+    },
+    {
+      "id": "",
+      "title": "115年第5批農田水利事業作業基金非事業用不動產土地公開標租案 - 桃園管理處",
+      "date": "2026-09-15",
+      "url": "https://www.iatyu.nat.gov.tw/news/Articles?a=10153&id=29729"
+    },
+    {
+      "id": "",
+      "title": "115年度第1次標租太平育賢二期好宅店鋪公開出租案公告 - 臺中市住宅發展工程處",
+      "date": "2026-09-15",
+      "url": "https://thd.taichung.gov.tw/4056487/post"
     }
   ],
   "國防部政治作戰局": [
@@ -4314,6 +4362,12 @@
       "title": "【招租公告】本公司臺北信維大樓公開招租(招標文件變更公告)",
       "date": "115/09/14",
       "url": "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904&news_no=75101&control_type=page&news_cat=6&group_name=real_estate&news_type=latest_news"
+    },
+    {
+      "id": "",
+      "title": "公開徵租原關廟文衡路郵局(臺南市關廟區文衡路20號)局屋節餘場地",
+      "date": "115/09/16",
+      "url": "https://www.post.gov.tw/post/internet/Real_estate/index.jsp?ID=904&news_no=75070&control_type=page&news_cat=6&group_name=real_estate&news_type=latest_news"
     }
   ],
   "台北市都發局": [
@@ -4715,6 +4769,7 @@
       "url": "https://www.landbank.com.tw/Bulletin/Detail/d3c58e8c-7c35-4916-99b8-b4b300349a6e?code=H400"
     },
     {
+      "id": "",
       "title": "本行修訂「保管箱出租契約」，自115年11月1日起實施。",
       "date": "",
       "url": "https://www.landbank.com.tw/Bulletin/Detail/a007eba8-c3f6-4e03-814c-af3f0021473d?code=H400"
