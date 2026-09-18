@@ -360,6 +360,66 @@
       "title": "延性鑄鐵直管及管件財物採購(開口契約含後續擴充)",
       "date": "",
       "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjM2Mjk="
+    },
+    {
+      "id": "1",
+      "title": "單突緣單承口套筒財物採購",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzExMDY="
+    },
+    {
+      "id": "2",
+      "title": "116年陽明分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzE1NjI="
+    },
+    {
+      "id": "3",
+      "title": "116年北區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzE1MTM="
+    },
+    {
+      "id": "4",
+      "title": "116年南區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzE0NjU="
+    },
+    {
+      "id": "5",
+      "title": "116年西區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzEzODk="
+    },
+    {
+      "id": "6",
+      "title": "116年東區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzEzMjg="
+    },
+    {
+      "id": "7",
+      "title": "115至117年臺北南區供水管網改善配合工程",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjY5NzU="
+    },
+    {
+      "id": "8",
+      "title": "116年直潭場淤泥處理廠委外操作維護勞務採購(開口契約含數量及年度擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjQ4NjE="
+    },
+    {
+      "id": "9",
+      "title": "116年淤泥餅清運再利用勞務採購(開口契約含數量及年度擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjUwNTc="
+    },
+    {
+      "id": "10",
+      "title": "延性鑄鐵直管及管件財物採購(開口契約含後續擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjM2Mjk="
     }
   ],
   "國營台鐵": [
@@ -2703,6 +2763,12 @@
       "title": "115年度臺北永吉段都更案店鋪、住宅國有學產不動產第2次公開標租",
       "date": "115-08-04",
       "url": ""
+    },
+    {
+      "id": "",
+      "title": "115年第3批次國有學產土地短期出租（採競標年租金）",
+      "date": "115-09-17",
+      "url": ""
     }
   ],
   "台北捷運局": [],
@@ -4190,6 +4256,42 @@
       "title": "臺東縣政府辦理115年度第2次縣有非公用土地標租案，歡迎踴躍參與投標。",
       "date": "2026-09-16",
       "url": "https://www.taitung.gov.tw/News_Content.aspx?n=13371&sms=12651&s=149479"
+    },
+    {
+      "id": "",
+      "title": "台水活化供水設施拚綠能，太陽光電、小水力年發電突破1 億度",
+      "date": "2026-09-17",
+      "url": "https://technews.tw/2026/09/16/taiwan-water-activates-supply-facilities-green-energy-solar-pv-small-hydropower-annual-generation-surpasses/"
+    },
+    {
+      "id": "",
+      "title": "自發綠電貼補虧損台水：今年綠電回饋金將達1.3億元 - 自由財經",
+      "date": "2026-09-16",
+      "url": "https://ec.ltn.com.tw/amp/article/breakingnews/5576408"
+    },
+    {
+      "id": "",
+      "title": "台水活化資產建綠能裝置估2026年回饋金收入1.3億 - 聯合新聞網",
+      "date": "2026-09-16",
+      "url": "https://udn.com/news/story/7238/9758908"
+    },
+    {
+      "id": "",
+      "title": "台水活化資產建綠能裝置估2026年回饋金收入1.3億| 政經焦點| 要聞| 經濟日報",
+      "date": "2026-09-16",
+      "url": "https://money.udn.com/money/story/5612/9758908?from=edn_related_storybottom"
+    },
+    {
+      "id": "",
+      "title": "自來水全球資訊網-訊息公佈欄",
+      "date": "2026-09-16",
+      "url": "https://www.water.gov.tw/ch/Subject/Detail/120020?nodeId=711"
+    },
+    {
+      "id": "",
+      "title": "「新化果菜市場飲食區攤位」標租公告 - 臺南市農產運銷股份有限公司",
+      "date": "2026-09-15",
+      "url": "https://www.t-apmc.com.tw/%E6%8B%9B%E5%95%86%E5%85%AC%E5%91%8A-3"
     }
   ],
   "國防部政治作戰局": [
