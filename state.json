@@ -2780,11 +2780,6 @@
   "台北捷運局": [],
   "Google Alerts": [
     {
-      "title": "臺北市公有蘭州市場1樓56、188號攤位公開標租",
-      "date": "",
-      "url": ""
-    },
-    {
       "title": "茲訂於115年7月3日(星期五)上午10時於本府三樓簡報室辦理公開標租-最新消息-彰化縣政府",
       "date": "",
       "url": ""
@@ -4318,6 +4313,12 @@
       "title": "彰化縣王功漁港漁貨直銷中心公開標租須知",
       "date": "2026-09-17",
       "url": "https://www.chcg.gov.tw/DTO/agriculture/getFile.aspx?file_id=577417&file=2&type=1&did=437342"
+    },
+    {
+      "id": "",
+      "title": "115年度臺南市歸仁區保西國小設置太陽光電設施公開標租案",
+      "date": "2026-09-18",
+      "url": "https://www.bsps.tn.edu.tw/modules/school/index.php?department_id=2&zone_id=0&page_id=13&content_id=167&type=news&from_op=school_department_show"
     }
   ],
   "國防部政治作戰局": [
