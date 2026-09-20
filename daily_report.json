@@ -1,12 +1,4 @@
 {
-  "2026-08-21": {
-    "date": "2026-08-21",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-08-22": {
     "date": "2026-08-22",
     "sources": {},
@@ -266,6 +258,14 @@
     "errors": [
       "â  ERP å¯å¥ç°å¸¸ï¼ä¸å½±é¿ LINE æ¨æ­ï¼ï¼Invalid leading whitespace, reserved character(s), or return character(s) in header value: '***\\n'"
     ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-09-20": {
+    "date": "2026-09-20",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
     "line": "無推播（0 筆）"
   }
 }
