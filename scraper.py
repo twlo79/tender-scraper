@@ -394,89 +394,93 @@ def parse_fnp() -> list[dict]:
     return all_items
 
 
-def _pcc_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
-    """抓取 PCC 單一關鍵字的查詢結果，回傳 item 清單。"""
+def _arpam_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
+    """抓取政府電子採購網「財物出租查詢」（非招標查詢）單一關鍵字的查詢結果。
+    2026-09-22 用真實查詢結果確認根因：舊版打的是「招標查詢」（/prkms/tender/...），
+    給工程/財物/勞務採購用；公有不動產出租不會走這個招標流程公告，兩個關鍵字
+    「出租」「標租」在那邊查詢連續 18 天都是 0 筆。真正該打的是「財物出租查詢」
+    （/opas/arpam/public/readArpam），是全國機關即時更新的不動產出租公告彙整，
+    同一天窗口內就查到教育部、國防部政治作戰局、新北市政府等雙北相關案件。
+    """
     from bs4 import BeautifulSoup
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     BASE = "https://web.pcc.gov.tw"
     URL  = (
-        f"{BASE}/prkms/tender/common/basic/readTenderBasic"
-        f"?firstSearch=true&searchType=basic&isBinding=N&isLogIn=N"
-        f"&orgName=&orgId="
-        f"&tenderName={requests.utils.quote(keyword)}"
-        f"&tenderId="
-        f"&tenderType=TENDER_DECLARATION"
-        f"&tenderWay=TENDER_WAY_ALL_DECLARATION"
-        f"&dateType=isDate"
-        f"&tenderStartDate={start.replace('/', '%2F')}"
-        f"&tenderEndDate={end.replace('/', '%2F')}"
-        f"&radProctrgCate=&policyAdvocacy="
+        f"{BASE}/opas/arpam/public/readArpam"
+        f"?searchAssetsName={requests.utils.quote(keyword)}"
+        f"&searchBeginNoticeDate={start.replace('/', '%2F')}"
+        f"&searchEndNoticeDate={end.replace('/', '%2F')}"
+        f"&pageModel.rowsPerPage=100"
     )
     try:
         r = requests.get(URL, headers=HTTP_HEADERS, timeout=30, verify=False)
         r.raise_for_status()
         r.encoding = r.apparent_encoding or "utf-8"
     except Exception as e:
-        log.warning(f"  [政府採購網/{keyword}] 連線失敗：{e}")
+        log.warning(f"  [政府採購網/財物出租/{keyword}] 連線失敗：{e}")
         return []
 
     soup  = BeautifulSoup(r.text, "lxml")
     items = []
 
-    target_table = None
-    for tbl in soup.find_all("table"):
-        hdr = tbl.find("tr")
-        if hdr and "項次" in hdr.get_text() and "功能選項" in hdr.get_text():
-            target_table = tbl
-            break
-
-    if target_table:
-        for row in target_table.find_all("tr")[1:]:
+    table = soup.find("table", id="displayTagTableId")
+    if table:
+        body = table.find("tbody") or table
+        for row in body.find_all("tr"):
             tds = row.find_all("td")
-            if len(tds) < 9:
+            if len(tds) < 7:
                 continue
-            agency  = tds[1].get_text(strip=True)
-            name_td = tds[2]
-            td_html = str(name_td)
-            m_title = re.search(r'pageCode2Img\("([^"]+)"\)', td_html)
-            title   = m_title.group(1) if m_title else ""
-            if not title:
-                lines = list(name_td.stripped_strings)
-                title = max(lines, key=len) if lines else ""
-            if not title or len(title) <= 3:
+            agency   = tds[1].get_text(strip=True)
+            case_no  = tds[2].get_text(strip=True)
+            title    = tds[4].get_text(strip=True)
+            if len(title) < 5:
                 continue
-            view_a   = (tds[9].find("a", href=True) if len(tds) > 9 else None) or tds[2].find("a", href=True)
-            view_url = URL
-            if view_a:
-                href = view_a["href"]
-                view_url = href if href.startswith("http") else urljoin(BASE, href)
-            date_str = tds[6].get_text(strip=True)
-            items.append({"title": title, "date": date_str, "url": view_url, "agency": agency})
+            date_str = tds[5].get_text(strip=True)
+            # 檢視連結是下拉選單的 <option value="formViewNew(PK,狀態);">，取 PK 組出詳情頁網址。
+            # 瀏覽器實際連結會多帶 _csrf 與整組查詢條件（如 searchAssetsName、日期區間），
+            # 但 _csrf 是綁定使用者當下 session 的一次性 token，換一個瀏覽器/session 打開必定
+            # 不吻合；而我們自己送出的查詢請求本身就是不帶 _csrf 的 GET 也能正常取得結果，
+            # 顯示此站對 GET 並未強制驗證 CSRF（Spring Security 預設只保護會變更狀態的方法）。
+            # 因此這裡不試圖偽造 _csrf，但比照瀏覽器連結多帶回原查詢條件，盡量提高相容性。
+            option = tds[6].find("option", value=re.compile(r"^formViewNew\("))
+            m = re.search(r"formViewNew\((\d+)", option["value"]) if option else None
+            pk  = m.group(1) if m else ""
+            if pk:
+                url = (
+                    f"{BASE}/opas/arpam/public/readOneArpamDetailOld?pk={pk}"
+                    f"&searchAssetsName={requests.utils.quote(keyword)}"
+                    f"&searchBeginNoticeDate={start.replace('/', '%2F')}"
+                    f"&searchEndNoticeDate={end.replace('/', '%2F')}"
+                    f"&pageModel.rowsPerPage=100"
+                )
+            else:
+                url = URL
+            items.append({"id": case_no, "title": title, "date": date_str, "url": url, "agency": agency})
 
     if not items and CONFIG["api_key"]:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "政府採購網", BASE)
 
-    log.info(f"  [政府採購網/{keyword}] {len(items)} 筆")
+    log.info(f"  [政府採購網/財物出租/{keyword}] {len(items)} 筆")
     return items
 
 
 def parse_pcc() -> list[dict]:
-    """政府採購網：以「出租」和「標租」為關鍵字查詢近 7 天招標公告，合併去重。"""
+    """政府採購網「財物出租查詢」：以「出租」和「標租」為關鍵字查詢近 ±10 天公告，合併去重。"""
     today = date.today()
-    start = (today - timedelta(days=7)).strftime("%Y/%m/%d")
+    start = (today - timedelta(days=DATE_WINDOW_DAYS)).strftime("%Y/%m/%d")
     end   = today.strftime("%Y/%m/%d")
 
     all_items: list[dict] = []
     for kw in ["出租", "標租"]:
-        all_items.extend(_pcc_fetch_keyword(kw, start, end))
+        all_items.extend(_arpam_fetch_keyword(kw, start, end))
 
-    # 按 title 去重（兩個 keyword 查詢可能重疊）
+    # 按案號＋案名去重（兩個 keyword 查詢可能重疊）
     seen: set[str] = set()
     items: list[dict] = []
     for i in all_items:
-        key = re.sub(r"\s+", "", i.get("title", ""))
+        key = re.sub(r"\s+", "", i.get("id", "") + i.get("title", ""))
         if key not in seen:
             seen.add(key)
             items.append(i)
