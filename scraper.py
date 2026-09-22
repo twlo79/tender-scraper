@@ -528,8 +528,10 @@ def parse_moe_xuechan() -> list[dict]:
 
 def parse_taipei_udd() -> list[dict]:
     """台北市都市發展局：不動產標售租公告。
-    表格結構：tds[0]=公告標題文字, tds[1]=類別連結（不動產標售租公告）, tds[-1]=日期
-    不用 a.get_text()（會得到類別名稱），改用 tds[0] 完整文字取得實際標題。
+    2026-09-22 用真實 HTML 核對後確認：頁面是 Bootstrap div 卡片列表（div.list-card），
+    完全沒有 <table> 元素，舊版 table tr 選擇器永遠比對 0 筆、整批回退給 Claude fallback，
+    非近期改版所致，是選擇器假設一開始就與實際頁面結構不符。
+    每張卡片：標題 <a href> 在第一欄，日期在最後一欄巢狀 <span> 內（如「115/06/29」）。
     """
     BASE = "https://udd.gov.taipei"
     URL  = f"{BASE}/events/psxwq1j"
@@ -544,25 +546,22 @@ def parse_taipei_udd() -> list[dict]:
     from bs4 import BeautifulSoup
     soup  = BeautifulSoup(r.text, "lxml")
     items = []
-    for row in soup.select("table tbody tr, table tr"):
-        tds = row.find_all("td")
-        if len(tds) < 2:
+    for card in soup.select("div.list-card"):
+        a = card.find("a", href=True)
+        if not a:
             continue
-        # 標題取第一欄完整文字（非 <a> 的連結文字）
-        title = tds[0].get_text(strip=True)
+        title = a.get_text(strip=True)
         if len(title) < 8:
             continue
-        # 最後欄必須含日期，否則跳過（排除表頭列）
-        dt = tds[-1].get_text(strip=True)
-        if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
-            continue
-        # URL：優先取第一欄的連結（文章連結），其次任何列內連結，最後 fallback listing
-        a = tds[0].find("a", href=True) or row.find("a", href=True)
-        href = URL
-        if a:
-            raw = a["href"]
-            if raw and raw not in ("#", "javascript:void(0)", "/"):
-                href = raw if raw.startswith("http") else urljoin(BASE, raw)
+        raw = a["href"]
+        href = raw if raw.startswith("http") else urljoin(BASE, raw)
+        # 日期在卡片最後一個含日期格式的巢狀 <span> 內
+        dt = ""
+        for sp in reversed(card.find_all("span")):
+            text = sp.get_text(strip=True)
+            if re.search(r"\d{2,4}[/.\-年]\d{1,2}", text):
+                dt = text
+                break
         items.append({"title": title, "date": dt, "url": href, "agency": "台北市都發局"})
     if not items:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "台北市都發局", BASE)
