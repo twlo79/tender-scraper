@@ -174,10 +174,10 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 | 5 | 台北市財政局 | `table tbody tr`（CCMS，data-title 定位公告日期） | 來源本身限雙北 |
 | 6 | 國家住宅及都市更新中心 | `table tr`（tds[2]=案名，tds[4]=公告日期） | 全台（關鍵字篩） |
 | 7 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | 北區分署 |
-| 8 | 政府採購網 | 關鍵字 API 查詢（出租／標租，近 7 天） | 台北、新北 |
-| 9 | 教育部學產基金 | `table tbody tr` + Claude fallback | 台北、新北 |
-| 10 | 台北市都發局 | `table tr` + Claude fallback | 來源本身限雙北 |
-| 11 | 國防部政治作戰局 | `table tr` + Claude fallback | 台北、新北 |
+| 8 | 政府採購網（財物出租查詢） | `/opas/arpam/public/readArpam` 關鍵字查詢（出租／標租，±10 天，`table#displayTagTableId`） | 台北、新北 |
+| 9 | 教育部學產基金 | `table tbody tr`（日期欄在 tds[0]，若無則退回 tds[-1]） | 台北、新北 |
+| 10 | 台北市都發局 | `div.list-card` 卡片（非 table） | 來源本身限雙北 |
+| 11 | 國防部政治作戰局 | `p.newslist_title` 卡片（非 table，cnid=609 與 695 兩個子頁一併抓） | 台北、新北 |
 | 12 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 台北、新北 |
 | 13 | Google Alerts | RSS Atom feed | 台北、新北、gov.tw |
 
@@ -240,6 +240,49 @@ python dry_run_all_regions.py --debug --source 來源名稱
 python dry_run_all_regions.py --non-taipei   # 看非雙北的標案有無格式問題
 python dry_run_all_regions.py --debug        # 全台 raw data 檢視
 ```
+
+---
+
+## Parser 除錯與更新流程（重要：務必用真實 HTML 驗證）
+
+當 QA 報告或 `fetched=0` 顯示某來源疑似壞掉時，遵循以下流程，**絕對不要憑記憶或猜測改 selector**：
+
+1. 用瀏覽器打開該來源的真實頁面，另存或複製完整 HTML（右鍵→檢視原始碼，或開發者工具的 Elements 面板），存成本地檔案
+2. 比對目前 `scraper.py` 對應 `parse_xxx()` 的 selector 假設是否仍成立（例如假設是 `<table>`，但實際頁面已改版成 Bootstrap `<div>` 卡片）
+3. 修好 selector 後，用 monkeypatch **直接呼叫 `scraper` module 裡真正的函式**驗證，不要另外寫一份重新實作的邏輯來測（那樣測的是你的猜測，不是修正後的程式碼本身）：
+
+   ```python
+   import scraper, unittest.mock as mock
+
+   class FakeResp:
+       def __init__(self, text):
+           self.text, self.status_code, self.apparent_encoding = text, 200, "utf-8"
+       def raise_for_status(self): pass
+
+   html = open("真實HTML檔案.html", encoding="utf-8").read()
+   with mock.patch("requests.get", side_effect=lambda *a, **kw: FakeResp(html)):
+       items = scraper.parse_xxx()             # 呼叫實際 parser，不是重寫一份
+   for it in items:
+       print(scraper.passes_filters(it), it)   # 篩選邏輯也要一併驗證
+   ```
+
+4. 確認擷取到的 `title`／`date`／`url`／`agency` 都正確，且 `passes_filters()` 對雙北案件回傳 `True`
+5. Commit 訊息寫清楚「根因」與「用什麼證據驗證」（例如：哪個真實頁面、原本錯在哪個假設），方便日後追查
+6. Push 到 Claude Code 指定的 `claude/*` session 分支即可 — session 結束後會由自動化流程（`chore: auto-merge claude/* into main`）併入 main，不需要手動開 PR
+
+> 這個 repo 沒有自動化 CI 測試（無 `tests/` 目錄），所以「用真實 HTML monkeypatch 驗證」是目前唯一的正確性把關手段，跳過這步等於盲改，很容易把「看起來合理」但實際上仍是 0 筆的假修復當成修好了。
+
+## 踩坑經驗（2026-09-22 debug session）
+
+以下是實際修過的案例與根因，記錄下來避免之後重蹈覆轍：
+
+| 問題 | 表面症狀 | 真正根因 | 教訓 |
+|------|---------|---------|------|
+| 國防部政治作戰局長期抓不到資料 | selector 對 `table tr` 比對一直是 0 筆，整批回退給 Claude fallback | 頁面根本不是 `<table>`，是 Bootstrap `p.newslist_title` 卡片；且該局有 cnid=609（土地標租彙總）與 cnid=695（社會住宅招租）兩個子頁面，舊版只抓其中一個 | 不要假設「政府公告頁」一定是表格；改版後應先確認頁面裡有沒有 `<table>` 存在，沒有就要重找真正的容器結構 |
+| 台北市都發局長期抓不到資料 | 同上，`table tr` 比對 0 筆 | 頁面是 `div.list-card` 卡片列表，完全沒有 `<table>` 元素 | 同上 |
+| 政府採購網連續 18+ 天 `fetched=0` | 用「出租」「標租」關鍵字查詢，連續多天都只有 0～1 筆不相關結果 | 舊版打的是「招標查詢」（`/prkms/tender/common/basic/readTenderBasic`），這是工程／財物／勞務**採購**用的公告系統，公有不動產出租根本不會走這個流程公告；真正該查的是「財物出租查詢」（`/opas/arpam/public/readArpam`），是全國機關即時更新的不動產出租公告彙整系統 | 同一個網站可能有多套外觀相似、路徑相近但用途完全不同的子系統；只驗證「有沒有回傳資料」不夠，要驗證「回傳的是不是你要的公告類別」 |
+| 一度誤判台北自來水處、政府採購網「parser 壞掉」 | 用「`url` 欄位空白比例偏高」當作 parser 是否失效的唯一訊號 | `url` 空白也可能是：(a) 該筆資料是 2026-09-09 repo 重置前留在 `state.json` 裡的舊 cache（寫入時的 parser 版本本來就不同），(b) 走 Claude fallback（從純文字擷取，天生沒有超連結）。兩者都跟「現在的 parser 有沒有壞」無關 | 判斷現在的 parser 是否正常，要看該筆資料**有沒有現在版本 parser 才會寫入的欄位**（例如台北自來水處的 `id`、政府採購網／國營台鐵的 `agency`），而不是只看 `url` 空白率 |
+| `state.json` 裡長期停擺來源的 300 筆快取「感覺一直沒變、很陳舊」 | 某來源快取內容看起來很多年沒更新 | 去重邏輯 `state[name] = list(merged.values())[-300:]`（scraper.py:1015）取的是「dict 最後 300 個 key」；Python dict 更新既有 key 的值**不會**把它移到尾端排序，所以只要來源沒有新 key 加進來，舊的 300 筆會原封不動卡住不變 | 看到某來源 300 筆快取「內容很舊」時，先懷疑是不是很久沒有新案件（parser 抓不到新 key，可能已經壞了一段時間），而不是資料損毀或程式邏輯錯誤 |
 
 ---
 
