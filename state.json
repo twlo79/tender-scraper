@@ -486,6 +486,78 @@
       "title": "延性鑄鐵直管及管件財物採購(開口契約含後續擴充)",
       "date": "",
       "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjM2Mjk="
+    },
+    {
+      "id": "1",
+      "title": "新北市新店區安德段923、928、929及930地號部分土地公開招租",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?_csrf=ab61ffdb-39cf-43dc-88c2-2cba50f22587&pk=70023654&status=&searchTenderCaseNo=&searchAssetsName=&searchOrgName=&searchOrgId=3.79.27&searchBeginNoticeDate=&searchEndNoticeDate=&searchBeginTenderDeadline=&searchEndTenderDeadline=&pageModel.rowsPerPage=50&pageModel.pagePosition=0"
+    },
+    {
+      "id": "2",
+      "title": "116年公館場、雙溪場淤泥處理廠委外操作維護勞務採購(開口契約含數量及年度擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzI1MDY="
+    },
+    {
+      "id": "3",
+      "title": "單突緣單承口套筒財物採購",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzExMDY="
+    },
+    {
+      "id": "4",
+      "title": "116年陽明分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzE1NjI="
+    },
+    {
+      "id": "5",
+      "title": "116年北區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzE1MTM="
+    },
+    {
+      "id": "6",
+      "title": "116年南區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzE0NjU="
+    },
+    {
+      "id": "7",
+      "title": "116年西區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzEzODk="
+    },
+    {
+      "id": "8",
+      "title": "116年東區分處換表作業勞務採購(開口契約含數量擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMzEzMjg="
+    },
+    {
+      "id": "9",
+      "title": "115至117年臺北南區供水管網改善配合工程",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjY5NzU="
+    },
+    {
+      "id": "10",
+      "title": "116年直潭場淤泥處理廠委外操作維護勞務採購(開口契約含數量及年度擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjQ4NjE="
+    },
+    {
+      "id": "11",
+      "title": "116年淤泥餅清運再利用勞務採購(開口契約含數量及年度擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjUwNTc="
+    },
+    {
+      "id": "12",
+      "title": "延性鑄鐵直管及管件財物採購(開口契約含後續擴充)",
+      "date": "",
+      "url": "https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=NzEzMjM2Mjk="
     }
   ],
   "國營台鐵": [
@@ -1317,11 +1389,6 @@
     }
   ],
   "政府採購網": [
-    {
-      "title": "115學年度臺中市國民中、小學﹝海區﹞學生健康檢查委託專業服務採購",
-      "date": "",
-      "url": ""
-    },
     {
       "title": "2026雲林滷肉飯節",
       "date": "",
@@ -2816,6 +2883,12 @@
       "title": "臺中市太平區公所115年設置太陽光電發電系統公開標租",
       "date": "115/08/27",
       "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEzMTA4OTA="
+    },
+    {
+      "id": "",
+      "title": "115年度轄管出租國宅及社會住宅建物一般設(施)備預約維修勞務採購案",
+      "date": "115/09/22",
+      "url": "https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?pk=NzEzMzM1MDQ="
     }
   ],
   "台北自來水處招租專區": [],
@@ -2847,20 +2920,22 @@
       "title": "115年第3批次國有學產土地短期出租（採競標年租金）",
       "date": "115-09-17",
       "url": ""
+    },
+    {
+      "id": "",
+      "title": "114年第3批次國有學產房地公開標租",
+      "date": "115-09-21",
+      "url": ""
+    },
+    {
+      "id": "",
+      "title": "115年度臺北捷運永春站國有學產房地公開標租",
+      "date": "115-09-14",
+      "url": ""
     }
   ],
   "台北捷運局": [],
   "Google Alerts": [
-    {
-      "title": "茲訂於115年7月3日(星期五)上午10時於本府三樓簡報室辦理公開標租-最新消息-彰化縣政府",
-      "date": "",
-      "url": ""
-    },
-    {
-      "title": "公告資訊 - 新北市坪林區公所",
-      "date": "2026-08-19",
-      "url": "https://www.pinglin.ntpc.gov.tw/home.jsp?id=af495e8d465faf30&act=be4f48068b2b0031&dataserno=23689ceb4ad79da6beb97622efee02bc"
-    },
     {
       "title": "饒慶鈴推動臺東客家文化園區活化結合觀光轉型六級香草產業新基地-蕃新聞",
       "date": "",
@@ -4391,6 +4466,18 @@
       "title": "115年度臺南市歸仁區保西國小設置太陽光電設施公開標租案",
       "date": "2026-09-18",
       "url": "https://www.bsps.tn.edu.tw/modules/school/index.php?department_id=2&zone_id=0&page_id=13&content_id=167&type=news&from_op=school_department_show"
+    },
+    {
+      "id": "",
+      "title": "公告標租本處「115年第2批農田水利非事業用不動產房舍公開標租案(TY115M002)」第1次公告",
+      "date": "2026-09-21",
+      "url": "https://www.iatyu.nat.gov.tw/news/Articles?a=10153&id=29767"
+    },
+    {
+      "id": "",
+      "title": "討論牆| 南市鐵路地下化照顧住宅餘屋店舖與車位今起公開標租| LINE TODAY",
+      "date": "2026-09-20",
+      "url": "https://today.line.me/tw/v3/posts/list/article/rmRwaxe"
     }
   ],
   "國防部政治作戰局": [
