@@ -571,35 +571,40 @@ def parse_taipei_udd() -> list[dict]:
 
 
 def parse_gpwd() -> list[dict]:
-    """國防部政治作戰局：社會住宅招租資訊（div 卡片列表，非 table 結構）。
-    URL: Publish.aspx?cnid=695（社會住宅招租資訊——逐案公告，含地址與日期）
-    舊版程式改抓 cnid=609（眷村土地標租，僅有跨縣市彙總 PDF 公告）用 table 選擇器比對，
-    但該頁與 cnid=695 皆非 <table> 結構，一直比對不到任何列，整批回退給 Claude fallback，
-    此為 2026-09-22 用真實 HTML 核對後確認的根因，非site 近期改版所致，是選擇器假設一開始就錯誤。
+    """國防部政治作戰局：國軍老舊眷村標租專區（div 卡片列表，非 table 結構）。
+    兩個子頁面皆用同一套版型（p.newslist_title 卡片），一併抓取：
+      cnid=609（土地標租——跨縣市彙總 PDF 公告）
+      cnid=695（社會住宅招租資訊——逐案公告，含地址）
+    舊版程式只抓 cnid=609 且用 table 選擇器比對，但兩頁皆非 <table> 結構，
+    一直比對不到任何列，整批回退給 Claude fallback，此為 2026-09-22 用真實
+    HTML 核對後確認的根因，非站方近期改版所致，是選擇器假設一開始就錯誤。
     """
     BASE = "https://gpwd.mnd.gov.tw"
-    URL  = f"{BASE}/Publish.aspx?cnid=695"
-    r = get(URL)
-    if not r:
-        return []
-    from bs4 import BeautifulSoup
-    soup  = BeautifulSoup(r.text, "lxml")
     items = []
-    for p_title in soup.select("p.newslist_title"):
-        a = p_title.find("a", href=True)
-        if not a:
+    for cnid in ("609", "695"):
+        URL = f"{BASE}/Publish.aspx?cnid={cnid}"
+        r = get(URL)
+        if not r:
             continue
-        title = a.get_text(strip=True)
-        if len(title) < 5:
-            continue
-        href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
-        # 日期在同一張卡片的下一個 <p><span class="date_font">上稿日期：114/11/04</span></p>
-        info_p = p_title.find_next_sibling("p")
-        date_span = info_p.find("span", class_="date_font") if info_p else None
-        dt = re.sub(r"^上稿日期[：:]\s*", "", date_span.get_text(strip=True)) if date_span else ""
-        items.append({"title": title, "date": dt, "url": href, "agency": "國防部政治作戰局"})
-    if not items:
-        items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國防部政治作戰局", BASE)
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(r.text, "lxml")
+        page_items = []
+        for p_title in soup.select("p.newslist_title"):
+            a = p_title.find("a", href=True)
+            if not a:
+                continue
+            title = a.get_text(strip=True)
+            if len(title) < 5:
+                continue
+            href = a["href"] if a["href"].startswith("http") else urljoin(BASE, a["href"])
+            # 日期在同一張卡片的下一個 <p><span class="date_font">上稿日期：114/11/04</span></p>
+            info_p = p_title.find_next_sibling("p")
+            date_span = info_p.find("span", class_="date_font") if info_p else None
+            dt = re.sub(r"^上稿日期[：:]\s*", "", date_span.get_text(strip=True)) if date_span else ""
+            page_items.append({"title": title, "date": dt, "url": href, "agency": "國防部政治作戰局"})
+        if not page_items:
+            page_items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國防部政治作戰局", BASE)
+        items.extend(page_items)
     log.info(f"  [國防部政治作戰局] {len(items)} 筆")
     return items
 
