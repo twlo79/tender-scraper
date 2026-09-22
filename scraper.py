@@ -438,11 +438,25 @@ def _arpam_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
             if len(title) < 5:
                 continue
             date_str = tds[5].get_text(strip=True)
-            # 檢視連結是下拉選單的 <option value="formViewNew(PK,狀態);">，取 PK 組出詳情頁網址
+            # 檢視連結是下拉選單的 <option value="formViewNew(PK,狀態);">，取 PK 組出詳情頁網址。
+            # 瀏覽器實際連結會多帶 _csrf 與整組查詢條件（如 searchAssetsName、日期區間），
+            # 但 _csrf 是綁定使用者當下 session 的一次性 token，換一個瀏覽器/session 打開必定
+            # 不吻合；而我們自己送出的查詢請求本身就是不帶 _csrf 的 GET 也能正常取得結果，
+            # 顯示此站對 GET 並未強制驗證 CSRF（Spring Security 預設只保護會變更狀態的方法）。
+            # 因此這裡不試圖偽造 _csrf，但比照瀏覽器連結多帶回原查詢條件，盡量提高相容性。
             option = tds[6].find("option", value=re.compile(r"^formViewNew\("))
             m = re.search(r"formViewNew\((\d+)", option["value"]) if option else None
             pk  = m.group(1) if m else ""
-            url = f"{BASE}/opas/arpam/public/readOneArpamDetailOld?pk={pk}" if pk else URL
+            if pk:
+                url = (
+                    f"{BASE}/opas/arpam/public/readOneArpamDetailOld?pk={pk}"
+                    f"&searchAssetsName={requests.utils.quote(keyword)}"
+                    f"&searchBeginNoticeDate={start.replace('/', '%2F')}"
+                    f"&searchEndNoticeDate={end.replace('/', '%2F')}"
+                    f"&pageModel.rowsPerPage=100"
+                )
+            else:
+                url = URL
             items.append({"id": case_no, "title": title, "date": date_str, "url": url, "agency": agency})
 
     if not items and CONFIG["api_key"]:
