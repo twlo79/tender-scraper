@@ -508,8 +508,12 @@ def parse_moe_xuechan() -> list[dict]:
         if len(title) < 5:
             continue
         href = _safe_url(a["href"], BASE, URL)
-        dt   = tds[-1].get_text(strip=True)
-        # 跳過最後欄不含日期格式的列（如橫幅廣告、宣傳文字）
+        # 日期欄位可能在第一欄（發布時間）或最後一欄，視站方表格版本而定；
+        # 優先採用第一欄，格式不符再退回最後一欄（改版曾在最後一欄放「公告單位」而非日期）。
+        dt = tds[0].get_text(strip=True)
+        if not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
+            dt = tds[-1].get_text(strip=True)
+        # 兩欄皆不含日期格式的列，才視為橫幅廣告、宣傳文字並跳過
         if dt and not re.search(r"\d{2,4}[/.\-年]\d{1,2}", dt):
             continue
         # 結構同台北市財政局（CCMS），若有 data-title="編號" 一併取，供二次招標判斷用
