@@ -995,6 +995,11 @@ def item_key(item: dict) -> str:
     parts = (item.get("id", ""), item.get("title", ""), item.get("date", ""), item.get("url", ""))
     return re.sub(r"\s+", "", "|".join(parts))
 
+def _title_date_key(item: dict) -> str:
+    """案名＋公告日期（不含 url）：用來判斷「同一筆資料只是補齊 url」的情況。"""
+    d = item if isinstance(item, dict) else {"title": item, "date": ""}
+    return re.sub(r"\s+", "", d.get("title", "") + d.get("date", ""))
+
 def _entry_key(entry) -> str:
     if isinstance(entry, str):
         return re.sub(r"\s+", "", entry)
@@ -1003,11 +1008,37 @@ def _entry_key(entry) -> str:
 def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
     existing = state.get(name, [])
     seen = {_entry_key(e) for e in existing}
-    new  = [i for i in items if item_key(i) not in seen]
-    # 合併：舊記錄升格為 dict，新項目直接存 {id, title, date, url}
+
+    # 找出舊紀錄裡 url 是空的項目（常見成因：那天走 Claude fallback，
+    # 只吃得到純文字、抓不到 <a href>，url 留空）。隔天若 parser 正常抓到
+    # 同一筆並補上真網址，item_key() 因為多了 url 會判定成從沒見過的新
+    # 案而重複推播；用 title+date 索引把這種「補齊資料」跟真正的新案分開。
+    empty_url_index: dict[str, str] = {}
+    for e in existing:
+        d = e if isinstance(e, dict) else {"title": e, "date": "", "url": ""}
+        if not d.get("url"):
+            empty_url_index[_title_date_key(d)] = _entry_key(d)
+
+    new: list[dict] = []
+    backfill_old_keys: set[str] = set()
+    for i in items:
+        k = item_key(i)
+        if k in seen:
+            continue
+        td = _title_date_key(i)
+        if i.get("url") and td in empty_url_index:
+            backfill_old_keys.add(empty_url_index[td])
+            continue
+        new.append(i)
+
+    # 合併：舊記錄升格為 dict，新項目直接存 {id, title, date, url}；
+    # 「補齊 url」的舊紀錄不保留，改由新紀錄取代，避免同一筆案件在
+    # state.json 裡永遠留著兩筆（一筆 url 空、一筆有值）。
     merged: dict[str, dict] = {}
     for e in existing:
         k = _entry_key(e)
+        if k in backfill_old_keys:
+            continue
         merged[k] = {"title": e, "date": "", "url": ""} if isinstance(e, str) else e
     for i in items:
         k = item_key(i)
