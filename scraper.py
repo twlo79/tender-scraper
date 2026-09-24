@@ -1187,8 +1187,8 @@ def push_to_anxing(results: dict):
 
     ★ 失敗不 raise —— LINE 推播是主要功能，不能被這個拖累。
     """
-    url = os.getenv("ANXING_URL", "")
-    key = os.getenv("ANXING_KEY", "")
+    url = os.getenv("ANXING_URL", "").strip()
+    key = os.getenv("ANXING_KEY", "").strip()
     if not url or not key:
         log.info("  ↷ 沒設 ANXING_URL / ANXING_KEY，跳過 ERP 匯入")
         return
