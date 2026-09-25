@@ -417,7 +417,10 @@ def _arpam_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
     try:
         r = requests.get(URL, headers=HTTP_HEADERS, timeout=30, verify=False)
         r.raise_for_status()
-        r.encoding = r.apparent_encoding or "utf-8"
+        # 此站回應一律為 UTF-8；r.apparent_encoding 對中文內容偶爾誤判成其他編碼，
+        # 會讓同一筆案子在不同次抓取產生亂碼標題，連帶讓 item_key() 去重比對失效
+        # （亂碼版與正常版視為兩筆不同案子）。固定寫死，不再猜測。
+        r.encoding = "utf-8"
     except Exception as e:
         log.warning(f"  [政府採購網/財物出租/{keyword}] 連線失敗：{e}")
         return []
@@ -988,11 +991,23 @@ def save_sent_log(results: dict, run_time: str, line_pushed: bool):
             log.warning(f"GitHub commit sent_log 異常：{e}")
 
 
+def _stable_url(url: str) -> str:
+    """政府採購網 url 帶有每日滾動查詢窗參數（searchBeginNoticeDate/searchEndNoticeDate，
+    見 _arpam_fetch_keyword()），同一筆案子（同一個 pk）的查詢窗每天往後移一天，url 字串
+    因此每天都不同；若直接拿完整 url 當去重依據，會讓同一筆案子被誤判成新案而連續重複
+    推播。這裡只取 url 中穩定不變的 pk 當去重依據，完整 url（含查詢窗參數）仍原樣存入
+    state.json，使用者點擊開啟不受影響。其餘來源的 url 不含 pk 參數，原樣返回，行為不變。
+    """
+    m = re.search(r"[?&]pk=(\d+)", url)
+    if not m:
+        return url
+    return f"{url.split('?', 1)[0]}?pk={m.group(1)}"
+
 def item_key(item: dict) -> str:
     # 整條記錄一起當 key（案號＋案名＋公告日期＋url），而不是只比對案名。
     # 同一案名「流標後第二次招標」會有新的公告日期（多半也有新案號／新 url），
     # 只用案名比對會誤判成舊案而漏推。id 欄位非必填，多數來源留空不影響比對。
-    parts = (item.get("id", ""), item.get("title", ""), item.get("date", ""), item.get("url", ""))
+    parts = (item.get("id", ""), item.get("title", ""), item.get("date", ""), _stable_url(item.get("url", "")))
     return re.sub(r"\s+", "", "|".join(parts))
 
 def _title_date_key(item: dict) -> str:
