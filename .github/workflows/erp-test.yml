@@ -1,0 +1,26 @@
+name: ERP 匯入測試
+
+on:
+  workflow_dispatch:
+    inputs:
+      send_test_record:
+        description: '送出 1 筆測試資料（會寫入 ERP；不勾＝只驗證 KEY，不寫入）'
+        type: boolean
+        default: false
+
+jobs:
+  erp-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - name: 測試 ERP 匯入
+        run: python erp_test.py ${{ inputs.send_test_record && '--send' || '' }}
+        env:
+          ANXING_URL: ${{ secrets.ANXING_URL }}
+          ANXING_KEY: ${{ secrets.ANXING_KEY }}
