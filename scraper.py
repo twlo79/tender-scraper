@@ -42,6 +42,7 @@ import json
 import logging
 import os
 import re
+import unicodedata
 from base64 import b64decode, b64encode
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -991,74 +992,85 @@ def save_sent_log(results: dict, run_time: str, line_pushed: bool):
             log.warning(f"GitHub commit sent_log 異常：{e}")
 
 
-def _stable_url(url: str) -> str:
-    """政府採購網 url 帶有每日滾動查詢窗參數（searchBeginNoticeDate/searchEndNoticeDate，
-    見 _arpam_fetch_keyword()），同一筆案子（同一個 pk）的查詢窗每天往後移一天，url 字串
-    因此每天都不同；若直接拿完整 url 當去重依據，會讓同一筆案子被誤判成新案而連續重複
-    推播。這裡只取 url 中穩定不變的 pk 當去重依據，完整 url（含查詢窗參數）仍原樣存入
-    state.json，使用者點擊開啟不受影響。其餘來源的 url 不含 pk 參數，原樣返回，行為不變。
-    """
-    m = re.search(r"[?&]pk=(\d+)", url)
-    if not m:
-        return url
-    return f"{url.split('?', 1)[0]}?pk={m.group(1)}"
+def normalize_date(text: str) -> str:
+    """把西元／民國、各種分隔符的日期統一成 YYYY-MM-DD；解析不出來回傳空字串。"""
+    if not text:
+        return ""
+    found = _extract_dates(str(text))
+    return found[0].isoformat() if found else ""
 
-def item_key(item: dict) -> str:
-    # 整條記錄一起當 key（案號＋案名＋公告日期＋url），而不是只比對案名。
-    # 同一案名「流標後第二次招標」會有新的公告日期（多半也有新案號／新 url），
-    # 只用案名比對會誤判成舊案而漏推。id 欄位非必填，多數來源留空不影響比對。
-    parts = (item.get("id", ""), item.get("title", ""), item.get("date", ""), _stable_url(item.get("url", "")))
-    return re.sub(r"\s+", "", "|".join(parts))
 
-def _title_date_key(item: dict) -> str:
-    """案名＋公告日期（不含 url）：用來判斷「同一筆資料只是補齊 url」的情況。"""
-    d = item if isinstance(item, dict) else {"title": item, "date": ""}
-    return re.sub(r"\s+", "", d.get("title", "") + d.get("date", ""))
+def _norm_title(title: str) -> str:
+    """去重用標題：NFKC 全半形統一、轉小寫、去掉空白與標點，只留文字與數字。"""
+    t = unicodedata.normalize("NFKC", title or "").casefold()
+    return re.sub(r"[\W_]+", "", t)
 
-def _entry_key(entry) -> str:
-    if isinstance(entry, str):
-        return re.sub(r"\s+", "", entry)
-    return item_key(entry)
+
+def _item_fields(entry) -> tuple[str, str, str, str]:
+    """回傳 (id, 正規化標題, 正規化日期, url)；舊 state 裡的純字串記錄視為只有標題。"""
+    d = entry if isinstance(entry, dict) else {"title": entry}
+    return (
+        (d.get("id") or "").strip(),
+        _norm_title(d.get("title", "")),
+        normalize_date(d.get("date", "")),
+        d.get("url") or "",
+    )
+
 
 def find_new_items(name: str, items: list[dict], state: dict) -> list[dict]:
-    existing = state.get(name, [])
-    seen = {_entry_key(e) for e in existing}
+    """去重規則（url 不參與比對，網址改版或帶動態參數都不會被當新案）：
+      1. 有 id（案號）→ 以 id 比對
+      2. 否則以「正規化標題」比對
+         - 同標題，且新舊任一邊沒有日期 → 視為同一案（日期空白不再造成重推）
+         - 同標題，兩邊都有日期且不同 → 視為重新公告（流標後再招標），算新案
+    state 裡的記錄不存 key，每次由 title/id/date 即時計算，因此不需要遷移。
+    """
+    existing = list(state.get(name, []))
+    by_id: dict[str, int] = {}
+    by_title: dict[str, list[int]] = {}
+    for idx, e in enumerate(existing):
+        eid, et, _, _ = _item_fields(e)
+        if eid:
+            by_id[eid] = idx
+        if et:
+            by_title.setdefault(et, []).append(idx)
 
-    # 找出舊紀錄裡 url 是空的項目（常見成因：那天走 Claude fallback，
-    # 只吃得到純文字、抓不到 <a href>，url 留空）。隔天若 parser 正常抓到
-    # 同一筆並補上真網址，item_key() 因為多了 url 會判定成從沒見過的新
-    # 案而重複推播；用 title+date 索引把這種「補齊資料」跟真正的新案分開。
-    empty_url_index: dict[str, str] = {}
-    for e in existing:
-        d = e if isinstance(e, dict) else {"title": e, "date": "", "url": ""}
-        if not d.get("url"):
-            empty_url_index[_title_date_key(d)] = _entry_key(d)
+    def find_match(i: dict):
+        iid, it, idate, _ = _item_fields(i)
+        if iid and iid in by_id:
+            return by_id[iid]
+        if not it:
+            return None
+        for idx in by_title.get(it, []):
+            _, _, edate, _ = _item_fields(existing[idx])
+            if not idate or not edate or idate == edate:
+                return idx
+        return None
 
     new: list[dict] = []
-    backfill_old_keys: set[str] = set()
     for i in items:
-        k = item_key(i)
-        if k in seen:
-            continue
-        td = _title_date_key(i)
-        if i.get("url") and td in empty_url_index:
-            backfill_old_keys.add(empty_url_index[td])
-            continue
-        new.append(i)
-
-    # 合併：舊記錄升格為 dict，新項目直接存 {id, title, date, url}；
-    # 「補齊 url」的舊紀錄不保留，改由新紀錄取代，避免同一筆案件在
-    # state.json 裡永遠留著兩筆（一筆 url 空、一筆有值）。
-    merged: dict[str, dict] = {}
-    for e in existing:
-        k = _entry_key(e)
-        if k in backfill_old_keys:
-            continue
-        merged[k] = {"title": e, "date": "", "url": ""} if isinstance(e, str) else e
-    for i in items:
-        k = item_key(i)
-        merged[k] = {"id": i.get("id", ""), "title": i.get("title", ""), "date": i.get("date", ""), "url": i.get("url", "")}
-    state[name] = list(merged.values())[-300:]
+        idx = find_match(i)
+        iid, it, idate, _ = _item_fields(i)
+        rec = {"id": i.get("id", ""), "title": i.get("title", ""),
+               "date": idate or i.get("date", ""), "url": i.get("url", "")}
+        if idx is None:
+            new.append(i)
+            existing.append(rec)
+            idx = len(existing) - 1
+            if iid:
+                by_id[iid] = idx
+            if it:
+                by_title.setdefault(it, []).append(idx)
+        else:
+            # 已見過：只補齊舊記錄缺的欄位（url／date／id），並刷新 url，不算新案
+            old = existing[idx] if isinstance(existing[idx], dict) else {"title": existing[idx], "id": "", "date": "", "url": ""}
+            for k in ("id", "date"):
+                if not old.get(k) and rec.get(k):
+                    old[k] = rec[k]
+            if rec["url"]:
+                old["url"] = rec["url"]
+            existing[idx] = old
+    state[name] = existing[-300:]
     return new
 
 
@@ -1202,8 +1214,8 @@ def push_to_anxing(results: dict):
 
     ★ 失敗不 raise —— LINE 推播是主要功能，不能被這個拖累。
     """
-    url = os.getenv("ANXING_URL", "")
-    key = os.getenv("ANXING_KEY", "")
+    url = os.getenv("ANXING_URL", "").strip()
+    key = os.getenv("ANXING_KEY", "").strip()   # secret 常帶結尾換行，會讓 header 被 requests 拒絕
     if not url or not key:
         log.info("  ↷ 沒設 ANXING_URL / ANXING_KEY，跳過 ERP 匯入")
         return
@@ -1216,7 +1228,7 @@ def push_to_anxing(results: dict):
                 "title":  it.get("title", ""),
                 "url":    it.get("url") or "",
                 "agency": it.get("agency") or "",
-                "date":   it.get("date") or "",   # 公告日期，不是截標日期
+                "date":   normalize_date(it.get("date") or ""),   # 公告日期（YYYY-MM-DD），不是截標日期
             })
 
     if not records:
