@@ -1,80 +1,4 @@
 {
-  "2026-09-04 01:30": {
-    "_summary": {
-      "total_fetched": 99,
-      "total_new": 10,
-      "total_notify": 1,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 4,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 4,
-      "new": 1,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 9,
-      "new": 9,
-      "notify": 1,
-      "items": [
-        "115年9月本市現代化公有零售市場攤位標租公告 - 新北市板橋區公所"
-      ]
-    }
-  },
   "2026-09-05 01:30": {
     "_summary": {
       "total_fetched": 91,
@@ -2369,6 +2293,83 @@
       "items": [
         "臺北市住宅及都市更新中心市有不動產商業服務設施及其他建築物出租規章"
       ]
+    }
+  },
+  "2026-10-05 01:30": {
+    "_summary": {
+      "total_fetched": 149,
+      "total_new": 9,
+      "total_notify": 2,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 16,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 31,
+      "new": 8,
+      "notify": 2,
+      "items": [
+        "板橋車站廣告出租經營案",
+        "116–120年保大公用房地出租設置自動櫃員機"
+      ]
+    },
+    "教育部學產基金": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 1,
+      "new": 1,
+      "notify": 0
     }
   }
 }
