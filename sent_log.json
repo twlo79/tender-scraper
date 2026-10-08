@@ -1,77 +1,4 @@
 {
-  "2026-09-07 01:30": {
-    "_summary": {
-      "total_fetched": 86,
-      "total_new": 2,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 3,
-      "new": 1,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 7,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    }
-  },
   "2026-09-08 01:30": {
     "_summary": {
       "total_fetched": 93,
@@ -2366,6 +2293,83 @@
     "Google Alerts": {
       "fetched": 21,
       "new": 21,
+      "notify": 0
+    }
+  },
+  "2026-10-08 01:30": {
+    "_summary": {
+      "total_fetched": 163,
+      "total_new": 6,
+      "total_notify": 2,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 16,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 6,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 42,
+      "new": 4,
+      "notify": 2,
+      "items": [
+        "臺北車站外東側機房牆面廣告空間出租經營案",
+        "臺北市捷運永春站聯合開發大樓(EAT)平面停車位短期公開出租"
+      ]
+    },
+    "教育部學產基金": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 1,
+      "new": 1,
       "notify": 0
     }
   }
