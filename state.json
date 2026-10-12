@@ -826,6 +826,12 @@
       "title": "【臺北營業分處】【廣告標租】【臺北車站外東側機房牆面廣告出租經營案】【1151007─1151022】",
       "date": "2026-10-07",
       "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6586&activePage=1"
+    },
+    {
+      "id": "",
+      "title": "【臺北營業分處】【機械類標租】【臺北、板橋車站部分空間設置自動彩色快速照相機】",
+      "date": "2026-10-12",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6598&activePage=1"
     }
   ],
   "新北市政府財政局": [],
@@ -1385,6 +1391,12 @@
       "id": "案號115B-055",
       "title": "明駝好室社會住宅115年度店鋪招租",
       "date": "2026-09-30",
+      "url": "https://www.hurc.org.tw/hurc/procurement"
+    },
+    {
+      "id": "案號115B-045-1",
+      "title": "115年度雙北社宅空調、熱水器、室內燈具設置暨室內修繕採購案",
+      "date": "2026-10-12",
       "url": "https://www.hurc.org.tw/hurc/procurement"
     }
   ],
@@ -2187,7 +2199,7 @@
       "id": "115-0350-1-044",
       "title": "產品推廣中心A櫃出租",
       "date": "115/09/18",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023797&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023797&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "1154102338",
@@ -2601,13 +2613,13 @@
       "id": "115-0380-1-014",
       "title": "埔里酒廠停車格供電動車充電設備設置公開標租案",
       "date": "115/09/16",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023877&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023877&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "115-031",
       "title": "彰化市香山步道東方公園土地標租案",
       "date": "115/09/16",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023845&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023845&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "JSY01-1131029-01",
@@ -2637,7 +2649,7 @@
       "id": "W115-27",
       "title": "臺南市永康區仁愛段179、191、180地號部分土地標租",
       "date": "115/09/15",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023855&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023855&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "115-B001",
@@ -2763,7 +2775,7 @@
       "id": "BL115-09-03",
       "title": "飲料販賣機設置標租案",
       "date": "2026-09-29",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023770&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023770&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "BL115-09-02",
@@ -2799,121 +2811,151 @@
       "id": "PN16004P004",
       "title": "海光俱樂部餐廳出租",
       "date": "2026-10-02",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023807&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023807&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "YL1151001P",
       "title": "116-117年太平間房地標租案",
       "date": "2026-10-02",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023808&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023808&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "JNY01-115H003",
       "title": "臺中市中區建國路152號房地遴選標租案",
       "date": "2026-10-02",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023805&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023805&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "JLY01-1151020-01",
       "title": "基隆市安樂區西定段326-2地號部分土地(土地供設置電動汽車公共充電樁)標租案",
       "date": "2026-10-02",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023796&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023796&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "11510112",
       "title": "屏東縣萬巒鄉新厝段一小段81內等1筆地號農地出租",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023827&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023827&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "JLY01-1151002-01",
       "title": "板橋車站廣告出租經營案",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023817&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023817&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "1150801R",
       "title": "北竿08據點出租案",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023813&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023813&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "D11601",
       "title": "116–120年保大公用房地出租設置自動櫃員機",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023792&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023792&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "116-603-01",
       "title": "高雄市區監理所116/117年度保險櫃檯出租案",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023814&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023814&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "1151HH001",
       "title": "高雄市苓雅區武聖段1124地號土地標租（出租面積共337.5平方公尺）。",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023822&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023822&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "11510106",
       "title": "屏東縣新埤鄉海豐段198等12筆地號農地出租",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023828&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023828&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "11510111",
       "title": "屏東縣萬巒鄉新農段2內、11、12等3筆地號農地出租",
       "date": "2026-10-05",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023832&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023832&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "1150100054",
       "title": "115年度臺北永吉段都更案店鋪、住宅國有學產不動產第3次公開標租",
       "date": "2026-10-06",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023841&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023841&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "11511061",
       "title": "南岸農場第20耕區 (屏東縣新埤鄉萬隆段182及205地號 ) 農地標租",
       "date": "2026-10-06",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023761&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023761&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "115-MR002",
       "title": "歷史建築南庄東村宿舍出租案",
       "date": "2026-10-07",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023850&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023850&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "115-F-03",
       "title": "115年新北市三峽區礁溪公有市場暨附設停車場標租案",
       "date": "2026-10-07",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023856&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023856&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "JLY01-1151007-1",
       "title": "臺北車站外東側機房牆面廣告空間出租經營案",
       "date": "2026-10-08",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023867&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023867&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "115-326",
       "title": "壯圍沙丘生態園區多功能室出租案",
       "date": "2026-10-08",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023869&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023869&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "1154102941",
       "title": "臺北市捷運永春站聯合開發大樓(EAT)平面停車位短期公開出租",
       "date": "2026-10-08",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023765&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023765&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     },
     {
       "id": "1151008-01",
       "title": "115 年內埔鄉蔬果文化藝術節暨農政業務宣導活 動」市集活動委託專業經營管理標租",
       "date": "2026-10-08",
-      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023870&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F01&searchEndNoticeDate=2026%2F10%2F11&pageModel.rowsPerPage=100"
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023870&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
+    },
+    {
+      "id": "11510114",
+      "title": "屏東縣長治鄉昌榮段1014內等1筆地號農地出租",
+      "date": "2026-10-12",
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023907&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
+    },
+    {
+      "id": "11510107",
+      "title": "屏東縣麟洛鄉農場段1214內、1214-1內等2筆地號農地出租",
+      "date": "2026-10-12",
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023908&searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
+    },
+    {
+      "id": "1157520006",
+      "title": "臺南市後壁區烏樹林段0702地號內砂糖倉庫標租",
+      "date": "2026-10-12",
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023902&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
+    },
+    {
+      "id": "115-036",
+      "title": "彰化臺鐵舊宿舍群洞洞屋等3棟經營管理公開標租案",
+      "date": "2026-10-12",
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023883&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
+    },
+    {
+      "id": "JLY01-1151027-01",
+      "title": "臺北、板橋車站部分空間設置自動彩色快速照相機標租案",
+      "date": "2026-10-12",
+      "url": "https://web.pcc.gov.tw/opas/arpam/public/readOneArpamDetailOld?pk=70023896&searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F02&searchEndNoticeDate=2026%2F10%2F12&pageModel.rowsPerPage=100"
     }
   ],
   "台北自來水處招租專區": [],
@@ -2997,16 +3039,6 @@
   ],
   "台北捷運局": [],
   "Google Alerts": [
-    {
-      "title": "星巴克進駐羅東林場| 宜蘭新聞網 - LINE TODAY",
-      "date": "2026-07-18",
-      "url": "https://today.line.me/tw/v3/article/JPnpowP"
-    },
-    {
-      "title": "115年度第3次員林市市有非公用不動產標租(標號2)公告 - 彰化縣政府網站服務管理後台",
-      "date": "2026-07-18",
-      "url": "https://ctrl.chcg.gov.tw/main/main_act3/main.aspx?main_id=51650&act_id=460"
-    },
     {
       "title": "臺東縣政府辦理「歷史建築-臺東縣警察局長宿舍」公開標租案，歡迎踴躍參與投標",
       "date": "2026-07-19",
@@ -4654,6 +4686,18 @@
       "title": "中華民國115年10月8日(星期四)第7016號 - 台中日報",
       "date": "2026-10-08",
       "url": "http://www.tc-news.com.tw/edm/55004"
+    },
+    {
+      "id": "",
+      "title": "「中小型規模運動場域-新莊勞工中心」 公開標租案",
+      "date": "2026-10-11",
+      "url": "https://qbid.bluesign.com.tw/tenders/FAR-1-70020953"
+    },
+    {
+      "id": "",
+      "title": "花蓮縣花蓮市民心段179地號土地公開標租案 - 標案軍師",
+      "date": "2026-10-11",
+      "url": "https://qbid.bluesign.com.tw/tenders/FAR-1-70018170"
     }
   ],
   "國防部政治作戰局": [
