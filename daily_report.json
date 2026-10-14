@@ -1,12 +1,4 @@
 {
-  "2026-09-14": {
-    "date": "2026-09-14",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-09-15": {
     "date": "2026-09-15",
     "sources": {},
@@ -255,6 +247,14 @@
   },
   "2026-10-13": {
     "date": "2026-10-13",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-10-14": {
+    "date": "2026-10-14",
     "sources": {},
     "total_new": 0,
     "total_pushed": 0,
