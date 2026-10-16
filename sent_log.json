@@ -1,86 +1,4 @@
 {
-  "2026-09-15 01:30": {
-    "_summary": {
-      "total_fetched": 90,
-      "total_new": 4,
-      "total_notify": 3,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 3,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "【招租公告】本公司臺北信維大樓公開招租(招標文件變更公告)"
-      ]
-    },
-    "台北市財政局": {
-      "fetched": 11,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "第2次公開標租臺北市中正區中華路2段409巷5弄4號等18戶市有不動產"
-      ]
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 10,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 2,
-      "new": 2,
-      "notify": 1,
-      "items": [
-        "臺北市公有環南市場公開標租攤位一覽表"
-      ]
-    }
-  },
   "2026-09-16 01:30": {
     "_summary": {
       "total_fetched": 93,
@@ -2384,6 +2302,84 @@
       "fetched": 20,
       "new": 20,
       "notify": 0
+    }
+  },
+  "2026-10-16 01:30": {
+    "_summary": {
+      "total_fetched": 176,
+      "total_new": 19,
+      "total_notify": 3,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 36,
+      "new": 3,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 17,
+      "new": 16,
+      "notify": 3,
+      "items": [
+        "檢送本部「115年度臺北永吉段都更案店鋪、住宅國有學產不動產第3次公開標租 ... - 台中市地政士公會",
+        "公開招標公告專欄-公告停止標租「臺北市公有成功超級市場房地公開標租案」",
+        "115年10月本市現代化公有零售市場攤位標租公告-新北市政府市場處"
+      ]
     }
   }
 }
