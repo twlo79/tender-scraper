@@ -1,77 +1,4 @@
 {
-  "2026-09-16 01:30": {
-    "_summary": {
-      "total_fetched": 93,
-      "total_new": 9,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 4,
-      "new": 4,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 4,
-      "new": 1,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 12,
-      "new": 2,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 2,
-      "new": 2,
-      "notify": 0
-    }
-  },
   "2026-09-17 01:30": {
     "_summary": {
       "total_fetched": 95,
@@ -2380,6 +2307,79 @@
         "公開招標公告專欄-公告停止標租「臺北市公有成功超級市場房地公開標租案」",
         "115年10月本市現代化公有零售市場攤位標租公告-新北市政府市場處"
       ]
+    }
+  },
+  "2026-10-17 01:30": {
+    "_summary": {
+      "total_fetched": 158,
+      "total_new": 3,
+      "total_notify": 0,
+      "line_pushed": false
+    },
+    "台北自來水處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 10,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 11,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 34,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 2,
+      "new": 2,
+      "notify": 0
     }
   }
 }
