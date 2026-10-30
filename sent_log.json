@@ -1,83 +1,4 @@
 {
-  "2026-09-29 01:30": {
-    "_summary": {
-      "total_fetched": 135,
-      "total_new": 9,
-      "total_notify": 2,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 12,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "【臺北營業分處】【土地出租】【新北市板橋區文化段97地號部分土地】【115.09.29~115.10.13】"
-      ]
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 9,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 30,
-      "new": 7,
-      "notify": 1,
-      "items": [
-        "新北市板橋區文化段97地號部分土地標租案"
-      ]
-    },
-    "教育部學產基金": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 20,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    }
-  },
   "2026-09-30 01:30": {
     "_summary": {
       "total_fetched": 158,
@@ -2345,6 +2266,88 @@
     "Google Alerts": {
       "fetched": 5,
       "new": 5,
+      "notify": 0
+    }
+  },
+  "2026-10-30 01:30": {
+    "_summary": {
+      "total_fetched": 127,
+      "total_new": 5,
+      "total_notify": 3,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 17,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【臺北營業分處】【土地出租】【新北市板橋區文化段97地號部分土地】【115.10.30~115.11.17】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 9,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【招標公告】北區分署 115年第21批 招標公告 公告:115年10月30日 開標:115年11月13日"
+      ]
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "公告標租本市木柵社會住宅內1戶商業設施及其對應持分土地，詳如公告事項。"
+      ]
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 2,
+      "new": 2,
       "notify": 0
     }
   }
