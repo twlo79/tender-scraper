@@ -1,12 +1,4 @@
 {
-  "2026-09-30": {
-    "date": "2026-09-30",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-10-01": {
     "date": "2026-10-01",
     "sources": {},
@@ -246,6 +238,17 @@
     "errors": [
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼HTTPSConnectionPool(host='web.pcc.gov.tw', port=443): Max retries exceeded with url: /opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F19&searchEndNoticeDate=2026%2F10%2F29&pageModel.rowsPerPage=100 (Caused by NewConnectionError(\"HTTPSConnection(host='web.pcc.gov.tw', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼HTTPSConnectionPool(host='web.pcc.gov.tw', port=443): Max retries exceeded with url: /opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F19&searchEndNoticeDate=2026%2F10%2F29&pageModel.rowsPerPage=100 (Caused by NewConnectionError(\"HTTPSConnection(host='web.pcc.gov.tw', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))"
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-10-30": {
+    "date": "2026-10-30",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼HTTPSConnectionPool(host='web.pcc.gov.tw', port=443): Max retries exceeded with url: /opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F20&searchEndNoticeDate=2026%2F10%2F30&pageModel.rowsPerPage=100 (Caused by NewConnectionError(\"HTTPSConnection(host='web.pcc.gov.tw', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼HTTPSConnectionPool(host='web.pcc.gov.tw', port=443): Max retries exceeded with url: /opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F10%2F20&searchEndNoticeDate=2026%2F10%2F30&pageModel.rowsPerPage=100 (Caused by NewConnectionError(\"HTTPSConnection(host='web.pcc.gov.tw', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))"
     ],
     "line": "無推播（0 筆）"
   }
