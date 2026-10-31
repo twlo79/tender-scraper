@@ -1,80 +1,4 @@
 {
-  "2026-09-30 01:30": {
-    "_summary": {
-      "total_fetched": 158,
-      "total_new": 16,
-      "total_notify": 1,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 14,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 4,
-      "new": 1,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 10,
-      "new": 1,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "【招標公告】北區分署 115年第18批 招標公告 公告:115年09月30日 開標:115年10月16日"
-      ]
-    },
-    "政府採購網": {
-      "fetched": 38,
-      "new": 6,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 4,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 20,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 6,
-      "new": 6,
-      "notify": 0
-    }
-  },
   "2026-10-01 01:30": {
     "_summary": {
       "total_fetched": 161,
@@ -2349,6 +2273,82 @@
       "fetched": 2,
       "new": 2,
       "notify": 0
+    }
+  },
+  "2026-10-31 01:30": {
+    "_summary": {
+      "total_fetched": 129,
+      "total_new": 4,
+      "total_notify": 1,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 17,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 9,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 4,
+      "new": 4,
+      "notify": 1,
+      "items": [
+        "公開招標公告專欄-臺北市公有成功超級市場房地公開標租案，詳如公告事項。 - 市場處"
+      ]
     }
   }
 }
