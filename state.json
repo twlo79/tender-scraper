@@ -3365,31 +3365,6 @@
   "台北捷運局": [],
   "Google Alerts": [
     {
-      "title": "公告1 1 5 年臺北市等2 縣市4 4 宗不動產標租 - 政戰資訊服務網",
-      "date": "2026-08-26",
-      "url": "https://gpwd.mnd.gov.tw/Download_File.ashx?id=8452"
-    },
-    {
-      "title": "11月地價稅誰繳，看納稅基準日8月31日這天！ - 宜蘭縣政府",
-      "date": "2026-08-28",
-      "url": "https://www.e-land.gov.tw/News_Content.aspx?n=2720&s=407252"
-    },
-    {
-      "title": "南鐵地下化工程專案公開標租 - Yahoo新聞",
-      "date": "2026-08-30",
-      "url": "https://tw.news.yahoo.com/%E5%8D%97%E9%90%B5%E5%9C%B0%E4%B8%8B%E5%8C%96%E5%B7%A5%E7%A8%8B%E5%B0%88%E6%A1%88%E5%85%AC%E9%96%8B%E6%A8%99%E7%A7%9F-112318431.html"
-    },
-    {
-      "title": "南鐵地下化工程專案公開標租 - 台灣新生報",
-      "date": "2026-08-30",
-      "url": "http://www.tssdnews.com.tw/?FID=64&CID=890433"
-    },
-    {
-      "title": "交通部觀光署東部海岸國家風景區管理處秀姑巒溪遊客中心設置太陽光電案(案號M11404)公開 ...",
-      "date": "2026-08-29",
-      "url": "https://admin.taiwan.net.tw/eastcoast-nsa/NewsEastcoast/News?a=1027&id=34118&p=2"
-    },
-    {
       "title": "桃園市龍潭區龍元路45號地下1樓公開標租案",
       "date": "2026-08-29",
       "url": "https://www.longtan.tycg.gov.tw/News_Content.aspx?n=7086&s=1837961"
@@ -5141,6 +5116,36 @@
       "title": "政府資訊公告內容 - 總統府",
       "date": "2026-10-29",
       "url": "https://www.president.gov.tw/Page/317/2052"
+    },
+    {
+      "id": "",
+      "title": "苗縣大西國中創校50週年太陽能光電球場啟用 - 自由時報",
+      "date": "2026-10-31",
+      "url": "https://news.ltn.com.tw/news/life/breakingnews/5624989"
+    },
+    {
+      "id": "",
+      "title": "大西國中歡慶建校50週年，太陽能光電球場啟用打造綠能永續校園 - 苗栗縣政府",
+      "date": "2026-10-31",
+      "url": "https://www.miaoli.gov.tw/News_Content2.aspx?n=285&s=1009778"
+    },
+    {
+      "id": "",
+      "title": "宜蘭縣政府財政稅務局標租縣有不動產投標須知",
+      "date": "2026-10-30",
+      "url": "https://www-ws.e-land.gov.tw/Download.ashx?u=LzAwMS9VcGxvYWQvNDM1L3JlbGZpbGUvMTIyODcvNDExNjQxLzZlY2ExMWQ2LTRmNDEtNDI2NS05Y2E3LTZjOTc0YTllMzVjYy5wZGY%3D&n=Meaomeenn%2BaKleaomemgiOefpS5wZGY%3D"
+    },
+    {
+      "id": "",
+      "title": "最新消息-公告訊息 - 臺中市立圖書館",
+      "date": "2026-10-30",
+      "url": "https://www.library.taichung.gov.tw/latestevent/Details?Parser=9,3,38,27,,,1957"
+    },
+    {
+      "id": "",
+      "title": "財政部國有財產署北區分署115年度招標第21批第5標標租不動產資訊",
+      "date": "2026-10-30",
+      "url": "https://esvc.fnp.gov.tw/rtMsg/showLocationPicture?rtS1Id=11a9021366c54e9e900dce0961262559"
     }
   ],
   "國防部政治作戰局": [
