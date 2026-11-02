@@ -874,6 +874,18 @@
       "title": "【臺北營業分處】【土地出租】【新北市板橋區文化段97地號部分土地】【115.10.30~115.11.17】",
       "date": "2026-10-30",
       "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6624&activePage=1"
+    },
+    {
+      "id": "",
+      "title": "【臺北營業分處】【場地短期出租】【南港車站早餐攤車】【1151102~1151115】",
+      "date": "2026-11-02",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6621&activePage=1"
+    },
+    {
+      "id": "",
+      "title": "【臺北營業分處】【場地短期出租】【臺北車站早餐攤車】【1151102~1151115】",
+      "date": "2026-11-02",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6620&activePage=1"
     }
   ],
   "新北市政府財政局": [],
@@ -1535,6 +1547,12 @@
       "id": "案號115A-061",
       "title": "116-118年度新北市板橋區「玫瑰好室」及「江翠好室」社會住宅物業管理委託專業服務案",
       "date": "2026-10-28",
+      "url": "https://www.hurc.org.tw/hurc/procurement"
+    },
+    {
+      "id": "案號115A-048",
+      "title": "委託不動產估價專業服務（建立廠商名單）採購案",
+      "date": "2026-11-02",
       "url": "https://www.hurc.org.tw/hurc/procurement"
     }
   ],
@@ -6209,6 +6227,12 @@
       "title": "配合財金公司辦理跨行系統演練，本行將於115年10月17日（星期六）及115年10月26日（星期一）部分時段暫停跨行服務，如提前完成即恢復跨行服務。",
       "date": "",
       "url": "https://www.landbank.com.tw/Bulletin/Detail/2462ea1d-46f6-4a03-9f8b-b4dd003dc5a8?code=H400"
+    },
+    {
+      "id": "",
+      "title": "本行TWQR(台灣Pay)發卡、收單、跨國Outbound&Inbound購物將於115/11/7(六)03:00~05:00暫停服務公告",
+      "date": "",
+      "url": "https://www.landbank.com.tw/Bulletin/Detail/7d8d2c67-bf0b-4787-bf19-b4f200240675?code=H400"
     }
   ]
 }
