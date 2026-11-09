@@ -934,6 +934,30 @@
       "title": "【臺北營業分處】【土地標租】【新北市鶯歌區國姓段616地號部分土地】【115.11.05~115.11.19】",
       "date": "2026-11-05",
       "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6635&activePage=1"
+    },
+    {
+      "id": "",
+      "title": "【臺北營業分處】【場地短期出租】【板橋車站便當攤車 西側】【1151109~1151122】",
+      "date": "2026-11-09",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6645&activePage=1"
+    },
+    {
+      "id": "",
+      "title": "【臺北營業分處】【場地短期出租】【板橋車站便當攤車 東側】",
+      "date": "2026-11-09",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6644&activePage=1"
+    },
+    {
+      "id": "",
+      "title": "【臺北營業分處】【場地短期出租】【樹林車站早餐攤車】【1151109~1151122】",
+      "date": "2026-11-09",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6643&activePage=1"
+    },
+    {
+      "id": "",
+      "title": "【臺北營業分處】【場地短期出租】【鶯歌車站早餐攤車】【1151109~1151122】",
+      "date": "2026-11-09",
+      "url": "https://www.railway.gov.tw/tra-tip-web/adr/rent-tender-1-detail?pk=6642&activePage=1"
     }
   ],
   "新北市政府財政局": [],
@@ -3468,30 +3492,6 @@
   "Google Alerts": [
     {
       "id": "",
-      "title": "瑠公管理處115 年度第6 批(1處土地) 農田水利非事業用不動產公開標租案",
-      "date": "2026-09-18",
-      "url": "https://www.ialgo.nat.gov.tw/news/Articles?a=10010&id=29761"
-    },
-    {
-      "id": "",
-      "title": "瑠公管理處115 年度第6 批(1處土地) 農田水利非事業用不動產公開標租案",
-      "date": "2026-09-18",
-      "url": "https://www.ia.gov.tw/zh-TW/news/NewsContent?a=2075&nid=29761&sdate=&edate=&q=&p=1&listid=2075&g=7&d="
-    },
-    {
-      "id": "",
-      "title": "彰化縣王功漁港漁貨直銷中心公開標租須知",
-      "date": "2026-09-17",
-      "url": "https://www.chcg.gov.tw/DTO/agriculture/getFile.aspx?file_id=577417&file=2&type=1&did=437342"
-    },
-    {
-      "id": "",
-      "title": "115年度臺南市歸仁區保西國小設置太陽光電設施公開標租案",
-      "date": "2026-09-18",
-      "url": "https://www.bsps.tn.edu.tw/modules/school/index.php?department_id=2&zone_id=0&page_id=13&content_id=167&type=news&from_op=school_department_show"
-    },
-    {
-      "id": "",
       "title": "公告標租本處「115年第2批農田水利非事業用不動產房舍公開標租案(TY115M002)」第1次公告",
       "date": "2026-09-21",
       "url": "https://www.iatyu.nat.gov.tw/news/Articles?a=10153&id=29767"
@@ -5265,6 +5265,30 @@
       "title": "高雄市政府全球資訊網",
       "date": "2026-11-06",
       "url": "https://www.kcg.gov.tw/News_Content.aspx?n=F29A02A9D36C47F0&s=F457E689BFB3B4A8"
+    },
+    {
+      "id": "",
+      "title": "台積電助威大台南科學園區成形提供晶圓一哥3奈米擴廠",
+      "date": "2026-11-08",
+      "url": "https://money.udn.com/money/story/5612/9865602?from=edn_industry_index"
+    },
+    {
+      "id": "",
+      "title": "便利商店相對 - 彰化縣政府",
+      "date": "2026-11-08",
+      "url": "https://www.chcg.gov.tw/DTO/traffic/getFile.aspx?file_id=583920&file=2&type=1&did=439969"
+    },
+    {
+      "id": "",
+      "title": "林田山課長的家標租案 - 更生日報",
+      "date": "2026-11-08",
+      "url": "https://www.ksnews.com.tw/e/157997"
+    },
+    {
+      "id": "",
+      "title": "「台南園區特A區」50公頃、台積興建3奈米廠明年上半年納入南科",
+      "date": "2026-11-08",
+      "url": "https://money.udn.com/money/story/5612/9865346?from=edn_related_storybottom"
     }
   ],
   "國防部政治作戰局": [
