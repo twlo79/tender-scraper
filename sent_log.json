@@ -1,77 +1,4 @@
 {
-  "2026-10-11 01:30": {
-    "_summary": {
-      "total_fetched": 152,
-      "total_new": 4,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 17,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 6,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 8,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 29,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 5,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 20,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 4,
-      "new": 4,
-      "notify": 0
-    }
-  },
   "2026-10-12 01:30": {
     "_summary": {
       "total_fetched": 151,
@@ -2328,6 +2255,91 @@
       "fetched": 9,
       "new": 7,
       "notify": 0
+    }
+  },
+  "2026-11-11 01:30": {
+    "_summary": {
+      "total_fetched": 215,
+      "total_new": 78,
+      "total_notify": 8,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 6,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 5,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 8,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 23,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 71,
+      "new": 66,
+      "notify": 6,
+      "items": [
+        "臺北市市政大樓市有公用房地出租供設置影印部招租案",
+        "本公司臺北車站1樓西北側部分商業空間B點標租案",
+        "本公司臺北車站1樓西北側部分商業空間A點標租案",
+        "新竹市香山區南港段869地號部分土地標租案",
+        "116年新北市立殯儀館暨三峽火化場牌位區供拜飯業務使用標租案",
+        "新北市鶯歌區國姓段616地號部分土地標租案"
+      ]
+    },
+    "教育部學產基金": {
+      "fetched": 3,
+      "new": 1,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 11,
+      "new": 10,
+      "notify": 2,
+      "items": [
+        "臺北市公有環南市場公開標租攤位一覽表",
+        "臺北市公有中研市場公開標租攤位一覽表"
+      ]
     }
   }
 }
