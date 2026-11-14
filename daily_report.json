@@ -1,12 +1,4 @@
 {
-  "2026-10-15": {
-    "date": "2026-10-15",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-10-16": {
     "date": "2026-10-16",
     "sources": {},
@@ -285,6 +277,16 @@
     "total_new": 0,
     "total_pushed": 0,
     "errors": [],
+    "line": "無推播（0 筆）"
+  },
+  "2026-11-14": {
+    "date": "2026-11-14",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "GET å¤±æ https://www.water.gov.taipei/News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5ï¼HTTPSConnectionPool(host='www.water.gov.taipei', port=443): Max retries exceeded with url: /News.aspx?n=D2818696FF5048B8&sms=B6EE39DA23E072F5 (Caused by NameResolutionError(\"HTTPSConnection(host='www.water.gov.taipei', port=443): Failed to resolve 'www.water.gov.taipei' ([Errno -3] Temporary failure in name resolution)\"))"
+    ],
     "line": "無推播（0 筆）"
   }
 }
