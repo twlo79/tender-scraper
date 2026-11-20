@@ -79,6 +79,23 @@ GLOBAL_FILTER = {
 }
 DATE_WINDOW_DAYS = 10  # 公告日期距今 ±10 天
 
+# ── 追蹤案件（每日進度匯報）──────────────────────────────────────────────────
+# 指定案件獨立追蹤：不套 GLOBAL_FILTER（地區／白名單／黑名單）也不套日期窗，
+# 只要「任一來源」的標題含任一關鍵字就算命中。比對前標題與關鍵字都經 _norm_title()
+# （全半形統一、不分大小寫、去空白與標點），所以「全坤 x101」「全坤Ｘ101」都會命中。
+# 每天 LINE 推播一則「📌 追蹤案件進度」，列出各案已知的所有公告（含 state.json 歷史），
+# 當天第一次出現的公告標 🆕。案件結案後從這裡移除即可。
+WATCHLIST = [
+    {
+        "name":     "全坤X101 社區商辦（臺北市都更處）",
+        "keywords": ["全坤X101"],
+    },
+    {
+        "name":     "永吉段都更案店鋪（教育部學產基金）",
+        "keywords": ["永吉段都更案"],
+    },
+]
+
 CONFIG = {
     "api_key":      os.getenv("ANTHROPIC_API_KEY", ""),
     "line_token":   os.getenv("LINE_CHANNEL_TOKEN", ""),
@@ -1251,6 +1268,98 @@ def build_line_messages(results: dict, run_time: str, original_date: str = "") -
     return messages
 
 
+# ── 追蹤案件 ─────────────────────────────────────────────────────────────────
+
+def _watch_key(title: str) -> str:
+    """同一則公告在不同來源的去重 key：去掉 Google Alerts 標題尾巴的「 - 網站名」再正規化。"""
+    return _norm_title(re.sub(r"\s+-\s+[^-]+$", "", title or ""))
+
+
+def collect_watch(results: dict, state: dict) -> dict:
+    """掃今天所有來源抓到的項目 + state.json 歷史，找出 WATCHLIST 各案的公告。
+
+    回傳 {案名: [record, ...]}，record = {title, date, url, source, new}，依公告日期新→舊。
+    「new」= 這則公告第一次被追蹤到（記錄在 state["_watch"]）；某案第一次追蹤時不標 new，
+    避免把歷史公告全部當成今天的新進度。會直接更新 state["_watch"]（dry-run 不會存檔）。
+    """
+    src_url = {s["name"]: s["url"] for s in SOURCES}
+    pool: list[tuple[str, dict]] = []
+    for name, d in results.items():
+        pool += [(name, i) for i in d.get("all", [])]
+    for name, entries in state.items():
+        if name.startswith("_") or not isinstance(entries, list):
+            continue
+        pool += [(name, e if isinstance(e, dict) else {"title": e}) for e in entries]
+
+    seen_all = state.setdefault("_watch", {})
+    report: dict[str, list[dict]] = {}
+    for case in WATCHLIST:
+        kws   = [_norm_title(k) for k in case["keywords"]]
+        first = case["name"] not in seen_all
+        seen  = set(seen_all.get(case["name"], []))
+        recs: dict[str, dict] = {}
+        for name, it in pool:
+            title = it.get("title", "")
+            if not any(k and k in _norm_title(title) for k in kws):
+                continue
+            key = _watch_key(title)
+            url = it.get("url") or ""
+            rec = recs.get(key)
+            if rec is None:
+                recs[key] = {"title": title, "date": normalize_date(it.get("date", "")),
+                             "url": url if url.startswith("http") else src_url.get(name, ""),
+                             "source": name}
+            elif not rec["url"].startswith("http") or rec["url"] == src_url.get(rec["source"]):
+                if url.startswith("http"):   # 優先保留個別公告頁網址
+                    rec["url"], rec["source"] = url, name
+        for key, rec in recs.items():
+            rec["new"] = (not first) and key not in seen
+        seen_all[case["name"]] = sorted(seen | set(recs))
+        report[case["name"]] = sorted(recs.values(), key=lambda r: r["date"] or "", reverse=True)
+    return report
+
+
+def build_watch_message(report: dict, today: str = "") -> dict:
+    """「📌 追蹤案件進度」Flex 訊息：每案一段，列最近 5 則公告（🆕 = 今天第一次出現）。"""
+    today = today or date.today().strftime("%Y/%m/%d")
+    body: list[dict] = []
+    for case in WATCHLIST:
+        recs = report.get(case["name"], [])
+        n_new = sum(r["new"] for r in recs)
+        status = f"🆕 今日新進度 {n_new} 則" if n_new else ("今日無新動態" if recs else "尚未在任何來源找到公告")
+        if body:
+            body.append({"type": "separator", "margin": "lg"})
+        body.append({"type": "text", "text": f"📌 {case['name']}", "weight": "bold", "size": "sm", "wrap": True, "margin": "lg"})
+        body.append({"type": "text", "text": f"{status}｜關鍵字：{'、'.join(case['keywords'])}",
+                     "size": "xs", "color": "#dc2626" if n_new else "#6b7280", "wrap": True, "margin": "xs"})
+        for r in recs[:5]:
+            row = {"type": "box", "layout": "vertical", "margin": "md", "contents": [
+                {"type": "text", "text": f"{'🆕 ' if r['new'] else '🔗 '}{r['title'][:60]}",
+                 "size": "sm", "color": "#1d4ed8", "wrap": True},
+                {"type": "text", "text": f"📅 {r['date'] or '日期不明'}｜{r['source']}",
+                 "size": "xs", "color": "#9ca3af", "margin": "xs"},
+            ]}
+            if r["url"].startswith("http"):
+                row["action"] = {"type": "uri", "uri": r["url"]}
+            body.append(row)
+    total_new = sum(r["new"] for recs in report.values() for r in recs)
+    return {
+        "type": "flex",
+        "altText": f"📌 追蹤案件進度 {today}" + (f"（{total_new} 則新進度）" if total_new else "（無新動態）"),
+        "contents": {
+            "type": "bubble",
+            "header": {
+                "type": "box", "layout": "vertical", "backgroundColor": "#b45309", "paddingAll": "16px",
+                "contents": [
+                    {"type": "text", "text": "📌 追蹤案件進度", "color": "#ffffff", "weight": "bold", "size": "md"},
+                    {"type": "text", "text": f"{today}｜追蹤 {len(WATCHLIST)} 案", "color": "#fde68a", "size": "sm", "margin": "xs"},
+                ],
+            },
+            "body": {"type": "box", "layout": "vertical", "paddingAll": "16px", "contents": body},
+        },
+    }
+
+
 # ── 主程式 ────────────────────────────────────────────────────────────────────
 # ── 送一份到安幸 ERP（標案追蹤器）────────────────────────────────────────────
 
@@ -1324,6 +1433,14 @@ def main():
             log.error(f"  → 例外：{e}")
             results[name] = {"all": [], "new": [], "notify": [], "error": str(e)}
 
+    # 追蹤案件：要在 save_state 之前跑，state["_watch"] 才會一起存檔
+    watch_report = collect_watch(results, state) if WATCHLIST else {}
+    for case_name, recs in watch_report.items():
+        n_new = sum(r["new"] for r in recs)
+        log.info(f"📌 追蹤 {case_name}：已知 {len(recs)} 則公告，今日新進度 {n_new} 則")
+        for r in recs[:5]:
+            log.info(f"     {'🆕' if r['new'] else '  '} {r['date'] or '----------'} [{r['source']}] {r['title'][:50]}")
+
     if DRY_RUN:
         log.info("[DRY RUN] 略過 save_state（不寫入 state.json）")
     else:
@@ -1363,7 +1480,11 @@ def main():
             push_in_batches(messages)
             line_pushed = True
     else:
-        log.info("無新增案件，略過 LINE 推播")
+        log.info("無新增案件，略過新標案推播")
+
+    # 追蹤案件進度：每天都推（不論有沒有新標案），附在新標案通知之後
+    if WATCHLIST:
+        push_in_batches([build_watch_message(watch_report)])
 
     # 儲存本次執行完整記錄到 sent_log.json（dry-run 不寫）
     if DRY_RUN:
