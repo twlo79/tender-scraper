@@ -79,6 +79,30 @@ GLOBAL_FILTER = {
 }
 DATE_WINDOW_DAYS = 10  # 公告日期距今 ±10 天
 
+# ── 追蹤案件（每日進度匯報）──────────────────────────────────────────────────
+# 指定案件獨立追蹤，不套 GLOBAL_FILTER（地區／白名單／黑名單）也不套日期窗：
+# 任一來源的標題含 keywords 任一詞就算命中。比對前標題與關鍵字都經 _norm_title()
+# （全半形統一、不分大小寫、去空白與標點）；國字與阿拉伯數字不會互換，所以「四段／4段」要分開寫。
+# hint_keywords：不算命中，只在「今天抓到、日期窗內、第一次出現」時提示（例如批次公告可能含本案）。
+# 每天併進 LINE 文字摘要（📌 追蹤案件），有新公告的案件另外多一張橘色卡片。結案後刪掉該筆即可。
+# 關鍵字依據：2026-11-20 用 state.json 15 個版本＋sent_log 共 1,175 筆歷史標題實測，無誤中。
+WATCHLIST = [
+    {
+        "name":     "全坤X101 社區商辦（臺北市都更處）",
+        "short":    "全坤X101",
+        "address":  "臺北市信義區信義路四段436號",
+        "keywords": ["全坤X101", "信義路四段436", "信義路4段436"],
+        "hint_keywords": [],
+    },
+    {
+        "name":     "永吉段都更案店鋪、住宅（教育部學產基金）",
+        "short":    "永吉段都更案",
+        "address":  "臺北市信義區忠孝東路五段423巷7號",
+        "keywords": ["永吉段都更", "忠孝東路五段423巷", "忠孝東路5段423巷"],
+        "hint_keywords": ["學產房地公開標租"],
+    },
+]
+
 CONFIG = {
     "api_key":      os.getenv("ANTHROPIC_API_KEY", ""),
     "line_token":   os.getenv("LINE_CHANNEL_TOKEN", ""),
@@ -1178,7 +1202,157 @@ def push_in_batches(messages: list[dict]):
         _push(messages[i:i+5])
 
 
-def build_line_messages(results: dict, run_time: str, original_date: str = "") -> list[dict]:
+def _watch_key(title: str) -> str:
+    """同一則公告在不同來源的去重 key：去掉 Google Alerts 標題尾巴的「 - 網站名」再正規化。"""
+    return _norm_title(re.sub(r"\s+-\s+[^-]+$", "", title or ""))
+
+
+def collect_watch(results: dict, state: dict) -> dict:
+    """掃「今天所有來源抓到的項目」＋「state.json 歷史」，整理 WATCHLIST 各案的公告。
+
+    回傳 {案名: {"records": [...], "hints": [...]}}
+      record = {title, date, url, source, new, reposts}，依日期（無日期用首次追蹤日）新→舊
+      new    = 這則公告第一次被追蹤到；某案第一次追蹤時全部不標 new，避免把歷史當新進度
+      reposts= 同一則公告的 Google Alerts 轉載數（轉載本身不另列）
+      hints  = hint_keywords 命中、今天抓到、日期窗內、第一次出現的項目
+    會更新 state["_watch"]（記錄已追蹤過的公告 key 與首次追蹤日；dry-run 不存檔）。
+    """
+    today   = date.today().isoformat()
+    src_url = {s["name"]: s["url"] for s in SOURCES}
+    today_pool = [(n, i) for n, d in results.items() for i in d.get("all", [])]
+    pool = list(today_pool)
+    for name, entries in state.items():
+        if name.startswith("_") or not isinstance(entries, list):
+            continue
+        pool += [(name, e if isinstance(e, dict) else {"title": e}) for e in entries]
+
+    watch_state = state.setdefault("_watch", {})
+    report: dict[str, dict] = {}
+    for case in WATCHLIST:
+        first  = case["name"] not in watch_state      # 第一次追蹤這案：歷史公告不標 🆕
+        cs     = watch_state.setdefault(case["name"], {"since": date.today().isoformat(), "seen": {}, "hints": []})
+        kws    = [_norm_title(k) for k in case["keywords"]]
+        recs: dict[str, dict] = {}
+        for name, it in pool:
+            title = it.get("title", "")
+            if not any(k and k in _norm_title(title) for k in kws):
+                continue
+            key = _watch_key(title)
+            url = it.get("url") or ""
+            rec = recs.get(key)
+            if rec is None:
+                recs[key] = {"title": title, "date": normalize_date(it.get("date", "")),
+                             "url": url if url.startswith("http") else src_url.get(name, ""),
+                             "source": name, "reposts": 0}
+            elif url.startswith("http") and (not rec["url"] or rec["url"] == src_url.get(rec["source"])):
+                rec["url"], rec["source"] = url, name   # 優先保留個別公告頁網址
+        # Google Alerts 轉載（例如「檢送本部「…」」）併到一手公告底下，只計數
+        firsthand = {k: r for k, r in recs.items() if r["source"] != "Google Alerts"}
+        for k in [k for k, r in recs.items() if r["source"] == "Google Alerts"]:
+            parent = next((fk for fk in firsthand if fk[:20] and fk[:20] in k), None)
+            if parent:
+                firsthand[parent]["reposts"] += 1
+                cs["seen"].setdefault(k, today)
+                del recs[k]
+        for key, rec in recs.items():
+            rec["new"] = (not first) and key not in cs["seen"]
+            cs["seen"].setdefault(key, today)
+            rec["first_seen"] = cs["seen"][key]
+        # 提示：只看今天抓到、日期窗內、沒提示過的
+        hints = []
+        hkws  = [_norm_title(k) for k in case.get("hint_keywords", [])]
+        for name, it in today_pool:
+            title = it.get("title", "")
+            key   = _watch_key(title)
+            if (hkws and any(k in _norm_title(title) for k in hkws) and key not in recs
+                    and key not in cs["hints"] and is_within_date_window(it)):
+                url = it.get("url") or ""
+                hints.append({"title": title, "date": normalize_date(it.get("date", "")),
+                              "url": url if url.startswith("http") else src_url.get(name, ""), "source": name})
+                cs["hints"].append(key)
+        report[case["name"]] = {
+            "records": sorted(recs.values(), key=lambda r: r["date"] or r["first_seen"], reverse=True),
+            "hints":   hints,
+        }
+    return report
+
+
+def _md(iso: str) -> str:
+    return f"{iso[5:7]}/{iso[8:10]}" if len(iso) == 10 else (iso or "日期不明")
+
+
+def _watch_summary_lines(watch: dict) -> list[str]:
+    """文字摘要裡的「📌 追蹤案件」段落。"""
+    lines = ["\n📌 追蹤案件"]
+    for case in WATCHLIST:
+        w     = watch.get(case["name"], {"records": [], "hints": []})
+        recs  = w["records"]
+        new   = [r for r in recs if r["new"]]
+        if new:
+            lines.append(f"🆕 {case['short']}：新公告 {len(new)} 則")
+            for r in new[:3]:
+                lines.append(f"  ▸ {r['title'][:40]}（{_md(r['date'] or r['first_seen'])}）")
+        elif recs:
+            r = recs[0]
+            t = r["title"] if len(r["title"]) <= 28 else r["title"][:28] + "…"
+            lines.append(f"・{case['short']}：無新動態（最近 {t} {_md(r['date'] or r['first_seen'])}）")
+        else:
+            lines.append(f"・{case['short']}：尚未在任何來源找到公告")
+        for h in w["hints"][:2]:
+            lines.append(f"  ⚠️ 批次公告可能含本案，請點開清冊確認：{h['title'][:30]}（{_md(h['date'])}）")
+    return lines
+
+
+def _watch_bubbles(watch: dict) -> list[dict]:
+    """有新公告（或新提示）的追蹤案件各一張橘色 Flex 卡片，可點開原始公告。"""
+    bubbles = []
+    for case in WATCHLIST:
+        w    = watch.get(case["name"], {"records": [], "hints": []})
+        rows = [(r, "🆕 ") for r in w["records"] if r["new"]] + [(h, "⚠️ ") for h in w["hints"]]
+        if not rows:
+            continue
+        body = []
+        for r, icon in rows[:8]:
+            meta = f"📅 {r['date'] or r.get('first_seen', '') or '日期不明'}｜{r['source']}"
+            if r.get("reposts"):
+                meta += f"｜+{r['reposts']} 轉載"
+            row = {"type": "box", "layout": "vertical", "margin": "md", "contents": [
+                {"type": "text", "text": f"{icon}{r['title'][:60]}", "size": "sm", "color": "#1d4ed8", "wrap": True},
+                {"type": "text", "text": meta, "size": "xs", "color": "#9ca3af", "margin": "xs", "wrap": True},
+            ]}
+            if r["url"].startswith("http"):
+                row["action"] = {"type": "uri", "uri": r["url"]}
+            body.append(row)
+        n_new = sum(1 for _, i in rows if i == "🆕 ")
+        sub   = f"🆕 今日新進度 {n_new} 則" if n_new else "⚠️ 批次公告可能含本案"
+        bubble = {
+            "type": "flex",
+            "altText": f"📌 {case['short']}：{sub}",
+            "contents": {
+                "type": "bubble",
+                "header": {
+                    "type": "box", "layout": "vertical", "backgroundColor": "#b45309", "paddingAll": "16px",
+                    "contents": [
+                        {"type": "text", "text": f"📌 {case['name']}", "color": "#ffffff", "weight": "bold", "size": "md", "wrap": True},
+                        {"type": "text", "text": sub, "color": "#fde68a", "size": "sm", "margin": "xs"},
+                    ],
+                },
+                "body": {"type": "box", "layout": "vertical", "paddingAll": "16px", "contents": body},
+            },
+        }
+        first_url = next((r["url"] for r, _ in rows if r["url"].startswith("http")), "")
+        if first_url:
+            bubble["contents"]["footer"] = {
+                "type": "box", "layout": "vertical", "backgroundColor": "#f9fafb", "paddingAll": "10px",
+                "contents": [{"type": "button", "style": "link", "color": "#b45309", "height": "sm",
+                              "action": {"type": "uri", "label": "前往原始網頁", "uri": first_url}}],
+            }
+        bubbles.append(bubble)
+    return bubbles
+
+
+def build_line_messages(results: dict, run_time: str, original_date: str = "",
+                        watch: dict | None = None) -> list[dict]:
     today        = original_date or date.today().strftime("%Y/%m/%d")
     total_notify = sum(len(v.get("notify", [])) for v in results.values())
     messages     = []
@@ -1196,6 +1370,8 @@ def build_line_messages(results: dict, run_time: str, original_date: str = "") -
             lines.append(f"\n🆕 {name}：{len(notify)} 筆")
             for item in notify[:5]:
                 lines.append(f"  ▸ {item.get('title', '')[:40]}")
+    if watch:
+        lines += _watch_summary_lines(watch)
     lines.append("\n⚠️ 免責聲明：本通知由自動爬蟲產生，資料僅供參考，請以各機關官方公告為準。")
     messages.append({"type": "text", "text": "\n".join(lines)})
 
@@ -1247,6 +1423,9 @@ def build_line_messages(results: dict, run_time: str, original_date: str = "") -
                 },
             },
         })
+
+    if watch:
+        messages += _watch_bubbles(watch)
 
     return messages
 
@@ -1324,6 +1503,17 @@ def main():
             log.error(f"  → 例外：{e}")
             results[name] = {"all": [], "new": [], "notify": [], "error": str(e)}
 
+    # 追蹤案件：要在 save_state 之前跑，state["_watch"] 才會一起存檔
+    watch = collect_watch(results, state) if WATCHLIST else None
+    for case_name, w in (watch or {}).items():
+        recs = w["records"]
+        log.info(f"📌 追蹤 {case_name}：已知 {len(recs)} 則，今日新進度 {sum(r['new'] for r in recs)} 則，提示 {len(w['hints'])} 則")
+        for r in recs[:5]:
+            log.info(f"     {'🆕' if r['new'] else '  '} {r['date'] or '(無日期)':10s} [{r['source']}] {r['title'][:50]}"
+                     + (f"（+{r['reposts']} 轉載）" if r["reposts"] else ""))
+        for h in w["hints"]:
+            log.info(f"     ⚠️ {h['date'] or '(無日期)':10s} [{h['source']}] {h['title'][:50]}")
+
     if DRY_RUN:
         log.info("[DRY RUN] 略過 save_state（不寫入 state.json）")
     else:
@@ -1357,11 +1547,12 @@ def main():
 
     # LINE 推播（有新案才發）
     line_pushed = False
-    if total_notify > 0:
-        messages = build_line_messages(results, run_time)
+    if total_notify > 0 or watch:
+        # 有追蹤案件時每天都推：沒新標案那天只會有文字摘要（📌 追蹤案件段落）＋有新進度的橘卡
+        messages = build_line_messages(results, run_time, watch=watch)
         if messages:
             push_in_batches(messages)
-            line_pushed = True
+            line_pushed = total_notify > 0   # sent_log 的 line_pushed 仍只代表「有推新標案」
     else:
         log.info("無新增案件，略過 LINE 推播")
 
