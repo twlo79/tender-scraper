@@ -458,6 +458,53 @@ def parse_fnp() -> list[dict]:
     return all_items
 
 
+_ARPAM_DEBUGGED = False
+
+def _arpam_debug(keyword: str, start: str, end: str):
+    """（只在 DRY_RUN 執行，每次 run 一次）PCC 查詢失敗時，印出錯誤頁內容並換參數組合重試，找出哪個參數讓它 500。"""
+    global _ARPAM_DEBUGGED
+    if _ARPAM_DEBUGGED:
+        return
+    _ARPAM_DEBUGGED = True
+    from bs4 import BeautifulSoup
+    BASE = "https://web.pcc.gov.tw/opas/arpam/public/readArpam"
+    q    = requests.utils.quote(keyword)
+    s_   = start.replace("/", "%2F")
+    e_   = end.replace("/", "%2F")
+    roc  = lambda d: f"{int(d[:4]) - 1911}{d[4:]}".replace("/", "%2F")
+    variants = [
+        ("無參數（查詢頁本身）", BASE),
+        ("只帶關鍵字",           f"{BASE}?searchAssetsName={q}"),
+        ("關鍵字＋日期（無 rowsPerPage）", f"{BASE}?searchAssetsName={q}&searchBeginNoticeDate={s_}&searchEndNoticeDate={e_}"),
+        ("現行完整參數",         f"{BASE}?searchAssetsName={q}&searchBeginNoticeDate={s_}&searchEndNoticeDate={e_}&pageModel.rowsPerPage=100"),
+        ("日期改民國年",         f"{BASE}?searchAssetsName={q}&searchBeginNoticeDate={roc(start)}&searchEndNoticeDate={roc(end)}&pageModel.rowsPerPage=100"),
+        ("rowsPerPage=10",       f"{BASE}?searchAssetsName={q}&searchBeginNoticeDate={s_}&searchEndNoticeDate={e_}&pageModel.rowsPerPage=10"),
+        ("舊入口 prkms 首頁",     "https://web.pcc.gov.tw/prkms/tender/common/basic/readTenderBasic"),
+    ]
+    log.info("  [PCC DEBUG] ===== 政府採購網診斷開始 =====")
+    sess = requests.Session()
+    for label, url in variants:
+        try:
+            r = sess.get(url, headers=HTTP_HEADERS, timeout=30, verify=False)
+            r.encoding = "utf-8"
+            soup = BeautifulSoup(r.text, "lxml")
+            title = soup.title.get_text(strip=True) if soup.title else ""
+            table = soup.find("table", id="displayTagTableId")
+            rows  = len(table.find_all("tr")) if table else 0
+            log.info(f"  [PCC DEBUG] {label}: HTTP {r.status_code}｜{len(r.text)} bytes｜title={title[:60]}｜"
+                     f"displayTagTableId={'有' if table else '無'}（{rows} 列）｜最終網址={r.url[:120]}")
+            if r.status_code >= 400 or not table:
+                txt = re.sub(r"\s+", " ", soup.get_text(" ", strip=True))
+                log.info(f"  [PCC DEBUG]   內文前 400 字：{txt[:400]}")
+            if label.startswith("無參數"):
+                for f in soup.find_all("form"):
+                    names = [i.get("name") for i in f.find_all(["input", "select"]) if i.get("name")]
+                    log.info(f"  [PCC DEBUG]   form action={f.get('action')} method={f.get('method')} 欄位={names[:30]}")
+        except Exception as e:
+            log.info(f"  [PCC DEBUG] {label}: 例外 {e}")
+    log.info("  [PCC DEBUG] ===== 政府採購網診斷結束 =====")
+
+
 def _arpam_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
     """抓取政府電子採購網「財物出租查詢」（非招標查詢）單一關鍵字的查詢結果。
     2026-09-22 用真實查詢結果確認根因：舊版打的是「招標查詢」（/prkms/tender/...），
@@ -487,6 +534,8 @@ def _arpam_fetch_keyword(keyword: str, start: str, end: str) -> list[dict]:
         r.encoding = "utf-8"
     except Exception as e:
         log.warning(f"  [政府採購網/財物出租/{keyword}] 連線失敗：{e}")
+        if DRY_RUN:
+            _arpam_debug(keyword, start, end)
         return []
 
     soup  = BeautifulSoup(r.text, "lxml")
