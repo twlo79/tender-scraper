@@ -627,7 +627,9 @@ def parse_moe_xuechan() -> list[dict]:
         title = a.get_text(strip=True)
         if len(title) < 5:
             continue
-        href = _safe_url(a["href"], BASE, URL)
+        # 相對網址要以「列表頁網址」為基準：站台在 /ed4100/ 子目錄底下，
+        # 用網域根目錄當基準會變成 depart.moe.edu.tw/News_Content.aspx（少了 /ed4100/，打不開）
+        href = _safe_url(a["href"], URL, URL)
         # 日期欄位可能在第一欄（發布時間）或最後一欄，視站方表格版本而定；
         # 優先採用第一欄，格式不符再退回最後一欄（改版曾在最後一欄放「公告單位」而非日期）。
         dt = tds[0].get_text(strip=True)
