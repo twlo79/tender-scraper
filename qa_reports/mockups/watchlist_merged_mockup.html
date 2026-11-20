@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>合併通報 UI 草圖</title>
+<style>
+body{margin:0;background:#e5e7eb;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;padding:20px;display:flex;gap:22px;justify-content:center;align-items:flex-start}
+.phone{width:360px;background:#8cabd9;border-radius:24px;padding:0 0 16px;box-shadow:0 2px 10px rgba(0,0,0,.2);overflow:hidden}
+.bar{background:#1f2937;color:#fff;padding:12px 16px;font-size:14px;font-weight:700}
+.cap{background:#fff;color:#111827;font-size:13px;font-weight:700;padding:10px 14px;border-bottom:1px solid #d1d5db}
+.cap span{display:block;font-weight:400;color:#6b7280;font-size:11px;margin-top:2px}
+.chat{padding:12px 12px 0}
+.msg{display:flex;gap:8px;margin-bottom:10px}
+.av{width:30px;height:30px;border-radius:50%;background:#1d4ed8;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.txt{background:#fff;border-radius:14px;padding:10px 12px;font-size:12.5px;line-height:1.55;max-width:270px;white-space:pre-wrap}
+.b{background:#fff;border-radius:14px;overflow:hidden;width:270px}
+.b.w{width:236px;flex:none}
+.hd{padding:11px 13px}.hd .t{color:#fff;font-weight:700;font-size:14px}.hd .s{font-size:11px;margin-top:2px}
+.bd{padding:4px 13px 12px}
+.row{margin-top:8px}.row .tt{font-size:12px;color:#1d4ed8;line-height:1.4}.row .mt{font-size:10.5px;color:#9ca3af;margin-top:1px}
+.cn{font-weight:700;font-size:12.5px;margin-top:10px}
+.st{display:inline-block;font-size:10.5px;border-radius:9px;padding:1px 7px;margin-top:4px}
+.new{background:#fee2e2;color:#b91c1c}.wait{background:#f3f4f6;color:#4b5563}
+.sep{border-top:1px solid #e5e7eb;margin-top:10px}
+.ft{background:#f9fafb;text-align:center;padding:8px;font-size:12px;color:#1d4ed8}
+.car{display:flex;gap:8px;overflow:hidden;margin-left:38px;margin-bottom:10px}
+.hint{font-size:10.5px;color:#fff;margin:-4px 0 10px 40px}
+.blue{background:#1d4ed8}.org{background:#b45309}
+.hl{background:#fef3c7;border-radius:6px;padding:4px 6px;margin:4px -6px 0}
+</style></head><body>
+
+<!-- 方案 1 -->
+<div class="phone">
+ <div class="bar">‹ 標案通知 OA</div>
+ <div class="cap">方案 1：原本訊息不動，最後多一張橘色卡<span>LINE 會連續收到 3 則（文字＋藍卡＋橘卡）</span></div>
+ <div class="chat">
+  <div class="msg"><div class="av">標</div><div class="txt">📋 政府標案通知 2026/11/21
+共新增 1 筆
+
+🆕 國營台鐵：1 筆
+  ▸ 【臺北營業分處】【土地出租】【新北市板橋區…
+
+⚠️ 免責聲明：本通知由自動爬蟲產生…</div></div>
+  <div class="msg"><div class="av">標</div><div class="b">
+   <div class="hd blue"><div class="t">國營台鐵</div><div class="s" style="color:#bfdbfe">近期新增 1 筆</div></div>
+   <div class="bd"><div class="row"><div class="tt">🔗 【臺北營業分處】【土地出租】【新北市板橋區文化段97地號部分土地】</div><div class="mt">📅 115.11.19</div></div></div>
+   <div class="ft">前往原始網頁</div></div></div>
+  <div class="msg"><div class="av">標</div><div class="b">
+   <div class="hd org"><div class="t">📌 追蹤案件進度</div><div class="s" style="color:#fde68a">追蹤 2 案｜🆕 1 則新進度</div></div>
+   <div class="bd">
+    <div class="cn">全坤X101 社區商辦</div><span class="st new">🆕 今日新進度</span>
+    <div class="row"><div class="tt">🆕 全坤X101社區事務所(19戶) 竭誠招租</div><div class="mt">📅 11/20｜台北市都市更新處</div></div>
+    <div class="row"><div class="tt">🔗 信義區全坤X101釋出19戶商辦空間…</div><div class="mt">📅 09/29｜Google Alerts</div></div>
+    <div class="sep"></div>
+    <div class="cn">永吉段都更案店鋪</div><span class="st wait">無新動態・最近 第3次標租 10/06</span>
+   </div></div></div>
+ </div>
+</div>
+
+<!-- 方案 2 -->
+<div class="phone">
+ <div class="bar">‹ 標案通知 OA</div>
+ <div class="cap">方案 2：追蹤進度併進原本的文字摘要<span>不多發訊息；沒新標案那天只發這則文字</span></div>
+ <div class="chat">
+  <div class="msg"><div class="av">標</div><div class="txt">📋 政府標案通知 2026/11/21
+共新增 1 筆
+
+🆕 國營台鐵：1 筆
+  ▸ 【臺北營業分處】【土地出租】【新北市板橋區…
+<div class="hl">📌 追蹤案件
+🆕 全坤X101：新公告
+  ▸ 全坤X101社區事務所(19戶) 竭誠招租（11/20）
+・永吉段都更案：無新動態（最近 第3次標租 10/06）</div>
+⚠️ 免責聲明：本通知由自動爬蟲產生…</div></div>
+  <div class="msg"><div class="av">標</div><div class="b">
+   <div class="hd blue"><div class="t">國營台鐵</div><div class="s" style="color:#bfdbfe">近期新增 1 筆</div></div>
+   <div class="bd"><div class="row"><div class="tt">🔗 【臺北營業分處】【土地出租】【新北市板橋區文化段97地號部分土地】</div><div class="mt">📅 115.11.19</div></div></div>
+   <div class="ft">前往原始網頁</div></div></div>
+  <div class="msg"><div class="av">標</div><div class="b">
+   <div class="hd org"><div class="t">📌 全坤X101 社區商辦</div><div class="s" style="color:#fde68a">🆕 今日新進度 1 則</div></div>
+   <div class="bd"><div class="row"><div class="tt">🆕 全坤X101社區事務所(19戶) 竭誠招租</div><div class="mt">📅 11/20｜台北市都市更新處</div></div></div>
+   <div class="ft">前往原始網頁</div></div></div>
+  <div class="hint">↑ 只有「有新進度的追蹤案」才多一張橘卡（可點連結）</div>
+ </div>
+</div>
+
+<!-- 方案 3 -->
+<div class="phone">
+ <div class="bar">‹ 標案通知 OA</div>
+ <div class="cap">方案 3：卡片改成可左右滑的輪播<span>文字摘要＋1 則輪播（藍卡在前、橘卡在後）</span></div>
+ <div class="chat">
+  <div class="msg"><div class="av">標</div><div class="txt">📋 政府標案通知 2026/11/21
+共新增 1 筆｜📌 追蹤 1 則新進度
+
+🆕 國營台鐵：1 筆
+📌 全坤X101：新公告
+
+⚠️ 免責聲明：本通知由自動爬蟲產生…</div></div>
+  <div class="msg" style="margin-bottom:4px"><div class="av">標</div><div style="font-size:11px;color:#fff;align-self:center">← 左右滑動 →</div></div>
+  <div class="car">
+   <div class="b w"><div class="hd blue"><div class="t">國營台鐵</div><div class="s" style="color:#bfdbfe">近期新增 1 筆</div></div>
+    <div class="bd"><div class="row"><div class="tt">🔗 【臺北營業分處】【土地出租】【新北市板橋區文化段97地號…</div><div class="mt">📅 115.11.19</div></div></div>
+    <div class="ft">前往原始網頁</div></div>
+   <div class="b w"><div class="hd org"><div class="t">📌 追蹤案件進度</div><div class="s" style="color:#fde68a">🆕 1 則新進度</div></div>
+    <div class="bd"><div class="cn">全坤X101</div><span class="st new">🆕 新公告</span>
+     <div class="row"><div class="tt">🆕 全坤X101社區事務所(19戶) 竭誠招租</div><div class="mt">📅 11/20｜都更處</div></div>
+     <div class="sep"></div><div class="cn">永吉段都更案</div><span class="st wait">無新動態</span></div></div>
+  </div>
+ </div>
+</div>
+
+</body></html>
