@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>追蹤案件 UI 草圖</title>
+<style>
+body{margin:0;background:#8cabd9;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;padding:24px;display:flex;gap:28px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.col{width:340px}
+.cap{color:#fff;font-weight:700;font-size:15px;margin:0 0 10px 4px}
+.bubble{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15);margin-bottom:14px}
+.hd{padding:16px}
+.hd .t{color:#fff;font-weight:700;font-size:16px}
+.hd .s{font-size:13px;margin-top:4px}
+.bd{padding:6px 16px 16px}
+.case{padding-top:14px}
+.case+.case{border-top:1px solid #e5e7eb;margin-top:14px}
+.cn{font-weight:700;font-size:14px}
+.st{display:inline-block;font-size:12px;border-radius:10px;padding:2px 8px;margin:6px 0 4px}
+.st.new{background:#fee2e2;color:#b91c1c}.st.wait{background:#f3f4f6;color:#4b5563}.st.open{background:#dcfce7;color:#15803d}
+.kw{font-size:11px;color:#9ca3af}
+.row{margin-top:10px}
+.row .tt{font-size:13px;color:#1d4ed8;line-height:1.4}
+.row .mt{font-size:11px;color:#9ca3af;margin-top:2px}
+.tag{font-size:10px;border:1px solid #d1d5db;color:#6b7280;border-radius:4px;padding:0 4px;margin-left:4px}
+.more{font-size:11px;color:#9ca3af;margin-top:8px}
+.ft{background:#f9fafb;text-align:center;padding:10px;font-size:13px;color:#1d4ed8;border-top:1px solid #f3f4f6}
+.small{background:#fff;border-radius:16px;padding:12px 14px;font-size:13px;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+</style></head><body>
+
+<div class="col">
+<p class="cap">A. 有新進度那天（例：永吉段出第 4 次標租）</p>
+<div class="bubble">
+ <div class="hd" style="background:#b45309"><div class="t">📌 追蹤案件進度</div><div class="s" style="color:#fde68a">2026/11/25｜追蹤 2 案｜🆕 1 則新進度</div></div>
+ <div class="bd">
+  <div class="case">
+   <div class="cn">永吉段都更案店鋪（教育部學產基金）</div>
+   <span class="st new">🆕 今日新進度・第 4 次公開標租</span><div class="kw">關鍵字：永吉段都更案</div>
+   <div class="row"><div class="tt">🆕 115年度臺北永吉段都更案店鋪、住宅國有學產不動產第4次公開標租</div><div class="mt">📅 2026-11-25｜教育部學產基金</div></div>
+   <div class="row"><div class="tt">🔗 …第3次公開標租</div><div class="mt">📅 2026-10-06｜政府採購網 <span class="tag">+2 轉載</span></div></div>
+   <div class="row"><div class="tt">🔗 …第2次公開標租</div><div class="mt">📅 2026-08-04｜教育部學產基金</div></div>
+   <div class="row"><div class="tt">🔗 …公開標租案（第 1 次）</div><div class="mt">📅 2026-06-15｜教育部學產基金</div></div>
+  </div>
+  <div class="case">
+   <div class="cn">全坤X101 社區商辦（臺北市都更處）</div>
+   <span class="st wait">今日無新動態・最近公告 11/18</span><div class="kw">關鍵字：全坤X101</div>
+   <div class="row"><div class="tt">🔗 全坤X101社區事務所(19戶) 竭誠招租 歡迎踴躍投標</div><div class="mt">📅 2026-11-18（待確認）｜台北市都市更新處</div></div>
+   <div class="row"><div class="tt">🔗 信義區全坤X101釋出19戶商辦空間 10月27日投標截止</div><div class="mt">📅 2026-09-29｜Google Alerts（是新聞）</div></div>
+  </div>
+ </div>
+</div>
+</div>
+
+<div class="col">
+<p class="cap">B. 沒有新進度那天：方案 1 照推完整卡片</p>
+<div class="bubble">
+ <div class="hd" style="background:#b45309"><div class="t">📌 追蹤案件進度</div><div class="s" style="color:#fde68a">2026/11/21｜追蹤 2 案｜無新動態</div></div>
+ <div class="bd">
+  <div class="case"><div class="cn">永吉段都更案店鋪</div><span class="st wait">無新動態・最近：第 3 次標租 10/06（已 46 天）</span></div>
+  <div class="case"><div class="cn">全坤X101 社區商辦</div><span class="st wait">無新動態・最近：招租公告 11/18（已 3 天）</span></div>
+ </div>
+ <div class="ft">點標題可開原始公告</div>
+</div>
+
+<p class="cap">B. 方案 2：只推一行文字（省版面）</p>
+<div class="small">📌 追蹤案件 11/21：無新動態<br>・永吉段：最近 第3次標租 10/06<br>・全坤X101：最近 招租公告 11/18</div>
+
+<p class="cap" style="margin-top:16px">B. 方案 3：沒進度就不推</p>
+<div class="small" style="color:#6b7280">（當天不發任何追蹤訊息）</div>
+</div>
+
+</body></html>
