@@ -1,14 +1,4 @@
 {
-  "2026-10-21": {
-    "date": "2026-10-21",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [
-      "GET å¤±æ https://www.landbank.com.tw/Bulletin/RentRealtyï¼HTTPSConnectionPool(host='www.landbank.com.tw', port=443): Read timed out. (read timeout=20)"
-    ],
-    "line": "無推播（0 筆）"
-  },
   "2026-10-22": {
     "date": "2026-10-22",
     "sources": {},
@@ -289,6 +279,17 @@
     "errors": [
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F09&searchEndNoticeDate=2026%2F11%2F19&pageModel.rowsPerPage=100",
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F09&searchEndNoticeDate=2026%2F11%2F19&pageModel.rowsPerPage=100"
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-11-20": {
+    "date": "2026-11-20",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F10&searchEndNoticeDate=2026%2F11%2F20&pageModel.rowsPerPage=100",
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F10&searchEndNoticeDate=2026%2F11%2F20&pageModel.rowsPerPage=100"
     ],
     "line": "無推播（0 筆）"
   }
