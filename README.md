@@ -17,11 +17,31 @@
 
 | 層次 | 條件 | 說明 |
 |------|------|------|
-| ① 地區 | 標題或機關名含「台北」「臺北」「新北」 | 部分來源本身就是雙北專屬，不做地區過濾 |
-| ② 關鍵字 | 標題含白名單詞（出租、標租、不動產…）且不含黑名單詞 | 排除開標結果、短期場地、財物採購等雜訊 |
+| ① 地區 | 「標題＋`agency`（機關名）」含「台北」「臺北」「新北」「瑠公管理處」任一詞 | `agency` 由各 parser 填入，見下方說明 |
+| ② 關鍵字 | 標題含白名單詞（出租、標租、招租、不動產…）且不含黑名單詞 | 排除開標結果、短期場地、財物採購等雜訊 |
 | ③ 日期窗口 | 公告日期在今天 ±10 天內；無法解析日期則放行 | 避免推播過期或未來案件 |
 
 去重機制另外透過 `state.json` 確保同一案件不重複推播。
+
+**篩選實際生效的設定**：
+
+- 三層篩選全部由 `scraper.py` 頂部的 `GLOBAL_FILTER` + `DATE_WINDOW_DAYS` 決定，**所有來源共用**（實作在 `passes_filters()`）。
+- `SOURCES` 裡每個來源各自寫的 `whitelist`／`blacklist`／`regions` **目前沒有被程式讀取**，改了不會有效果，只具參考意義。
+- 唯一例外是國有財產署設了 `skip_global_filter: True`：它的標題是組合字串，北區分署的篩選已經在 parser 裡做掉，只套日期窗。
+
+**`agency` 的作用（雙北機關的來源一定要帶）**：
+
+市府機關的公告標題常寫「**本市**…」或完全不寫地名（例如「全坤X101社區事務所(19戶) 竭誠招租」），只看標題會在 ① 地區被擋掉。因此雙北機關的 parser 會在每筆資料固定填上含「臺北／台北」的 `agency`，讓地區判斷靠機關名過關：
+
+| 來源 | parser 填入的 `agency` |
+|------|------------------------|
+| 台北自來水處 | `臺北自來水事業處` |
+| 台北市財政局 | `臺北市財政局` |
+| 台北市都市更新處 | `臺北市都市更新處` |
+| 台北市都發局 | `台北市都發局` |
+| 國營台鐵 | 頁面上的單位欄（parser 已先篩「臺北營業分處」） |
+
+> 新增雙北機關的來源時，記得在 parser 的 `items.append({...})` 帶上 `agency`，否則標題沒寫地名的案件會全部被誤殺。
 
 ---
 
@@ -165,22 +185,24 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 
 ## 收錄來源（14 個）
 
-| # | 機關 | 抓取方式 | 地區篩選 |
+順序與 `scraper.py` 的 `SOURCES` 一致（也是 LINE 推播與 sent_log 的排列順序）。「地區判斷」欄說明這個來源的案件靠什麼通過 ① 地區篩選。
+
+| # | 機關 | 抓取方式 | 地區判斷 |
 |---|------|----------|----------|
-| 1 | 台北自來水處 | `table tbody tr`（CCMS） | 來源本身限雙北 |
-| 2 | 國營台鐵 | `ul.tender-list li.rent-item` | 臺北營業分處 |
-| 3 | 農業部 瑠公管理處 | `ul.commonList li.commonList-item` | 全台（關鍵字篩） |
-| 4 | 郵局房地產出租 | `ul.NewsList li a` | 台北、新北 |
-| 5 | 台北市財政局 | `table tbody tr`（CCMS，data-title 定位公告日期） | 來源本身限雙北 |
-| 6 | 國家住宅及都市更新中心 | `table tr`（tds[2]=案名，tds[4]=公告日期） | 全台（關鍵字篩） |
-| 7 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | 北區分署 |
-| 8 | 政府採購網（財物出租查詢） | `/opas/arpam/public/readArpam` 關鍵字查詢（出租／標租，±10 天，`table#displayTagTableId`） | 台北、新北 |
-| 9 | 教育部學產基金 | `table tbody tr`（日期欄在 tds[0]，若無則退回 tds[-1]） | 台北、新北 |
-| 10 | 台北市都發局 | `div.list-card` 卡片（非 table） | 來源本身限雙北 |
-| 11 | 國防部政治作戰局 | `p.newslist_title` 卡片（非 table，cnid=609 與 695 兩個子頁一併抓） | 台北、新北 |
-| 12 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 台北、新北 |
-| 13 | Google Alerts | RSS Atom feed | 台北、新北、gov.tw |
-| 14 | 台北市都市更新處（新聞稿） | `table tr`（CCMS，data-title 定位標題／發布日期），靠 whitelist 篩標租類 | 來源本身限雙北（agency 帶「臺北市」，讓「本市…」標題通過） |
+| 1 | 台北自來水處 | `table tbody tr`（CCMS） | `agency` 帶「臺北」，全部通過 |
+| 2 | 國營台鐵 | `ul.tender-list li.rent-item` | parser 只留臺北營業分處，`agency` 帶「臺北」 |
+| 3 | 農業部 瑠公管理處 | `ul.commonList li.commonList-item` | 標題須含台北／新北／瑠公管理處（parser 沒帶 `agency`） |
+| 4 | 郵局房地產出租 | `ul.NewsList li a` | 標題須含台北／新北 |
+| 5 | 台北市財政局 | `table tbody tr`（CCMS，data-title 定位公告日期；抓「標案列表」，不含「最新消息」） | `agency` 帶「臺北」，全部通過 |
+| 6 | 台北市都市更新處（新聞稿） | `table tr`（CCMS，data-title 定位標題／發布日期）。網址 `uro.gov.taipei/News.aspx?n=3ADF6474408DA0C5&sms=78D644F2755ACCAA`。新聞稿多為一般都更新聞，靠 ② 白名單篩出招租／標租類 | `agency` 帶「臺北」，全部通過 |
+| 7 | 國家住宅及都市更新中心 | `table tr`（tds[2]=案名，tds[4]=公告日期） | 標題須含台北／新北 |
+| 8 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | parser 內篩北區分署（`skip_global_filter`） |
+| 9 | 政府採購網（財物出租查詢） | `/opas/arpam/public/readArpam` 關鍵字查詢（出租／標租，±10 天，`table#displayTagTableId`） | 標題或招標機關名須含台北／新北 |
+| 10 | 教育部學產基金 | `table tbody tr`（日期欄在 tds[0]，若無則退回 tds[-1]） | 標題須含台北／新北 |
+| 11 | 台北市都發局 | `div.list-card` 卡片（非 table） | `agency` 帶「台北」，全部通過 |
+| 12 | 國防部政治作戰局 | `p.newslist_title` 卡片（非 table，cnid=609 與 695 兩個子頁一併抓） | 標題須含台北／新北 |
+| 13 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 標題須含台北／新北 |
+| 14 | Google Alerts | RSS Atom feed | 標題須含台北／新北 |
 
 > **Claude fallback**：部分 JS 渲染頁面無法直接解析時，改用 Claude API 從 HTML 文字擷取結構化資料。需設定 `ANTHROPIC_API_KEY`。
 
@@ -287,6 +309,14 @@ python dry_run_all_regions.py --debug        # 全台 raw data 檢視
 
 ---
 
+### 2026-11-20：雙北機關標租案因標題寫「本市」被漏掉
+
+| 問題 | 表面症狀 | 真正根因 | 教訓 |
+|------|---------|---------|------|
+| 都更處「全坤X101社區事務所(19戶) 竭誠招租」沒有推播 | 使用者在財政局「最新消息」、都更處「新聞稿」看到這筆標租案，LINE 沒收到 | (1) 臺北市都市更新處（uro.gov.taipei）不在來源清單裡；(2) 就算抓到，標題寫「本市…」或不寫地名，`passes_filters()` 的地區判斷只看「標題＋`agency`」，而財政局等 parser 當時沒帶 `agency`，會被擋掉 | 新增都更處新聞稿為第 14 個來源；雙北機關的 parser 一律帶含「臺北」的 `agency`。用 GitHub Actions `dry_run=true` 實測（run #179）：都更處抓 20 筆，只推這 1 筆，其他 19 則一般新聞被白名單擋掉 |
+
+---
+
 ## 優化路線圖
 
 ### 第一優先：確保基礎正確
@@ -317,6 +347,8 @@ python dry_run_all_regions.py --debug        # 全台 raw data 檢視
 | 內政部不動產資訊平台 | 全國公有不動產標租公告 |
 | 各縣市政府資產活化公告 | 台北市／新北市政府資產管理局 |
 | 財政部國有財產署（南中東部分署） | 目前只收北區分署 |
+| 臺北市財政局「最新消息」、都更處「最新消息」 | 都更處標租案也會出現在財政局最新消息；目前只抓財政局標案列表與都更處新聞稿 |
+| ~~臺北市都市更新處~~ | ✅ 2026-11-20 已加入（新聞稿列表） |
 
 ---
 
