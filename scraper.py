@@ -1266,7 +1266,7 @@ def collect_watch(results: dict, state: dict) -> dict:
 
     回傳 {案名: {"records": [...], "hints": [...]}}
       record = {title, date, url, source, new, reposts}，依日期（無日期用首次追蹤日）新→舊
-      new    = 這則公告第一次被追蹤到；某案第一次追蹤時全部不標 new，避免把歷史當新進度
+      new    = 這則公告第一次被追蹤到；某案第一次追蹤時只有日期窗內（近 10 天）的才標 new，避免把歷史當新進度
       reposts= 同一則公告的 Google Alerts 轉載數（轉載本身不另列）
       hints  = hint_keywords 命中、今天抓到、日期窗內、第一次出現的項目
     會更新 state["_watch"]（記錄已追蹤過的公告 key 與首次追蹤日；dry-run 不存檔）。
@@ -1309,7 +1309,10 @@ def collect_watch(results: dict, state: dict) -> dict:
                 cs["seen"].setdefault(k, today)
                 del recs[k]
         for key, rec in recs.items():
-            rec["new"] = (not first) and key not in cs["seen"]
+            # 第一次追蹤這案時，只有「公告日期在日期窗內」的才算新進度（例如 2 天前剛出的新一輪招租），
+            # 更早的歷史公告（第 1、2 次標租等）不標 🆕
+            recent = bool(rec["date"]) and is_within_date_window({"date": rec["date"]})
+            rec["new"] = key not in cs["seen"] and (not first or recent)
             cs["seen"].setdefault(key, today)
             rec["first_seen"] = cs["seen"][key]
         # 提示：只看今天抓到、日期窗內、沒提示過的
