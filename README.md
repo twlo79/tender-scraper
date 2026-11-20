@@ -1,6 +1,6 @@
 # 政府標案每日爬蟲
 
-自動抓取 13 個政府機關網站，篩選**台北／新北地區**公有不動產標租公告，每日透過 **LINE** 推播標案名稱、公告日期與連結。
+自動抓取 14 個政府機關網站，篩選**台北／新北地區**公有不動產標租公告，每日透過 **LINE** 推播標案名稱、公告日期與連結。
 
 ---
 
@@ -34,7 +34,7 @@
        ▼
   GitHub Actions 執行 scraper.py
        │
-       ├─ 爬 13 個來源
+       ├─ 爬 14 個來源
        │
        ├─ 和 state.json 比對（去重）
        │      已見過 → 跳過
@@ -76,7 +76,7 @@
 
 | 檔案 | 用途 |
 |------|------|
-| `scraper.py` | 主爬蟲。抓取 13 個來源、篩選、去重、推播 LINE、更新 state/sent_log |
+| `scraper.py` | 主爬蟲。抓取 14 個來源、篩選、去重、推播 LINE、更新 state/sent_log |
 | `log_checker.py` | 解析 GitHub Actions 執行 log，寫入 `daily_report.json` |
 | `dry_run_all_regions.py` | 測試用：移除地區限制執行所有 parser，驗證標題/日期/URL 格式 |
 | `qa_report.py` | QA 監測：讀取 sent_log.json，輸出爬蟲健康報告 |
@@ -163,7 +163,7 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 
 ---
 
-## 收錄來源（13 個）
+## 收錄來源（14 個）
 
 | # | 機關 | 抓取方式 | 地區篩選 |
 |---|------|----------|----------|
@@ -180,6 +180,7 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 | 11 | 國防部政治作戰局 | `p.newslist_title` 卡片（非 table，cnid=609 與 695 兩個子頁一併抓） | 台北、新北 |
 | 12 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 台北、新北 |
 | 13 | Google Alerts | RSS Atom feed | 台北、新北、gov.tw |
+| 14 | 台北市都市更新處（新聞稿） | `table tr`（CCMS，data-title 定位標題／發布日期），靠 whitelist 篩標租類 | 來源本身限雙北（agency 帶「臺北市」，讓「本市…」標題通過） |
 
 > **Claude fallback**：部分 JS 渲染頁面無法直接解析時，改用 Claude API 從 HTML 文字擷取結構化資料。需設定 `ANTHROPIC_API_KEY`。
 

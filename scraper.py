@@ -2,11 +2,11 @@
 """
 政府標案每日爬蟲 v9
 ================================================================
-收錄來源（13 個）：
+收錄來源（14 個）：
   台北自來水處、國營台鐵、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
   國有財產署、政府採購網、教育部學產基金、台北市都發局
-  國防部政治作戰局、土地銀行出租不動產、Google Alerts
+  國防部政治作戰局、土地銀行出租不動產、Google Alerts、台北市都市更新處
 
 抓取策略：
   台北自來水處            requests + table tbody tr（CCMS 格式）
@@ -14,6 +14,7 @@
   農業部 瑠公管理處       requests + ul.commonList li parser
   郵局房地產出租           requests + table/list parser
   台北市財政局            requests + table tr（CCMS 格式）
+  台北市都市更新處         requests + table tr（CCMS 新聞稿列表，靠 whitelist 篩標租）
   國家住宅及都市更新中心   requests + table/article + Claude fallback
   國有財產署              4 頁面 table parser（招標/地上權/停車/創業，篩北區分署）
   政府採購網              直接抓取 PCC 查詢頁（出租/標租 關鍵字，近 7 天招標公告）
@@ -160,7 +161,7 @@ def parse_taipei_water() -> list[dict]:
         id_td = td_map.get("編號")
         case_id = id_td.get_text(strip=True) if id_td else ""
         if title and len(title) > 3:
-            items.append({"id": case_id, "title": title, "date": dt, "url": href})
+            items.append({"id": case_id, "title": title, "date": dt, "url": href, "agency": "臺北自來水事業處"})
     log.info(f"  [台北自來水處] {len(items)} 筆")
     return items
 
@@ -279,8 +280,46 @@ def parse_taipei_dof() -> list[dict]:
         td_map = {td.get("data-title", ""): td for td in tds}
         date_td = td_map.get("公告日期") or td_map.get("發布日期") or td_map.get("日期")
         dt = date_td.get_text(strip=True) if date_td else ""
-        items.append({"title": title, "date": dt, "url": href})
+        # agency 帶「臺北市」：標題常寫「本市…」而不寫地名，否則會被 GLOBAL_FILTER regions 擋掉
+        items.append({"title": title, "date": dt, "url": href, "agency": "臺北市財政局"})
     log.info(f"  [台北市財政局] {len(items)} 筆")
+    return items
+
+
+def parse_taipei_uro() -> list[dict]:
+    """臺北市都市更新處「新聞稿」：CCMS 系統（與財政局、自來水處同一套），table tr，td 帶 data-title。
+    都更處的標租案（如「本市都市更新處公告標租全坤X101社區商辦服務設施」）只發在新聞稿，
+    不會出現在財政局標案列表。標題寫「本市」不寫地名，所以 agency 固定帶「臺北市」讓 regions 放行；
+    一般都更新聞由 GLOBAL_FILTER whitelist（標租/出租/招租…）擋掉。
+    """
+    BASE = "https://uro.gov.taipei"
+    URL  = f"{BASE}/News.aspx?n=3ADF6474408DA0C5&sms=78D644F2755ACCAA"
+    r = get(URL)
+    if not r: return []
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(r.text, "lxml")
+    items = []
+    for row in soup.select("table tbody tr, table tr"):
+        tds = row.find_all("td")
+        if not tds:
+            continue
+        td_map = {td.get("data-title", ""): td for td in tds}
+        title_td = td_map.get("標題") or td_map.get("主旨") or next((td for td in tds if td.find("a", href=True)), None)
+        a = title_td.find("a", href=True) if title_td else None
+        if not a:
+            continue
+        title = (a.get("title") or "").strip() or a.get_text(strip=True)
+        if len(title) < 5:
+            continue
+        href = a["href"] if a["href"].startswith("http") else urljoin(BASE + "/", a["href"])
+        date_td = td_map.get("發布日期") or td_map.get("公告日期") or td_map.get("日期")
+        if date_td:
+            dt = date_td.get_text(strip=True)
+        else:  # 沒有 data-title 時，從整列文字抓 yyyy-mm-dd / 民國 yyy-mm-dd
+            m = re.search(r"\d{3,4}[-/.]\d{1,2}[-/.]\d{1,2}", row.get_text(" ", strip=True))
+            dt = m.group(0) if m else ""
+        items.append({"title": title, "date": dt, "url": href, "agency": "臺北市都市更新處"})
+    log.info(f"  [台北市都市更新處] {len(items)} 筆")
     return items
 
 
@@ -758,6 +797,12 @@ SOURCES = [
         "url":  "https://dof.gov.taipei/News.aspx?n=DBCAF43864F42187&sms=148C417C1585EF00",
         "fn":   parse_taipei_dof,
         "whitelist": [], "blacklist": [], "regions": [],
+    },
+    {
+        "name": "台北市都市更新處",
+        "url":  "https://uro.gov.taipei/News.aspx?n=3ADF6474408DA0C5&sms=78D644F2755ACCAA",
+        "fn":   parse_taipei_uro,
+        "whitelist": [], "blacklist": [], "regions": [],  # 已是台北市機關；靠 GLOBAL_FILTER whitelist 篩標租類
     },
     {
         "name": "國家住宅及都市更新中心",
