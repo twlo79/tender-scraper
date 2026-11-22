@@ -1,12 +1,4 @@
 {
-  "2026-10-23": {
-    "date": "2026-10-23",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-10-24": {
     "date": "2026-10-24",
     "sources": {},
@@ -293,6 +285,19 @@
     "errors": [
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F11&searchEndNoticeDate=2026%2F11%2F21&pageModel.rowsPerPage=100",
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F11&searchEndNoticeDate=2026%2F11%2F21&pageModel.rowsPerPage=100"
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-11-22": {
+    "date": "2026-11-22",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "GET å¤±æ https://esvc.fnp.gov.tw/tenderSetSuperficies?svcId=f6c87d65ebc84e988b4d245777d83a81ï¼HTTPSConnectionPool(host='esvc.fnp.gov.tw', port=443): Max retries exceeded with url: /tenderSetSuperficies?svcId=f6c87d65ebc84e988b4d245777d83a81 (Caused by ConnectTimeoutError(<HTTPSConnection(host='esvc.fnp.gov.tw', port=443) at 0x7782f2a72590>, 'Connection to esvc.fnp.gov.tw timed out. (connect timeout=20)'))",
+      "[åæè²¡ç¢ç½²/å°ä¸æ¬è¨­å®] é£ç·å¤±æ",
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F12&searchEndNoticeDate=2026%2F11%2F22&pageModel.rowsPerPage=100",
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F12&searchEndNoticeDate=2026%2F11%2F22&pageModel.rowsPerPage=100"
     ],
     "line": "無推播（0 筆）"
   }
