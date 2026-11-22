@@ -1,86 +1,4 @@
 {
-  "2026-10-22 01:30": {
-    "_summary": {
-      "total_fetched": 171,
-      "total_new": 11,
-      "total_notify": 3,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 13,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "瑠公管理處 115 年度第 8 批 (2處土地) 農田水利非事業用不動產公開標租案"
-      ]
-    },
-    "郵局房地產出租": {
-      "fetched": 5,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 9,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 13,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 47,
-      "new": 1,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 4,
-      "new": 1,
-      "notify": 1,
-      "items": [
-        "115年度新北市汐止區水源路二段36巷25號16樓國有學產建物短期出租招標"
-      ]
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 20,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 1,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 9,
-      "new": 7,
-      "notify": 1,
-      "items": [
-        "瑠公管理處115 年度第8 批(2處土地) 農田水利非事業用不動產公開標租案"
-      ]
-    }
-  },
   "2026-10-23 01:30": {
     "_summary": {
       "total_fetched": 170,
@@ -2503,6 +2421,84 @@
     "Google Alerts": {
       "fetched": 2,
       "new": 1,
+      "notify": 0
+    }
+  },
+  "2026-11-22 01:30": {
+    "_summary": {
+      "total_fetched": 157,
+      "total_new": 4,
+      "total_notify": 0,
+      "line_pushed": false
+    },
+    "台北自來水處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 6,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 7,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都市更新處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 26,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 3,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 0,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 4,
+      "new": 4,
       "notify": 0
     }
   }
