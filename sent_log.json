@@ -1,80 +1,4 @@
 {
-  "2026-10-24 01:30": {
-    "_summary": {
-      "total_fetched": 154,
-      "total_new": 3,
-      "total_notify": 1,
-      "line_pushed": true
-    },
-    "台北自來水處": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 5,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 9,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 12,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 40,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 20,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 4,
-      "new": 3,
-      "notify": 1,
-      "items": [
-        "公開標租「臺北市懷愛館公用房地租賃案（治喪用品暫放）」"
-      ]
-    }
-  },
   "2026-10-25 01:30": {
     "_summary": {
       "total_fetched": 143,
@@ -2507,6 +2431,90 @@
     "Google Alerts": {
       "fetched": 0,
       "new": 0,
+      "notify": 0
+    }
+  },
+  "2026-11-24 01:30": {
+    "_summary": {
+      "total_fetched": 158,
+      "total_new": 9,
+      "total_notify": 2,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 5,
+      "new": 1,
+      "notify": 1,
+      "items": [
+        "【臺北營業分處】【車站旅運販賣空間標租】【臺北車站1樓西北側部分商業空間A點旅運販賣空間】【1151124~1151215】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 7,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都市更新處": {
+      "fetched": 20,
+      "new": 1,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 27,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 5,
+      "new": 2,
+      "notify": 1,
+      "items": [
+        "115年度臺北捷運永春站國有學產房地公開標租"
+      ]
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 1,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 3,
+      "new": 3,
       "notify": 0
     }
   }
