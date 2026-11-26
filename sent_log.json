@@ -1,77 +1,4 @@
 {
-  "2026-10-26 01:30": {
-    "_summary": {
-      "total_fetched": 139,
-      "total_new": 0,
-      "total_notify": 0,
-      "line_pushed": false
-    },
-    "台北自來水處": {
-      "fetched": 11,
-      "new": 0,
-      "notify": 0
-    },
-    "國營台鐵": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "農業部 瑠公管理處": {
-      "fetched": 15,
-      "new": 0,
-      "notify": 0
-    },
-    "郵局房地產出租": {
-      "fetched": 5,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市財政局": {
-      "fetched": 9,
-      "new": 0,
-      "notify": 0
-    },
-    "國家住宅及都市更新中心": {
-      "fetched": 12,
-      "new": 0,
-      "notify": 0
-    },
-    "國有財產署": {
-      "fetched": 1,
-      "new": 0,
-      "notify": 0
-    },
-    "政府採購網": {
-      "fetched": 29,
-      "new": 0,
-      "notify": 0
-    },
-    "教育部學產基金": {
-      "fetched": 3,
-      "new": 0,
-      "notify": 0
-    },
-    "台北市都發局": {
-      "fetched": 30,
-      "new": 0,
-      "notify": 0
-    },
-    "國防部政治作戰局": {
-      "fetched": 20,
-      "new": 0,
-      "notify": 0
-    },
-    "土地銀行出租不動產": {
-      "fetched": 2,
-      "new": 0,
-      "notify": 0
-    },
-    "Google Alerts": {
-      "fetched": 0,
-      "new": 0,
-      "notify": 0
-    }
-  },
   "2026-10-27 01:30": {
     "_summary": {
       "total_fetched": 142,
@@ -2524,6 +2451,91 @@
       "fetched": 2,
       "new": 2,
       "notify": 0
+    }
+  },
+  "2026-11-26 01:30": {
+    "_summary": {
+      "total_fetched": 163,
+      "total_new": 11,
+      "total_notify": 3,
+      "line_pushed": true
+    },
+    "台北自來水處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國營台鐵": {
+      "fetched": 5,
+      "new": 2,
+      "notify": 2,
+      "items": [
+        "【臺北營業分處】【土地出租】【新竹縣竹東鎮竹東段番社子小段18–14、18–17等2筆地號部分土地】【115.11.26~115.12.10】",
+        "【臺北營業分處】【土地標租】【新北巿鶯歌區尖山堆段87–2、105–2及108–2地號部分土地】【115.11.26~115.12.10】"
+      ]
+    },
+    "農業部 瑠公管理處": {
+      "fetched": 15,
+      "new": 0,
+      "notify": 0
+    },
+    "郵局房地產出租": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市財政局": {
+      "fetched": 7,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都市更新處": {
+      "fetched": 20,
+      "new": 0,
+      "notify": 0
+    },
+    "國家住宅及都市更新中心": {
+      "fetched": 27,
+      "new": 0,
+      "notify": 0
+    },
+    "國有財產署": {
+      "fetched": 1,
+      "new": 0,
+      "notify": 0
+    },
+    "政府採購網": {
+      "fetched": 0,
+      "new": 0,
+      "notify": 0
+    },
+    "教育部學產基金": {
+      "fetched": 4,
+      "new": 0,
+      "notify": 0
+    },
+    "台北市都發局": {
+      "fetched": 30,
+      "new": 0,
+      "notify": 0
+    },
+    "國防部政治作戰局": {
+      "fetched": 21,
+      "new": 1,
+      "notify": 0
+    },
+    "土地銀行出租不動產": {
+      "fetched": 2,
+      "new": 1,
+      "notify": 0
+    },
+    "Google Alerts": {
+      "fetched": 7,
+      "new": 7,
+      "notify": 1,
+      "items": [
+        "116年度臺北市市有公用不動產提供設置太陽光電發電設備暨太陽能光電球場公開標租案"
+      ]
     }
   }
 }
