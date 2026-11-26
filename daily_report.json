@@ -1,12 +1,4 @@
 {
-  "2026-10-27": {
-    "date": "2026-10-27",
-    "sources": {},
-    "total_new": 0,
-    "total_pushed": 0,
-    "errors": [],
-    "line": "無推播（0 筆）"
-  },
   "2026-10-28": {
     "date": "2026-10-28",
     "sources": {},
@@ -307,6 +299,17 @@
     "errors": [
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F15&searchEndNoticeDate=2026%2F11%2F25&pageModel.rowsPerPage=100",
       "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F15&searchEndNoticeDate=2026%2F11%2F25&pageModel.rowsPerPage=100"
+    ],
+    "line": "無推播（0 筆）"
+  },
+  "2026-11-26": {
+    "date": "2026-11-26",
+    "sources": {},
+    "total_new": 0,
+    "total_pushed": 0,
+    "errors": [
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/åºç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E5%87%BA%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F16&searchEndNoticeDate=2026%2F11%2F26&pageModel.rowsPerPage=100",
+      "[æ¿åºæ¡è³¼ç¶²/è²¡ç©åºç§/æ¨ç§] é£ç·å¤±æï¼500 Server Error: Internal Server Error for url: https://web.pcc.gov.tw/opas/arpam/public/readArpam?searchAssetsName=%E6%A8%99%E7%A7%9F&searchBeginNoticeDate=2026%2F11%2F16&searchEndNoticeDate=2026%2F11%2F26&pageModel.rowsPerPage=100"
     ],
     "line": "無推播（0 筆）"
   }
