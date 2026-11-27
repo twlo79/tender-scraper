@@ -2,11 +2,12 @@
 """
 政府標案每日爬蟲 v9
 ================================================================
-收錄來源（14 個）：
+收錄來源（16 個）：
   台北自來水處、國營台鐵、農業部 瑠公管理處
   郵局房地產出租、台北市財政局、國家住宅及都市更新中心
   國有財產署、政府採購網、教育部學產基金、台北市都發局
   國防部政治作戰局、土地銀行出租不動產、Google Alerts、台北市都市更新處
+  新北市住都中心、臺北市住都中心
 
 抓取策略：
   台北自來水處            requests + table tbody tr（CCMS 格式）
@@ -397,6 +398,59 @@ def parse_hurc() -> list[dict]:
         items = parse_with_claude_fallback(soup.get_text("\n")[:8000], "國家住宅及都市更新中心", BASE)
     log.info(f"  [國家住宅及都市更新中心] {len(items)} 筆")
     return items
+
+
+def _parse_announce_list(url: str, base: str, name: str, agency: str) -> list[dict]:
+    """通用公告列表 parser（給沒有固定 selector 的來源用）：
+    找每個文字 ≥6 字的 <a href>，往上最多 4 層找同一列（tr/li/div/article）裡的日期；
+    有日期才收（導覽列、頁尾連結沒有日期，會自然被排除）。都抓不到再交給 Claude fallback。
+    agency 帶市名：住都中心的案名常寫「本中心」「OO社宅」而不寫台北／新北，否則會被 regions 擋掉。
+    """
+    r = get(url)
+    if not r: return []
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(r.text, "lxml")
+    items, seen = [], set()
+    for a in soup.find_all("a", href=True):
+        title = re.sub(r"\s+", " ", a.get_text(" ", strip=True))
+        if len(title) < 6 or title in seen:
+            continue
+        row, dt = a, ""
+        for _ in range(4):
+            row = row.parent
+            if row is None or row.name in ("body", "html"):
+                break
+            found = _extract_dates(row.get_text(" ", strip=True))
+            if found:
+                dt = found[0].isoformat()
+                break
+        if not dt:
+            continue
+        item = {"title": title, "date": dt, "url": _safe_url(a["href"], base, url), "agency": agency}
+        if _is_junk(item):
+            continue
+        seen.add(title)
+        items.append(item)
+    if not items:
+        items = [dict(i, agency=agency)
+                 for i in parse_with_claude_fallback(soup.get_text("\n")[:8000], name, base)
+                 if not _is_junk(i)]
+    log.info(f"  [{name}] {len(items)} 筆")
+    return items
+
+
+def parse_nthurc() -> list[dict]:
+    """新北市住宅及都市更新中心：招標公告列表（結構未實測，用通用 parser）。"""
+    return _parse_announce_list(
+        "https://www.nthurc.org.tw/procurement/previous/announcements",
+        "https://www.nthurc.org.tw", "新北市住都中心", "新北市住都中心")
+
+
+def parse_thurc() -> list[dict]:
+    """臺北市住宅及都市更新中心：採購公告 kind=1（結構未實測，用通用 parser）。"""
+    return _parse_announce_list(
+        "https://thurc.org.taipei/ThurcTaipei/Portal/Procurement?kind=1",
+        "https://thurc.org.taipei", "臺北市住都中心", "臺北市住都中心")
 
 
 # 國有財產署 4 個類別頁面（北區分署）
@@ -889,6 +943,18 @@ SOURCES = [
         "whitelist": [], "blacklist": [], "regions": [],
     },
     {
+        "name": "新北市住都中心",
+        "url":  "https://www.nthurc.org.tw/procurement/previous/announcements",
+        "fn":   parse_nthurc,
+        "whitelist": [], "blacklist": [], "regions": [],  # agency 帶「新北市」
+    },
+    {
+        "name": "臺北市住都中心",
+        "url":  "https://thurc.org.taipei/ThurcTaipei/Portal/Procurement?kind=1",
+        "fn":   parse_thurc,
+        "whitelist": [], "blacklist": [], "regions": [],  # agency 帶「臺北市」
+    },
+    {
         "name": "國有財產署",
         "url":  "https://esvc.fnp.gov.tw/rtMsg?svcId=5eafac8df8c649ba9cf62a591e44223c",
         "fn":   parse_fnp,
@@ -1351,8 +1417,8 @@ def _watch_summary_lines(watch: dict) -> list[str]:
                 lines.append(f"  ▸ {r['title'][:40]}（{_md(r['date'] or r['first_seen'])}）")
         elif recs:
             r = recs[0]
-            t = r["title"] if len(r["title"]) <= 28 else r["title"][:28] + "…"
-            lines.append(f"・{case['short']}：無新動態（最近 {t} {_md(r['date'] or r['first_seen'])}）")
+            t = r["title"] if len(r["title"]) <= 32 else r["title"][:32] + "…"
+            lines.append(f"・{case['short']}：無新動態（上次更新 - {_md(r['date'] or r['first_seen'])} {t}）")
         else:
             lines.append(f"・{case['short']}：尚未在任何來源找到公告")
         for h in w["hints"][:2]:
