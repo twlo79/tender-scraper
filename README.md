@@ -215,7 +215,7 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 
 ---
 
-## 收錄來源（14 個）
+## 收錄來源（16 個）
 
 順序與 `scraper.py` 的 `SOURCES` 一致（也是 LINE 推播與 sent_log 的排列順序）。「地區判斷」欄說明這個來源的案件靠什麼通過 ① 地區篩選。
 
@@ -228,13 +228,15 @@ python qa_report.py --full       # 顯示所有推播項目（含正常的）
 | 5 | 台北市財政局 | `table tbody tr`（CCMS，data-title 定位公告日期；抓「標案列表」，不含「最新消息」） | `agency` 帶「臺北」，全部通過 |
 | 6 | 台北市都市更新處（新聞稿） | `table tr`（CCMS，data-title 定位標題／發布日期）。網址 `uro.gov.taipei/News.aspx?n=3ADF6474408DA0C5&sms=78D644F2755ACCAA`。新聞稿多為一般都更新聞，靠 ② 白名單篩出招租／標租類 | `agency` 帶「臺北」，全部通過 |
 | 7 | 國家住宅及都市更新中心 | `table tr`（tds[2]=案名，tds[4]=公告日期） | 標題須含台北／新北 |
-| 8 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | parser 內篩北區分署（`skip_global_filter`） |
-| 9 | 政府採購網（財物出租查詢） | `/opas/arpam/public/readArpam` 關鍵字查詢（出租／標租，±10 天，`table#displayTagTableId`） | 標題或招標機關名須含台北／新北 |
-| 10 | 教育部學產基金 | `table tbody tr`（日期欄在 tds[0]，若無則退回 tds[-1]） | 標題須含台北／新北 |
-| 11 | 台北市都發局 | `div.list-card` 卡片（非 table） | `agency` 帶「台北」，全部通過 |
-| 12 | 國防部政治作戰局 | `p.newslist_title` 卡片（非 table，cnid=609 與 695 兩個子頁一併抓） | 標題須含台北／新北 |
-| 13 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 標題須含台北／新北 |
-| 14 | Google Alerts | RSS Atom feed | 標題須含台北／新北 |
+| 8 | 新北市住都中心 | 通用 parser：`<a>` + 同列日期，抓不到用 Claude fallback（2026-11-27 新增，結構未實測） | `agency` 帶「新北市」，全部通過 |
+| 9 | 臺北市住都中心 | 同上（`Procurement?kind=1`） | `agency` 帶「臺北市」，全部通過 |
+| 10 | 國有財產署 | `a.message-flex`（4 個類別頁，限北區分署） | parser 內篩北區分署（`skip_global_filter`） |
+| 11 | 政府採購網（財物出租查詢） | `/opas/arpam/public/readArpam` 關鍵字查詢（出租／標租，±10 天，`table#displayTagTableId`） | 標題或招標機關名須含台北／新北 |
+| 12 | 教育部學產基金 | `table tbody tr`（日期欄在 tds[0]，若無則退回 tds[-1]） | 標題須含台北／新北 |
+| 13 | 台北市都發局 | `div.list-card` 卡片（非 table） | `agency` 帶「台北」，全部通過 |
+| 14 | 國防部政治作戰局 | `p.newslist_title` 卡片（非 table，cnid=609 與 695 兩個子頁一併抓） | 標題須含台北／新北 |
+| 15 | 土地銀行出租不動產 | `table tbody tr` + Claude fallback | 標題須含台北／新北 |
+| 16 | Google Alerts | RSS Atom feed | 標題須含台北／新北 |
 
 > **Claude fallback**：部分 JS 渲染頁面無法直接解析時，改用 Claude API 從 HTML 文字擷取結構化資料。需設定 `ANTHROPIC_API_KEY`。
 
